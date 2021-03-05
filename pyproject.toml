@@ -19,6 +19,7 @@ scikit-allel = "1.3.2"
 
 [tool.poetry.dev-dependencies]
 sphinx = "^3.5.1"
+sphinxcontrib-napoleon = "^0.7"
 
 [build-system]
 requires = ["poetry>=0.12"]
