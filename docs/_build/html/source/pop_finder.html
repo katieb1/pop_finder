@@ -62,8 +62,74 @@ RandomSearch()).</p>
 </dd></dl>
 
 </div>
-<div class="section" id="pop-finder-pop-finder-module">
-<h2>pop_finder.pop_finder module<a class="headerlink" href="#pop-finder-pop-finder-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-pop_finder.pop_finder">
+<span id="pop-finder-pop-finder-module"></span><h2>pop_finder.pop_finder module<a class="headerlink" href="#module-pop_finder.pop_finder" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="pop_finder.pop_finder.get_model_name">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.pop_finder.</span></code><code class="sig-name descname"><span class="pre">get_model_name</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/pop_finder.html#get_model_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.pop_finder.get_model_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a string model name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>k</strong> (<em>int</em>) – Model number.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pop_finder.pop_finder.run_neural_net">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.pop_finder.</span></code><code class="sig-name descname"><span class="pre">run_neural_net</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile_kfcv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infile_all</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_allele_counts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu_number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tune_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_splits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_reps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_best_mod</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/pop_finder.html#run_neural_net"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.pop_finder.run_neural_net" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses input arguments from the command line to tune, train,
+evaluate an ensemble of neural networks, then predicts the
+population of origin for samples of unknown origin.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>infile_kfcv</strong> (<em>string</em>) – Path to k-fold cross-validation input file, which is
+a tab-delimited text file with columns x, y, pop, and
+sampleID. No samples of unknown origin should be in
+this file.</p></li>
+<li><p><strong>infile_all</strong> (<em>string</em>) – Path to input file with all samples present (including
+samples of unknown origin), which is a tab-delimited
+text file with columns x, y, pop, and sampleID.</p></li>
+<li><p><strong>sample_data</strong> (<em>string</em>) – Path to VCF or hdf5 file with genetic information
+for all samples (including samples of unknown origin).</p></li>
+<li><p><strong>counts</strong> (<em>save_allele</em>) – Whether or not to store derived allele counts in hdf5
+file (Default=False).</p></li>
+<li><p><strong>save_weights</strong> (<em>boolean</em>) – Save model weights so you don’t have to retrain again
+later (Default=False).</p></li>
+<li><p><strong>patience</strong> (<em>int</em>) – Hyperparameter for leniency on early-stopping
+(Default=10).</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em>) – Number of samples to use in training for each batch
+(Default=32).</p></li>
+<li><p><strong>max_epochs</strong> (<em>int</em>) – Number of epochs to train over.</p></li>
+<li><p><strong>seed</strong> (<em>int</em>) – Random seed (Default=None).</p></li>
+<li><p><strong>train_prop</strong> (<em>float</em>) – Proportion of samples used in training (Default=0.5).</p></li>
+<li><p><strong>gpu_number</strong> (<em>string</em>) – Whether to use GPUs (Default=’0’).</p></li>
+<li><p><strong>tune_model</strong> (<em>boolean</em>) – Whether to tune model or just use default
+(Default=False).</p></li>
+<li><p><strong>n_splits</strong> (<em>int</em>) – Number of folds in k-fold cross-validation
+(Default=5).</p></li>
+<li><p><strong>n_reps</strong> (<em>int</em>) – Number of times to repeat k-fold cross-validation,
+creating the number of models in the ensemble
+(Default=5).</p></li>
+<li><p><strong>save_best_mod</strong> (<em>boolean</em>) – Whether to save the model with the highest accuracy
+(Default=False).</p></li>
+<li><p><strong>save_dir</strong> (<em>string</em>) – Directory where results will be stored (Default=’out’).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>A dataframe in csv format called ‘metrics.csv’ that gives</em> – details on accuracy and performance of the best model
+and overall accuracy and performance of the ensemble.</p></li>
+<li><p><em>A dataframe in csv format called ‘pop_assign_freqs.csv’</em> – outlining the frequency of assignment of an individual
+to each population.</p></li>
+<li><p><em>A dataframe in csv format called ‘pop_assign_ensemble.csv’</em> – that specifies that top population for each individual</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 <div class="section" id="module-pop_finder.read">
 <span id="pop-finder-read-module"></span><h2>pop_finder.read module<a class="headerlink" href="#module-pop_finder.read" title="Permalink to this headline">¶</a></h2>
