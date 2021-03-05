@@ -66,11 +66,66 @@ def get_model_name(k):
     """
     return 'model_'+str(k)
 
-def run_neural_net():
+def run_neural_net(infile_kfcv, infile_all, sample_data,
+                   save_allele_counts, save_weights, patience,
+                   batch_size, max_epochs, seed, train_prop,
+                   gpu_number, tune_model, n_splits, n_reps,
+                   save_best_mod, save_dir):
     """
     Uses input arguments from the command line to tune, train,
     evaluate an ensemble of neural networks, then predicts the
     population of origin for samples of unknown origin.
+    
+    Parameters
+    ----------
+    infile_kfcv : string
+        Path to k-fold cross-validation input file, which is
+        a tab-delimited text file with columns x, y, pop, and
+        sampleID. No samples of unknown origin should be in
+        this file.
+    infile_all : string
+        Path to input file with all samples present (including
+        samples of unknown origin), which is a tab-delimited
+        text file with columns x, y, pop, and sampleID.
+    sample_data : string
+        Path to VCF or hdf5 file with genetic information
+        for all samples (including samples of unknown origin).
+    save_allele counts : boolean
+        Whether or not to store derived allele counts in hdf5
+        file (Default=False).
+    save_weights : boolean
+        Save model weights so you don't have to retrain again 
+        later (Default=False).
+    patience : int
+        Hyperparameter for leniency on early-stopping 
+        (Default=10).
+    batch_size : int
+        Number of samples to use in training for each batch 
+        (Default=32).
+    max_epochs : int
+        Number of epochs to train over.
+    seed : int
+        Random seed (Default=None).
+    train_prop : float
+        Proportion of samples used in training (Default=0.5).
+    gpu_number : string
+        Whether to use GPUs (Default='0').
+    tune_model : boolean
+        Whether to tune model or just use default 
+        (Default=False).
+    n_splits : int
+        Number of folds in k-fold cross-validation 
+        (Default=5).
+    n_reps : int
+        Number of times to repeat k-fold cross-validation,
+        creating the number of models in the ensemble 
+        (Default=5).
+    save_best_mod : boolean
+        Whether to save the model with the highest accuracy 
+        (Default=False).
+    save_dir : string
+        Directory where results will be stored (Default='out').
+    
     
     Returns
     -------
@@ -168,7 +223,7 @@ def run_neural_net():
             tuner = RandomSearch(
                 hypermodel,
                 objective='loss',
-                seed=123,
+                seed=seed,
                 max_trials=10,
                 executions_per_trial=10,
                 directory=save_dir,
