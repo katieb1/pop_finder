@@ -6,10 +6,34 @@ from kerastuner import HyperModel
 class classifierHyperModel(HyperModel):
     
     def __init__(self, input_shape, num_classes):
+        """
+        Initializes object of class classifierHyperModel.
+        
+        Parameters
+        ----------
+        input_shape : int
+            Number of training examples.
+        num_classes : int
+            Number of populations or labels.
+        """
         self.input_shape = input_shape
         self.num_classes = num_classes
         
     def build(self, hp):
+        """
+        Builds a model with the specified hyperparameters.
+        
+        Parameters
+        ----------
+        hp : keras.tuners class
+            Class that defines how to sample hyperparameters (e.g. 
+            RandomSearch()).
+        
+        Returns
+        -------
+        model : Keras sequential model
+            Model with all the layers and specified hyperparameters.
+        """
         model = tfk.Sequential()
         model.add(
             tfk.layers.BatchNormalization(

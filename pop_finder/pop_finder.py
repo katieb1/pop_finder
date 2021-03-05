@@ -56,9 +56,33 @@ save_dir=args.save_dir
 
 # Create function for labelling models in kfcv
 def get_model_name(k):
+    """
+    Returns a string model name.
+    
+    Parameters
+    ----------
+    k : int
+        Model number.
+    """
     return 'model_'+str(k)
 
 def run_neural_net():
+    """
+    Uses input arguments from the command line to tune, train,
+    evaluate an ensemble of neural networks, then predicts the
+    population of origin for samples of unknown origin.
+    
+    Returns
+    -------
+    A dataframe in csv format called 'metrics.csv' that gives
+        details on accuracy and performance of the best model
+        and overall accuracy and performance of the ensemble.
+    A dataframe in csv format called 'pop_assign_freqs.csv'
+        outlining the frequency of assignment of an individual
+        to each population.
+    A dataframe in csv format called 'pop_assign_ensemble.csv'
+        that specifies that top population for each individual
+    """
 
     print(f"Output will be saved to: {save_dir}")
 
