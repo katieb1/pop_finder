@@ -14,23 +14,31 @@ def read_data(infile, sample_data, save_allele_counts, kfcv=False):
     Reads a .zarr, .vcf, or h5py file containing genetic data and 
     creates subsettable data for a classifier neural network.
     
-    Parameters:
-    infile (string): path to the .zarr, .vcf, or h5py file
-    sample_data (string): path to .txt file containing sample
-        information (columns are x, y, sampleID, and pop)
-    save_allele_counts (boolean): Saves derived allele count 
-        information (Default=False)
-    kfcv (boolean): If being used to test accuracy with k-fold
-        cross-validation (i.e. no NAs in the sample data), set 
-        to True (Default=False)
+    Parameters
+    ----------
+    infile : string
+        Path to the .zarr, .vcf, or h5py file.
+    sample_data : string
+        Path to .txt file containing sample information
+        (columns are x, y, sampleID, and pop).
+    save_allele_counts : boolean
+        Saves derived allele count information (Default=False).
+    kfcv : boolean
+        If being used to test accuracy with k-fold cross-
+        validation (i.e. no NAs in the sample data), set to
+        True (Default=False).
         
-    Returns:
-    samp_list (dataframe): contains information on corresponding
-        sampleID and population classifications
-    dc (np.array): Array of derived allele counts
-    unknowns (dataframe): if kfcv is set to False, returns a 
-        dataframe with information about sampleID and indices
-        for samples of unknown origin
+    Returns
+    -------
+    samp_list : dataframe
+        Contains information on corresponding sampleID and 
+        population classifications.
+    dc : np.array
+        Array of derived allele counts.
+    unknowns : dataframe
+        If kfcv is set to False, returns a dataframe with 
+        information about sampleID and indices for samples
+        of unknown origin.
     """
     
     # Load genotypes

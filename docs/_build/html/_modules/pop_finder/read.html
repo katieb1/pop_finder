@@ -1,0 +1,212 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pop_finder.read &#8212; pop_finder  documentation</title>
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for pop_finder.read</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Script for reading genetic data and population data</span>
+
+<span class="c1"># Load packages</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">allel</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">zarr</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+
+<div class="viewcode-block" id="read_data"><a class="viewcode-back" href="../../source/pop_finder.html#pop_finder.read.read_data">[docs]</a><span class="k">def</span> <span class="nf">read_data</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">sample_data</span><span class="p">,</span> <span class="n">save_allele_counts</span><span class="p">,</span> <span class="n">kfcv</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads a .zarr, .vcf, or h5py file containing genetic data and </span>
+<span class="sd">    creates subsettable data for a classifier neural network.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    infile : string</span>
+<span class="sd">        Path to the .zarr, .vcf, or h5py file.</span>
+<span class="sd">    sample_data : string</span>
+<span class="sd">        Path to .txt file containing sample information</span>
+<span class="sd">        (columns are x, y, sampleID, and pop).</span>
+<span class="sd">    save_allele_counts : boolean</span>
+<span class="sd">        Saves derived allele count information (Default=False).</span>
+<span class="sd">    kfcv : boolean</span>
+<span class="sd">        If being used to test accuracy with k-fold cross-</span>
+<span class="sd">        validation (i.e. no NAs in the sample data), set to</span>
+<span class="sd">        True (Default=False).</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    samp_list : dataframe</span>
+<span class="sd">        Contains information on corresponding sampleID and </span>
+<span class="sd">        population classifications.</span>
+<span class="sd">    dc : np.array</span>
+<span class="sd">        Array of derived allele counts.</span>
+<span class="sd">    unknowns : dataframe</span>
+<span class="sd">        If kfcv is set to False, returns a dataframe with </span>
+<span class="sd">        information about sampleID and indices for samples</span>
+<span class="sd">        of unknown origin.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Load genotypes</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;loading genotypes&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">infile</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.zarr&#39;</span><span class="p">):</span>
+        
+        <span class="n">callset</span> <span class="o">=</span> <span class="n">zarr</span><span class="o">.</span><span class="n">open_group</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="n">gt</span> <span class="o">=</span> <span class="n">callset</span><span class="p">[</span><span class="s1">&#39;calldata/GT&#39;</span><span class="p">]</span>
+        <span class="n">gen</span> <span class="o">=</span> <span class="n">allel</span><span class="o">.</span><span class="n">GenotypeArray</span><span class="p">(</span><span class="n">gt</span><span class="p">[:])</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">callset</span><span class="p">[</span><span class="s1">&#39;samples&#39;</span><span class="p">][:]</span>
+        
+    <span class="k">elif</span> <span class="n">infile</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.vcf&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">infile</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.vcf.gz&#39;</span><span class="p">):</span>
+        
+        <span class="n">vcf</span><span class="o">=</span><span class="n">allel</span><span class="o">.</span><span class="n">read_vcf</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span><span class="n">log</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="n">gen</span><span class="o">=</span><span class="n">allel</span><span class="o">.</span><span class="n">GenotypeArray</span><span class="p">(</span><span class="n">vcf</span><span class="p">[</span><span class="s1">&#39;calldata/GT&#39;</span><span class="p">])</span>
+        <span class="n">pos</span><span class="o">=</span><span class="n">vcf</span><span class="p">[</span><span class="s1">&#39;variants/POS&#39;</span><span class="p">]</span>
+        <span class="n">samples</span><span class="o">=</span><span class="n">vcf</span><span class="p">[</span><span class="s1">&#39;samples&#39;</span><span class="p">]</span>
+        
+    <span class="k">elif</span> <span class="n">infile</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.locator.hdf5&#39;</span><span class="p">):</span>
+        
+        <span class="n">h5</span><span class="o">=</span><span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="n">dc</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">h5</span><span class="p">[</span><span class="s1">&#39;derived_counts&#39;</span><span class="p">])</span>
+        <span class="n">samples</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">h5</span><span class="p">[</span><span class="s1">&#39;samples&#39;</span><span class="p">])</span>
+        <span class="n">h5</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="c1">#count derived alleles for biallelic sites</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">infile</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.locator.hdf5&#39;</span><span class="p">):</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;counting alleles&quot;</span><span class="p">)</span>
+        <span class="n">ac</span><span class="o">=</span><span class="n">gen</span><span class="o">.</span><span class="n">to_allele_counts</span><span class="p">()</span>
+        <span class="n">biallel</span><span class="o">=</span><span class="n">gen</span><span class="o">.</span><span class="n">count_alleles</span><span class="p">()</span><span class="o">.</span><span class="n">is_biallelic</span><span class="p">()</span>
+        <span class="n">dc</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ac</span><span class="p">[</span><span class="n">biallel</span><span class="p">,:,</span><span class="mi">1</span><span class="p">],</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int_&quot;</span><span class="p">)</span>
+        <span class="n">dc</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">dc</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">save_allele_counts</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">infile</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.locator.hdf5&#39;</span><span class="p">):</span>
+            
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;saving derived counts for reanalysis&quot;</span><span class="p">)</span>
+            <span class="n">outfile</span><span class="o">=</span><span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">infile</span><span class="o">+</span><span class="s2">&quot;.locator.hdf5&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+            <span class="n">outfile</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;derived_counts&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">dc</span><span class="p">)</span>
+            <span class="n">outfile</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;samples&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="n">h5py</span><span class="o">.</span><span class="n">string_dtype</span><span class="p">())</span> <span class="c1">#note this requires h5py v 2.10.0</span>
+            <span class="n">outfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="c1">#sys.exit()</span>
+        
+    <span class="c1"># Load data and organize for output</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;loading sample data&quot;</span><span class="p">)</span>
+    <span class="n">locs</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">sample_data</span><span class="p">,</span><span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">locs</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">locs</span><span class="p">[</span><span class="s1">&#39;sampleID&#39;</span><span class="p">]</span>
+    <span class="n">locs</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="c1">#sort loc table so samples are in same order as genotype samples</span>
+    <span class="n">locs</span><span class="o">=</span><span class="n">locs</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">samples</span><span class="p">))</span> 
+    
+    <span class="c1">#check that all sample names are present</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">locs</span><span class="p">[</span><span class="s1">&#39;sampleID&#39;</span><span class="p">][</span><span class="n">x</span><span class="p">]</span><span class="o">==</span><span class="n">samples</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">))]):</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;sample ordering failed! Check that sample IDs match the VCF.&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+        
+    <span class="k">if</span> <span class="n">kfcv</span><span class="o">==</span><span class="kc">True</span><span class="p">:</span>
+        
+        <span class="n">locs</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">locs</span><span class="p">[</span><span class="s2">&quot;pop&quot;</span><span class="p">])</span>
+        <span class="n">samp_list</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;samples&#39;</span><span class="p">:</span> <span class="n">samples</span><span class="p">,</span><span class="s1">&#39;pops&#39;</span><span class="p">:</span> <span class="n">locs</span><span class="p">})</span>
+        
+        <span class="c1"># Return the sample list to be funneled into kfcv</span>
+        <span class="k">return</span> <span class="n">samp_list</span><span class="p">,</span> <span class="n">dc</span>
+    
+    <span class="k">else</span><span class="p">:</span>
+        
+        <span class="n">locs</span><span class="p">[</span><span class="s1">&#39;order&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">locs</span><span class="p">))</span>
+        
+        <span class="c1"># Find unknown locations as NAs in the dataset</span>
+        <span class="n">unknowns</span> <span class="o">=</span> <span class="n">locs</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">isnull</span><span class="p">(</span><span class="n">locs</span><span class="p">[</span><span class="s1">&#39;pop&#39;</span><span class="p">]))]</span>
+        
+        <span class="c1"># Extract known location information for training</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">samples</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">notnull</span><span class="p">(</span><span class="n">locs</span><span class="p">[</span><span class="s1">&#39;pop&#39;</span><span class="p">]))]</span>
+        <span class="n">locs</span> <span class="o">=</span> <span class="n">locs</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">notnull</span><span class="p">(</span><span class="n">locs</span><span class="p">[</span><span class="s1">&#39;pop&#39;</span><span class="p">]))]</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">locs</span><span class="p">[</span><span class="s1">&#39;order&#39;</span><span class="p">])</span>
+        <span class="n">locs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">locs</span><span class="p">[</span><span class="s2">&quot;pop&quot;</span><span class="p">])</span>
+        <span class="n">samp_list</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;samples&#39;</span><span class="p">:</span> <span class="n">samples</span><span class="p">,</span> <span class="s1">&#39;pops&#39;</span><span class="p">:</span> <span class="n">locs</span><span class="p">,</span> <span class="s1">&#39;order&#39;</span><span class="p">:</span> <span class="n">order</span><span class="p">})</span>
+        
+        <span class="k">return</span> <span class="n">samp_list</span><span class="p">,</span> <span class="n">dc</span><span class="p">,</span> <span class="n">unknowns</span></div>
+        
+        
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">pop_finder</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../conduct.html">Code of Conduct</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Katie Birchard.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

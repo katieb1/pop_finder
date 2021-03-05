@@ -65,8 +65,39 @@ RandomSearch()).</p>
 <div class="section" id="pop-finder-pop-finder-module">
 <h2>pop_finder.pop_finder module<a class="headerlink" href="#pop-finder-pop-finder-module" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="pop-finder-read-module">
-<h2>pop_finder.read module<a class="headerlink" href="#pop-finder-read-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-pop_finder.read">
+<span id="pop-finder-read-module"></span><h2>pop_finder.read module<a class="headerlink" href="#module-pop_finder.read" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="pop_finder.read.read_data">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.read.</span></code><code class="sig-name descname"><span class="pre">read_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_allele_counts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kfcv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/read.html#read_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.read.read_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a .zarr, .vcf, or h5py file containing genetic data and
+creates subsettable data for a classifier neural network.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>infile</strong> (<em>string</em>) – Path to the .zarr, .vcf, or h5py file.</p></li>
+<li><p><strong>sample_data</strong> (<em>string</em>) – Path to .txt file containing sample information
+(columns are x, y, sampleID, and pop).</p></li>
+<li><p><strong>save_allele_counts</strong> (<em>boolean</em>) – Saves derived allele count information (Default=False).</p></li>
+<li><p><strong>kfcv</strong> (<em>boolean</em>) – If being used to test accuracy with k-fold cross-
+validation (i.e. no NAs in the sample data), set to
+True (Default=False).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>samp_list</strong> (<em>dataframe</em>) – Contains information on corresponding sampleID and
+population classifications.</p></li>
+<li><p><strong>dc</strong> (<em>np.array</em>) – Array of derived allele counts.</p></li>
+<li><p><strong>unknowns</strong> (<em>dataframe</em>) – If kfcv is set to False, returns a dataframe with
+information about sampleID and indices for samples
+of unknown origin.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 <div class="section" id="module-pop_finder">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pop_finder" title="Permalink to this headline">¶</a></h2>
