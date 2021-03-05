@@ -1,7 +1,7 @@
 build:
   image: latest
 python:
-  version: {{cookiecutter.python_version}}
+  version: '3.7.7'
   pip_install: true
   extra_requirements:
     - docs
