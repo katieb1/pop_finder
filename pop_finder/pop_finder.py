@@ -95,10 +95,12 @@ def get_model_name(k):
     return 'model_'+str(k)
 
 def run_neural_net(infile_kfcv, infile_all, sample_data,
-                   save_allele_counts, save_weights, patience,
-                   batch_size, max_epochs, seed, train_prop,
-                   gpu_number, tune_model, n_splits, n_reps,
-                   save_best_mod, save_dir, plot_history):
+                   save_allele_counts=False, save_weights=False,
+                   patience=10, batch_size=32, max_epochs=10,
+                   seed=None, train_prop=0.5, gpu_number='0',
+                   tune_model=False, n_splits=5, n_reps=5,
+                   save_best_mod=False, save_dir='out',
+                   plot_history=False):
     """
     Uses input arguments from the command line to tune, train,
     evaluate an ensemble of neural networks, then predicts the
@@ -131,7 +133,7 @@ def run_neural_net(infile_kfcv, infile_all, sample_data,
         Number of samples to use in training for each batch 
         (Default=32).
     max_epochs : int
-        Number of epochs to train over.
+        Number of epochs to train over (Default=10.
     seed : int
         Random seed (Default=None).
     train_prop : float
