@@ -9,7 +9,7 @@ import h5py
 import sys
 import argparse
 
-def read_data(infile, sample_data, save_allele_counts, kfcv=False):
+def read_data(infile, sample_data, save_allele_counts=False, kfcv=False):
     """
     Reads a .zarr, .vcf, or h5py file containing genetic data and 
     creates subsettable data for a classifier neural network.
@@ -40,6 +40,8 @@ def read_data(infile, sample_data, save_allele_counts, kfcv=False):
         information about sampleID and indices for samples
         of unknown origin.
     """
+    
+    # Check formats of datatypes
     
     # Load genotypes
     print("loading genotypes")

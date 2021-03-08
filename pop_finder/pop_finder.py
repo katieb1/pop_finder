@@ -17,42 +17,70 @@ import os
 from matplotlib import pyplot as plt
 
 # Parser arguments
-parser=argparse.ArgumentParser()
-parser.add_argument("--infile_kfcv")
-parser.add_argument("--infile_all")
-parser.add_argument("--sample_data")
-parser.add_argument("--save_allele_counts",default=False,action="store_true")
-parser.add_argument("--save_weights",default=False,action="store_true")
-parser.add_argument("--patience",default=10,type=int)
-parser.add_argument("--max_epochs",default=100)
-parser.add_argument("--batch_size",default=32)
-parser.add_argument("--seed",default=None,type=int)
-parser.add_argument("--train_prop",default=0.5,type=float)
-parser.add_argument("--gpu_number",default='0',type=str)
-parser.add_argument("--tune_model", default=False, action="store_true")
-parser.add_argument("--n_splits", default=5, type=int)
-parser.add_argument("--n_reps", default=5, type=int)
-parser.add_argument("--save_best_mod", default=False, action="store_true")
-parser.add_argument("--save_dir", default="out", type=str)
-args=parser.parse_args()
+if __name__ == "__main__":
+    parser=argparse.ArgumentParser()
+    parser.add_argument("--infile_kfcv")
+    parser.add_argument("--infile_all")
+    parser.add_argument("--sample_data")
+    parser.add_argument("--save_allele_counts",
+                        default=False,
+                        action="store_true")
+    parser.add_argument("--save_weights", 
+                        default=False, 
+                        action="store_true")
+    parser.add_argument("--patience", 
+                        default=10, 
+                        type=int)
+    parser.add_argument("--max_epochs", 
+                        default=100)
+    parser.add_argument("--batch_size", 
+                        default=32)
+    parser.add_argument("--seed", 
+                        default=None, 
+                        type=int)
+    parser.add_argument("--train_prop", 
+                        default=0.5, 
+                        type=float)
+    parser.add_argument("--gpu_number",  # need to do something with this
+                        default='0', 
+                        type=str)
+    parser.add_argument("--tune_model", 
+                        default=False, 
+                        action="store_true")
+    parser.add_argument("--n_splits", 
+                        default=5, 
+                        type=int)
+    parser.add_argument("--n_reps", 
+                        default=5, 
+                        type=int)
+    parser.add_argument("--save_best_mod", 
+                        default=False, 
+                        action="store_true")
+    parser.add_argument("--save_dir", 
+                        default="out", 
+                        type=str)
+    parser.add_argument("--plot_history",
+                        default=False,
+                        action="store_true")
+    args=parser.parse_args()
 
-# Similar syntax to R optparse()
-infile_kfcv=args.infile_kfcv
-infile_all=args.infile_all
-sample_data=args.sample_data
-save_allele_counts=args.save_allele_counts
-save_weights=args.save_weights
-patience=args.patience
-batch_size=args.batch_size
-max_epochs=args.max_epochs
-seed=args.seed
-train_prop = args.train_prop
-gpu_number=args.gpu_number
-tune_model=args.tune_model
-n_splits=args.n_splits
-n_reps=args.n_reps
-save_best_mod=args.save_best_mod
-save_dir=args.save_dir
+    # Similar syntax to R optparse()
+    infile_kfcv=args.infile_kfcv
+    infile_all=args.infile_all
+    sample_data=args.sample_data
+    save_allele_counts=args.save_allele_counts
+    save_weights=args.save_weights
+    patience=args.patience
+    batch_size=args.batch_size
+    max_epochs=args.max_epochs
+    seed=args.seed
+    train_prop = args.train_prop
+    gpu_number=args.gpu_number
+    tune_model=args.tune_model
+    n_splits=args.n_splits
+    n_reps=args.n_reps
+    save_best_mod=args.save_best_mod
+    save_dir=args.save_dir
 
 # Create function for labelling models in kfcv
 def get_model_name(k):
@@ -70,7 +98,7 @@ def run_neural_net(infile_kfcv, infile_all, sample_data,
                    save_allele_counts, save_weights, patience,
                    batch_size, max_epochs, seed, train_prop,
                    gpu_number, tune_model, n_splits, n_reps,
-                   save_best_mod, save_dir):
+                   save_best_mod, save_dir, plot_history):
     """
     Uses input arguments from the command line to tune, train,
     evaluate an ensemble of neural networks, then predicts the
@@ -125,6 +153,9 @@ def run_neural_net(infile_kfcv, infile_all, sample_data,
         (Default=False).
     save_dir : string
         Directory where results will be stored (Default='out').
+    plot_history : boolean
+        Whether or not to plot the training vs validation loss
+        over time (Default=False).
     
     
     Returns
@@ -212,8 +243,10 @@ def run_neural_net(infile_kfcv, infile_all, sample_data,
         
         # Or tune the model for best results
         else:
-            hypermodel = hp_tuning.classifierHyperModel(input_shape=traingen.shape[1],
-                                                        num_classes=len(popnames))
+            hypermodel = hp_tuning.classifierHyperModel(
+                input_shape=traingen.shape[1],
+                num_classes=len(popnames)
+            )
             
             # If tuned model already exists, rewrite
             if os.path.exists(save_dir+'/'+mod_name):
@@ -265,8 +298,8 @@ def run_neural_net(infile_kfcv, infile_all, sample_data,
         # Load best model
         model.load_weights(save_dir+'/'+mod_name+'.h5')
         
-        if not save_weights:
-            subprocess.check_output(['rm', save_dir+'/'+mod_name+'.h5'])
+        if save_weights == False:
+            os.remove(save_dir+'/'+mod_name+'.h5')
             
         if fold_var == 1:
             preds = pd.DataFrame(model.predict(valgen))
@@ -281,15 +314,19 @@ def run_neural_net(infile_kfcv, infile_all, sample_data,
             preds = preds.append(preds_new)
         
         #plot training history
-        plt.switch_backend('agg')
-        fig = plt.figure(figsize=(3,1.5),dpi=200)
-        plt.rcParams.update({'font.size': 7})
-        ax1=fig.add_axes([0,0,1,1])
-        ax1.plot(history.history['val_loss'][3:],"--",color="black",lw=0.5,label="Validation Loss")
-        ax1.plot(history.history['loss'][3:],"-",color="black",lw=0.5,label="Training Loss")
-        ax1.set_xlabel("Epoch")
-        ax1.legend()
-        fig.savefig(save_dir+'/'+mod_name+'history.pdf',bbox_inches='tight')
+        if plot_history == True:
+            plt.switch_backend('agg')
+            fig = plt.figure(figsize=(3,1.5), dpi=200)
+            plt.rcParams.update({'font.size': 7})
+            ax1=fig.add_axes([0,0,1,1])
+            ax1.plot(history.history['val_loss'][3:], "--", color="black",
+                     lw=0.5, label="Validation Loss")
+            ax1.plot(history.history['loss'][3:], "-", color="black",
+                     lw=0.5, label="Training Loss")
+            ax1.set_xlabel("Epoch")
+            ax1.legend()
+            fig.savefig(save_dir+'/'+mod_name+'_history.pdf',
+                        bbox_inches='tight')
 
         # Save results    
         results = model.evaluate(valgen, valpops)
@@ -310,7 +347,8 @@ def run_neural_net(infile_kfcv, infile_all, sample_data,
     preds.to_csv(save_dir+'/'+"preds.csv",index=False)
 
     # Extract the best model and calculate accuracy on test set
-    best_mod = mod_list[np.argmax(VALIDATION_ACCURACY) + 1]
+    # print(len(mod_list))
+    best_mod = mod_list[np.argmax(VALIDATION_ACCURACY)]
 
     # One hot encode test set
     y_train_enc = enc.fit_transform(y_train['pops'].values.reshape(-1,1)).toarray()
@@ -322,7 +360,7 @@ def run_neural_net(infile_kfcv, infile_all, sample_data,
     TEST_LOSS = []
 
     checkpointer=tf.callbacks.ModelCheckpoint(
-            filepath= save_dir+'/'+get_model_name(np.argmax(VALIDATION_ACCURACY) + 1)+'.h5',
+            filepath= save_dir+'/checkpoint.h5',
             verbose=1,
             save_best_only=True,
             save_weights_only=True,
@@ -359,7 +397,7 @@ def run_neural_net(infile_kfcv, infile_all, sample_data,
         TEST_ACCURACY.append(test_acc)
         TEST_95CI.append(test_95CI)
 
-        print(f"Accuracy of best model is {np.round(test_acc, 2)} +/- {np.round(test_95CI,2)}")
+        print(f"Accuracy of model {i} is {np.round(test_acc, 2)} +/- {np.round(test_95CI,2)}")
 
 
     # Print metrics to csv
@@ -434,6 +472,9 @@ def run_neural_net(infile_kfcv, infile_all, sample_data,
     freq_df.columns = ['Assigned Pop', 'Frequency', 'Sample ID']
 
     # Save predictions
-    freq_df.to_csv(save_dir+'/pop_assign_ensemble.csv', index=False)   
+    freq_df.to_csv(save_dir+'/pop_assign_ensemble.csv', index=False)  
+    
+    if save_weights == False:
+        os.remove(save_dir+'/checkpoint.h5')
 
     print("Process complete")
