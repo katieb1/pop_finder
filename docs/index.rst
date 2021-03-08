@@ -1,15 +1,6 @@
 Welcome to pop_finder's documentation!
 ===========================================================
 
-.. image:: https://img.shields.io/badge/tutorial-py--pkgs-blue
-        :target: https://ubc-mds.github.io/py-pkgs/
-
-.. image:: https://img.shields.io/badge/cookiecutter-ubc--mds-yellow
-        :target: https://github.com/UBC-MDS/cookiecutter-ubc-mds
-
-.. image:: https://img.shields.io/badge/badges-shields.io-brightgreen
-        :target: https://shields.io/
-
 Python package that uses neural networks for population assignment
 
 To get started, check out the sections below:
