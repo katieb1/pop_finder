@@ -488,7 +488,6 @@ def run_neural_net(
 
     # MAKE PREDICTIONS ON UNKNOWN DATA
     # One hot encode label data
-    enc = OneHotEncoder(handle_unknown="ignore")
     popnames = enc.categories_[0]
 
     # Organize unknown data

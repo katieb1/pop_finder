@@ -1,5 +1,5 @@
 *.DS_store
-./*/__pycache__/
+tests/__pycache__/*
 
 # Unit test / coverage reports
 .coverage
