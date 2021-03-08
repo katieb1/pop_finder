@@ -42,7 +42,7 @@
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">argparse</span>
 
-<div class="viewcode-block" id="read_data"><a class="viewcode-back" href="../../source/pop_finder.html#pop_finder.read.read_data">[docs]</a><span class="k">def</span> <span class="nf">read_data</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">sample_data</span><span class="p">,</span> <span class="n">save_allele_counts</span><span class="p">,</span> <span class="n">kfcv</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="read_data"><a class="viewcode-back" href="../../source/pop_finder.html#pop_finder.read.read_data">[docs]</a><span class="k">def</span> <span class="nf">read_data</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">sample_data</span><span class="p">,</span> <span class="n">save_allele_counts</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">kfcv</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Reads a .zarr, .vcf, or h5py file containing genetic data and </span>
 <span class="sd">    creates subsettable data for a classifier neural network.</span>
@@ -73,6 +73,8 @@
 <span class="sd">        information about sampleID and indices for samples</span>
 <span class="sd">        of unknown origin.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Check formats of datatypes</span>
     
     <span class="c1"># Load genotypes</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;loading genotypes&quot;</span><span class="p">)</span>
@@ -179,6 +181,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../conduct.html">Code of Conduct</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/modules.html">pop_finder</a></li>
 </ul>
 
 

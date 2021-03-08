@@ -14,6 +14,7 @@
     <script src="../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="pop_finder" href="modules.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -77,7 +78,7 @@ RandomSearch()).</p>
 
 <dl class="py function">
 <dt id="pop_finder.pop_finder.run_neural_net">
-<code class="sig-prename descclassname"><span class="pre">pop_finder.pop_finder.</span></code><code class="sig-name descname"><span class="pre">run_neural_net</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile_kfcv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infile_all</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_allele_counts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu_number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tune_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_splits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_reps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_best_mod</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/pop_finder.html#run_neural_net"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.pop_finder.run_neural_net" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">pop_finder.pop_finder.</span></code><code class="sig-name descname"><span class="pre">run_neural_net</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile_kfcv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infile_all</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_allele_counts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu_number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tune_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_splits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_reps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_best_mod</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/pop_finder.html#run_neural_net"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.pop_finder.run_neural_net" title="Permalink to this definition">¶</a></dt>
 <dd><p>Uses input arguments from the command line to tune, train,
 evaluate an ensemble of neural networks, then predicts the
 population of origin for samples of unknown origin.</p>
@@ -115,6 +116,8 @@ creating the number of models in the ensemble
 <li><p><strong>save_best_mod</strong> (<em>boolean</em>) – Whether to save the model with the highest accuracy
 (Default=False).</p></li>
 <li><p><strong>save_dir</strong> (<em>string</em>) – Directory where results will be stored (Default=’out’).</p></li>
+<li><p><strong>plot_history</strong> (<em>boolean</em>) – Whether or not to plot the training vs validation loss
+over time (Default=False).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -135,7 +138,7 @@ to each population.</p></li>
 <span id="pop-finder-read-module"></span><h2>pop_finder.read module<a class="headerlink" href="#module-pop_finder.read" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="pop_finder.read.read_data">
-<code class="sig-prename descclassname"><span class="pre">pop_finder.read.</span></code><code class="sig-name descname"><span class="pre">read_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_allele_counts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kfcv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/read.html#read_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.read.read_data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">pop_finder.read.</span></code><code class="sig-name descname"><span class="pre">read_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_allele_counts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kfcv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/read.html#read_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.read.read_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reads a .zarr, .vcf, or h5py file containing genetic data and
 creates subsettable data for a classifier neural network.</p>
 <dl class="field-list simple">
@@ -188,11 +191,15 @@ of unknown origin.</p></li>
 
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../conduct.html">Code of Conduct</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">pop_finder</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">pop_finder package</a></li>
+</ul>
+</li>
 </ul>
 
 
