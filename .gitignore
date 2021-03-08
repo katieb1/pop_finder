@@ -6,3 +6,5 @@
 
 # Sphinx documentation
 docs/_build/
+
+dist/
