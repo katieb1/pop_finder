@@ -32,7 +32,7 @@ jobs:
         name: codecov-umbrella
         fail_ci_if_error: true
     - name: checkout
-      uses: actions/checkout@main
+      uses: actions/checkout@master
     - name: Bump version and tagging and publish
       run: |
         git config --local user.email "action@github.com"
@@ -42,7 +42,7 @@ jobs:
         poetry version $(grep "version" */__init__.py | cut -d "'" -f 2 | cut -d '"' -f 2)
         git commit -m "Bump versions" -a
     - name: Push package version changes
-      uses: ad-m/github-push-action@main
+      uses: ad-m/github-push-action@master
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
     - name: Get release tag version from package version
