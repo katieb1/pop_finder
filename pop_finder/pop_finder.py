@@ -6,7 +6,6 @@ from kerastuner.tuners import RandomSearch
 import numpy as np
 import pandas as pd
 import subprocess
-import argparse
 from sklearn.model_selection import RepeatedStratifiedKFold, train_test_split
 from sklearn.preprocessing import OneHotEncoder
 from pop_finder import read
@@ -14,50 +13,6 @@ from pop_finder import hp_tuning
 import sys
 import os
 from matplotlib import pyplot as plt
-
-# Parser arguments
-# if __name__ == "__main__":
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument("--infile_kfcv")
-#     parser.add_argument("--infile_all")
-#     parser.add_argument("--sample_data")
-#     parser.add_argument("--save_allele_counts",
-#                         default=False,
-#                         action="store_true")
-#     parser.add_argument("--save_weights", default=False, action="store_true")
-#     parser.add_argument("--patience", default=10, type=int)
-#     parser.add_argument("--max_epochs", default=100)
-#     parser.add_argument("--batch_size", default=32)
-#     parser.add_argument("--seed", default=None, type=int)
-#     parser.add_argument("--train_prop", default=0.5, type=float)
-#     parser.add_argument(
-#         "--gpu_number", default="0", type=str  # need to do something with this
-#     )
-#     parser.add_argument("--tune_model", default=False, action="store_true")
-#     parser.add_argument("--n_splits", default=5, type=int)
-#     parser.add_argument("--n_reps", default=5, type=int)
-#     parser.add_argument("--save_best_mod", default=False, action="store_true")
-#     parser.add_argument("--save_dir", default="out", type=str)
-#     parser.add_argument("--plot_history", default=False, action="store_true")
-#     args = parser.parse_args()
-
-#     # Similar syntax to R optparse()
-#     infile_kfcv = args.infile_kfcv
-#     infile_all = args.infile_all
-#     sample_data = args.sample_data
-#     save_allele_counts = args.save_allele_counts
-#     save_weights = args.save_weights
-#     patience = args.patience
-#     batch_size = args.batch_size
-#     max_epochs = args.max_epochs
-#     seed = args.seed
-#     train_prop = args.train_prop
-#     gpu_number = args.gpu_number
-#     tune_model = args.tune_model
-#     n_splits = args.n_splits
-#     n_reps = args.n_reps
-#     save_best_mod = args.save_best_mod
-#     save_dir = args.save_dir
 
 
 # Create function for labelling models in kfcv
