@@ -23,7 +23,14 @@ sphinxcontrib-napoleon = "^0.7"
 pytest = "^6.2.2"
 pytest-cov = "^2.11.1"
 flake8 = "^3.8.4"
+python-semantic-release = "^7.15.0"
 
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
+
+[tool.semantic_release]
+version_variable = "pop_finder/__init__.py:__version__"
+version_source = "commit"
+upload_to_pypi = "false"
+patch_without_tag = "true"
