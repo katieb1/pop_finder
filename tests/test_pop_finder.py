@@ -15,7 +15,7 @@ sample_data2 = "tests/test_inputs/onlyAtl_truelocs_NAs.txt"
 
 
 def test_version():
-    assert __version__ == "0.2.1"
+    assert __version__ == "0.1.2"
 
 
 def test_read():
