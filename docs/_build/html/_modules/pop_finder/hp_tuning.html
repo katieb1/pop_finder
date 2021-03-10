@@ -35,13 +35,13 @@
 <span class="kn">import</span> <span class="nn">tensorflow.keras</span> <span class="k">as</span> <span class="nn">tfk</span>
 <span class="kn">from</span> <span class="nn">kerastuner</span> <span class="kn">import</span> <span class="n">HyperModel</span>
 
+
 <span class="c1"># Hyperparameter tuning</span>
 <div class="viewcode-block" id="classifierHyperModel"><a class="viewcode-back" href="../../source/pop_finder.html#pop_finder.hp_tuning.classifierHyperModel">[docs]</a><span class="k">class</span> <span class="nc">classifierHyperModel</span><span class="p">(</span><span class="n">HyperModel</span><span class="p">):</span>
-    
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initializes object of class classifierHyperModel.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        input_shape : int</span>
@@ -51,17 +51,17 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span> <span class="o">=</span> <span class="n">input_shape</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span> <span class="o">=</span> <span class="n">num_classes</span>
-        
+
 <div class="viewcode-block" id="classifierHyperModel.build"><a class="viewcode-back" href="../../source/pop_finder.html#pop_finder.hp_tuning.classifierHyperModel.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hp</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Builds a model with the specified hyperparameters.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        hp : keras.tuners class</span>
-<span class="sd">            Class that defines how to sample hyperparameters (e.g. </span>
+<span class="sd">            Class that defines how to sample hyperparameters (e.g.</span>
 <span class="sd">            RandomSearch()).</span>
-<span class="sd">        </span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        model : Keras sequential model</span>
@@ -71,129 +71,135 @@
         <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
             <span class="n">tfk</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span>
                 <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span><span class="p">,)</span>
-            <span class="p">))</span>
-        <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-            <span class="n">tfk</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span>
-            <span class="n">units</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span>
-                <span class="s1">&#39;units_1&#39;</span><span class="p">,</span>
-                <span class="c1">#placeholder values for now</span>
-                <span class="n">min_value</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                <span class="n">max_value</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
-                <span class="n">step</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                <span class="n">default</span><span class="o">=</span><span class="mi">128</span>
-            <span class="p">),</span>
-            <span class="n">activation</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Choice</span><span class="p">(</span>
-                <span class="s1">&#39;dense_activation_1&#39;</span><span class="p">,</span>
-                <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;elu&#39;</span><span class="p">,</span><span class="s1">&#39;relu&#39;</span><span class="p">,</span><span class="s1">&#39;tanh&#39;</span><span class="p">,</span><span class="s1">&#39;sigmoid&#39;</span><span class="p">],</span>
-                <span class="n">default</span><span class="o">=</span><span class="s1">&#39;elu&#39;</span>
-            <span class="p">))</span>
+            <span class="p">)</span>
         <span class="p">)</span>
         <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
             <span class="n">tfk</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span>
-            <span class="n">units</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span>
-                <span class="s1">&#39;units_2&#39;</span><span class="p">,</span>
-                <span class="c1">#placeholder values for now</span>
-                <span class="n">min_value</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                <span class="n">max_value</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
-                <span class="n">step</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                <span class="n">default</span><span class="o">=</span><span class="mi">128</span>
-            <span class="p">),</span>
-            <span class="n">activation</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Choice</span><span class="p">(</span>
-                <span class="s1">&#39;dense_activation_2&#39;</span><span class="p">,</span>
-                <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;elu&#39;</span><span class="p">,</span><span class="s1">&#39;relu&#39;</span><span class="p">,</span><span class="s1">&#39;tanh&#39;</span><span class="p">,</span><span class="s1">&#39;sigmoid&#39;</span><span class="p">],</span>
-                <span class="n">default</span><span class="o">=</span><span class="s1">&#39;elu&#39;</span>
-            <span class="p">))</span>
+                <span class="n">units</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span>
+                    <span class="s2">&quot;units_1&quot;</span><span class="p">,</span>
+                    <span class="c1"># placeholder values for now</span>
+                    <span class="n">min_value</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                    <span class="n">max_value</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+                    <span class="n">step</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                    <span class="n">default</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">activation</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Choice</span><span class="p">(</span>
+                    <span class="s2">&quot;dense_activation_1&quot;</span><span class="p">,</span>
+                    <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;elu&quot;</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="s2">&quot;tanh&quot;</span><span class="p">,</span> <span class="s2">&quot;sigmoid&quot;</span><span class="p">],</span>
+                    <span class="n">default</span><span class="o">=</span><span class="s2">&quot;elu&quot;</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
         <span class="p">)</span>
         <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
             <span class="n">tfk</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span>
-            <span class="n">units</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span>
-                <span class="s1">&#39;units_3&#39;</span><span class="p">,</span>
-                <span class="c1">#placeholder values for now</span>
-                <span class="n">min_value</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                <span class="n">max_value</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
-                <span class="n">step</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                <span class="n">default</span><span class="o">=</span><span class="mi">128</span>
-            <span class="p">),</span>
-            <span class="n">activation</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Choice</span><span class="p">(</span>
-                <span class="s1">&#39;dense_activation_3&#39;</span><span class="p">,</span>
-                <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;elu&#39;</span><span class="p">,</span><span class="s1">&#39;relu&#39;</span><span class="p">,</span><span class="s1">&#39;tanh&#39;</span><span class="p">,</span><span class="s1">&#39;sigmoid&#39;</span><span class="p">],</span>
-                <span class="n">default</span><span class="o">=</span><span class="s1">&#39;elu&#39;</span>
-            <span class="p">))</span>
-        <span class="p">)</span>
-        <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-            <span class="n">tfk</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">rate</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Float</span><span class="p">(</span>
-                <span class="s1">&#39;dropout&#39;</span><span class="p">,</span>
-                <span class="n">min_value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-                <span class="n">max_value</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-                <span class="n">default</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
-                <span class="n">step</span><span class="o">=</span><span class="mf">0.05</span>
-            <span class="p">))</span>
+                <span class="n">units</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span>
+                    <span class="s2">&quot;units_2&quot;</span><span class="p">,</span>
+                    <span class="c1"># placeholder values for now</span>
+                    <span class="n">min_value</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                    <span class="n">max_value</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+                    <span class="n">step</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                    <span class="n">default</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">activation</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Choice</span><span class="p">(</span>
+                    <span class="s2">&quot;dense_activation_2&quot;</span><span class="p">,</span>
+                    <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;elu&quot;</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="s2">&quot;tanh&quot;</span><span class="p">,</span> <span class="s2">&quot;sigmoid&quot;</span><span class="p">],</span>
+                    <span class="n">default</span><span class="o">=</span><span class="s2">&quot;elu&quot;</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
         <span class="p">)</span>
         <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
             <span class="n">tfk</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span>
-            <span class="n">units</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span>
-                <span class="s1">&#39;units_4&#39;</span><span class="p">,</span>
-                <span class="c1">#placeholder values for now</span>
-                <span class="n">min_value</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                <span class="n">max_value</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
-                <span class="n">step</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                <span class="n">default</span><span class="o">=</span><span class="mi">128</span>
-            <span class="p">),</span>
-            <span class="n">activation</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Choice</span><span class="p">(</span>
-                <span class="s1">&#39;dense_activation_4&#39;</span><span class="p">,</span>
-                <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;elu&#39;</span><span class="p">,</span><span class="s1">&#39;relu&#39;</span><span class="p">,</span><span class="s1">&#39;tanh&#39;</span><span class="p">,</span><span class="s1">&#39;sigmoid&#39;</span><span class="p">],</span>
-                <span class="n">default</span><span class="o">=</span><span class="s1">&#39;elu&#39;</span>
-            <span class="p">))</span>
+                <span class="n">units</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span>
+                    <span class="s2">&quot;units_3&quot;</span><span class="p">,</span>
+                    <span class="c1"># placeholder values for now</span>
+                    <span class="n">min_value</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                    <span class="n">max_value</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+                    <span class="n">step</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                    <span class="n">default</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">activation</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Choice</span><span class="p">(</span>
+                    <span class="s2">&quot;dense_activation_3&quot;</span><span class="p">,</span>
+                    <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;elu&quot;</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="s2">&quot;tanh&quot;</span><span class="p">,</span> <span class="s2">&quot;sigmoid&quot;</span><span class="p">],</span>
+                    <span class="n">default</span><span class="o">=</span><span class="s2">&quot;elu&quot;</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+            <span class="n">tfk</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span>
+                <span class="n">rate</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Float</span><span class="p">(</span>
+                    <span class="s2">&quot;dropout&quot;</span><span class="p">,</span>
+                    <span class="n">min_value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                    <span class="n">max_value</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                    <span class="n">default</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+                    <span class="n">step</span><span class="o">=</span><span class="mf">0.05</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
         <span class="p">)</span>
         <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
             <span class="n">tfk</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span>
-            <span class="n">units</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span>
-                <span class="s1">&#39;units_5&#39;</span><span class="p">,</span>
-                <span class="c1">#placeholder values for now</span>
-                <span class="n">min_value</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                <span class="n">max_value</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
-                <span class="n">step</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                <span class="n">default</span><span class="o">=</span><span class="mi">128</span>
-            <span class="p">),</span>
-            <span class="n">activation</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Choice</span><span class="p">(</span>
-                <span class="s1">&#39;dense_activation_5&#39;</span><span class="p">,</span>
-                <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;elu&#39;</span><span class="p">,</span><span class="s1">&#39;relu&#39;</span><span class="p">,</span><span class="s1">&#39;tanh&#39;</span><span class="p">,</span><span class="s1">&#39;sigmoid&#39;</span><span class="p">],</span>
-                <span class="n">default</span><span class="o">=</span><span class="s1">&#39;elu&#39;</span>
-            <span class="p">))</span>
+                <span class="n">units</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span>
+                    <span class="s2">&quot;units_4&quot;</span><span class="p">,</span>
+                    <span class="c1"># placeholder values for now</span>
+                    <span class="n">min_value</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                    <span class="n">max_value</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+                    <span class="n">step</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                    <span class="n">default</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">activation</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Choice</span><span class="p">(</span>
+                    <span class="s2">&quot;dense_activation_4&quot;</span><span class="p">,</span>
+                    <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;elu&quot;</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="s2">&quot;tanh&quot;</span><span class="p">,</span> <span class="s2">&quot;sigmoid&quot;</span><span class="p">],</span>
+                    <span class="n">default</span><span class="o">=</span><span class="s2">&quot;elu&quot;</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
         <span class="p">)</span>
         <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
             <span class="n">tfk</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span>
-            <span class="n">units</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span>
-                <span class="s1">&#39;units_6&#39;</span><span class="p">,</span>
-                <span class="c1">#placeholder values for now</span>
-                <span class="n">min_value</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                <span class="n">max_value</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
-                <span class="n">step</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                <span class="n">default</span><span class="o">=</span><span class="mi">128</span>
-            <span class="p">),</span>
-            <span class="n">activation</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Choice</span><span class="p">(</span>
-                <span class="s1">&#39;dense_activation_6&#39;</span><span class="p">,</span>
-                <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;elu&#39;</span><span class="p">,</span><span class="s1">&#39;relu&#39;</span><span class="p">,</span><span class="s1">&#39;tanh&#39;</span><span class="p">,</span><span class="s1">&#39;sigmoid&#39;</span><span class="p">],</span>
-                <span class="n">default</span><span class="o">=</span><span class="s1">&#39;elu&#39;</span>
-            <span class="p">))</span>
+                <span class="n">units</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span>
+                    <span class="s2">&quot;units_5&quot;</span><span class="p">,</span>
+                    <span class="c1"># placeholder values for now</span>
+                    <span class="n">min_value</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                    <span class="n">max_value</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+                    <span class="n">step</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                    <span class="n">default</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">activation</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Choice</span><span class="p">(</span>
+                    <span class="s2">&quot;dense_activation_5&quot;</span><span class="p">,</span>
+                    <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;elu&quot;</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="s2">&quot;tanh&quot;</span><span class="p">,</span> <span class="s2">&quot;sigmoid&quot;</span><span class="p">],</span>
+                    <span class="n">default</span><span class="o">=</span><span class="s2">&quot;elu&quot;</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
         <span class="p">)</span>
         <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
             <span class="n">tfk</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">,</span><span class="n">activation</span><span class="o">=</span><span class="s2">&quot;softmax&quot;</span>
-            <span class="p">))</span>
-        
+                <span class="n">units</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Int</span><span class="p">(</span>
+                    <span class="s2">&quot;units_6&quot;</span><span class="p">,</span>
+                    <span class="c1"># placeholder values for now</span>
+                    <span class="n">min_value</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                    <span class="n">max_value</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+                    <span class="n">step</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                    <span class="n">default</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">activation</span><span class="o">=</span><span class="n">hp</span><span class="o">.</span><span class="n">Choice</span><span class="p">(</span>
+                    <span class="s2">&quot;dense_activation_6&quot;</span><span class="p">,</span>
+                    <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;elu&quot;</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="s2">&quot;tanh&quot;</span><span class="p">,</span> <span class="s2">&quot;sigmoid&quot;</span><span class="p">],</span>
+                    <span class="n">default</span><span class="o">=</span><span class="s2">&quot;elu&quot;</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tfk</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;softmax&quot;</span><span class="p">))</span>
+
         <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
             <span class="n">optimizer</span><span class="o">=</span><span class="n">tfk</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span>
                 <span class="n">hp</span><span class="o">.</span><span class="n">Float</span><span class="p">(</span>
-                    <span class="s1">&#39;learning_rate&#39;</span><span class="p">,</span>
+                    <span class="s2">&quot;learning_rate&quot;</span><span class="p">,</span>
                     <span class="n">min_value</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
                     <span class="n">max_value</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span>
-                    <span class="n">sampling</span><span class="o">=</span><span class="s1">&#39;LOG&#39;</span><span class="p">,</span>
-                    <span class="n">default</span><span class="o">=</span><span class="mf">5e-4</span>
+                    <span class="n">sampling</span><span class="o">=</span><span class="s2">&quot;LOG&quot;</span><span class="p">,</span>
+                    <span class="n">default</span><span class="o">=</span><span class="mf">5e-4</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">),</span>
             <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;categorical_crossentropy&quot;</span><span class="p">,</span>
-            <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">]</span>
+            <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;accuracy&quot;</span><span class="p">],</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">model</span></div></div>
 </pre></div>
@@ -220,6 +226,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../conduct.html">Code of Conduct</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/modules.html">pop_finder</a></li>
 </ul>
 
 
@@ -241,7 +248,7 @@
       &copy;2021, Katie Birchard.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

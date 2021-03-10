@@ -36,6 +36,64 @@
 <div class="section" id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </div>
+<div class="section" id="module-pop_finder.assign_plot">
+<span id="pop-finder-assign-plot-module"></span><h2>pop_finder.assign_plot module<a class="headerlink" href="#module-pop_finder.assign_plot" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="pop_finder.assign_plot.assign_plot">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.assign_plot.</span></code><code class="sig-name descname"><span class="pre">assign_plot</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_scheme</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Spectral'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/assign_plot.html#assign_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.assign_plot.assign_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots the frequency of assignment of individuals
+from unknown populations to different populations
+included in the training data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>save_dir</strong> (<em>string</em>) – Path to output file where “preds.csv” lives and
+also where the resulting plot will be saved.</p></li>
+<li><p><strong>col_scheme</strong> (<em>string</em>) – Colour scheme of confusion matrix. See
+matplotlib.org/stable/tutorials/colors/colormaps.html
+for available colour palettes (Default=”Spectral”).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>assign_plot.png</strong> – PNG formatted assignment plot located in the
+save_dir folder.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>PNG file</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pop_finder.conf_matrix">
+<span id="pop-finder-conf-matrix-module"></span><h2>pop_finder.conf_matrix module<a class="headerlink" href="#module-pop_finder.conf_matrix" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="pop_finder.conf_matrix.conf_matrix">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.conf_matrix.</span></code><code class="sig-name descname"><span class="pre">conf_matrix</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_scheme</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Purples'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/conf_matrix.html#conf_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.conf_matrix.conf_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes results from running the neural network with
+K-fold cross-validation and creates a confusion
+matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>save_dir</strong> (<em>string</em>) – Path to output file where “preds.csv” lives and
+also where the resulting plot will be saved.</p></li>
+<li><p><strong>col_scheme</strong> (<em>string</em>) – Colour scheme of confusion matrix. See
+matplotlib.org/stable/tutorials/colors/colormaps.html
+for available colour palettes (Default=”Purples”).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>conf_mat.png</strong> – PNG formatted confusion matrix plot located in the
+save_dir folder.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>PNG file</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
 <div class="section" id="module-pop_finder.hp_tuning">
 <span id="pop-finder-hp-tuning-module"></span><h2>pop_finder.hp_tuning module<a class="headerlink" href="#module-pop_finder.hp_tuning" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
@@ -78,7 +136,7 @@ RandomSearch()).</p>
 
 <dl class="py function">
 <dt id="pop_finder.pop_finder.run_neural_net">
-<code class="sig-prename descclassname"><span class="pre">pop_finder.pop_finder.</span></code><code class="sig-name descname"><span class="pre">run_neural_net</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile_kfcv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infile_all</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_allele_counts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu_number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tune_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_splits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_reps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_best_mod</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/pop_finder.html#run_neural_net"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.pop_finder.run_neural_net" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">pop_finder.pop_finder.</span></code><code class="sig-name descname"><span class="pre">run_neural_net</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile_kfcv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infile_all</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_allele_counts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_prop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tune_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_reps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_best_mod</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'out'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_history</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/pop_finder.html#run_neural_net"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.pop_finder.run_neural_net" title="Permalink to this definition">¶</a></dt>
 <dd><p>Uses input arguments from the command line to tune, train,
 evaluate an ensemble of neural networks, then predicts the
 population of origin for samples of unknown origin.</p>
@@ -102,7 +160,7 @@ later (Default=False).</p></li>
 (Default=10).</p></li>
 <li><p><strong>batch_size</strong> (<em>int</em>) – Number of samples to use in training for each batch
 (Default=32).</p></li>
-<li><p><strong>max_epochs</strong> (<em>int</em>) – Number of epochs to train over.</p></li>
+<li><p><strong>max_epochs</strong> (<em>int</em>) – Number of epochs to train over (Default=10.</p></li>
 <li><p><strong>seed</strong> (<em>int</em>) – Random seed (Default=None).</p></li>
 <li><p><strong>train_prop</strong> (<em>float</em>) – Proportion of samples used in training (Default=0.5).</p></li>
 <li><p><strong>gpu_number</strong> (<em>string</em>) – Whether to use GPUs (Default=’0’).</p></li>
@@ -168,6 +226,36 @@ of unknown origin.</p></li>
 </dd></dl>
 
 </div>
+<div class="section" id="module-pop_finder.structure_plot">
+<span id="pop-finder-structure-plot-module"></span><h2>pop_finder.structure_plot module<a class="headerlink" href="#module-pop_finder.structure_plot" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="pop_finder.structure_plot.structure_plot">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.structure_plot.</span></code><code class="sig-name descname"><span class="pre">structure_plot</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_scheme</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Spectral'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/structure_plot.html#structure_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.structure_plot.structure_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes results from running the neural network with
+K-fold cross-validation and creates a structure plot
+showing proportion of assignment of individuals from
+known populations to predicted populations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>save_dir</strong> (<em>string</em>) – Path to output file where “preds.csv” lives and
+also where the resulting plot will be saved.</p></li>
+<li><p><strong>col_scheme</strong> (<em>string</em>) – Colour scheme of confusion matrix. See
+matplotlib.org/stable/tutorials/colors/colormaps.html
+for available colour palettes (Default=”Spectral”).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>structure_plot.png</strong> – PNG formatted structure plot located in the
+save_dir folder.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>PNG file</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
 <div class="section" id="module-pop_finder">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pop_finder" title="Permalink to this headline">¶</a></h2>
 </div>
@@ -221,7 +309,7 @@ of unknown origin.</p></li>
       &copy;2021, Katie Birchard.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

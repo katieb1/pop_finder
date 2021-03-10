@@ -31,7 +31,7 @@
           <div class="body" role="main">
             
   <h1>Source code for pop_finder.pop_finder</h1><div class="highlight"><pre>
-<span></span><span class="c1">## Neural network for pop assignment</span>
+<span></span><span class="c1"># Neural network for pop assignment</span>
 
 <span class="c1"># Load packages</span>
 <span class="kn">import</span> <span class="nn">tensorflow.keras</span> <span class="k">as</span> <span class="nn">tf</span>
@@ -39,8 +39,6 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">subprocess</span>
-<span class="kn">import</span> <span class="nn">h5py</span>
-<span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">RepeatedStratifiedKFold</span><span class="p">,</span> <span class="n">train_test_split</span>
 <span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">OneHotEncoder</span>
 <span class="kn">from</span> <span class="nn">pop_finder</span> <span class="kn">import</span> <span class="n">read</span>
@@ -49,94 +47,44 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
 
-<span class="c1"># Parser arguments</span>
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="n">parser</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--infile_kfcv&quot;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--infile_all&quot;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--sample_data&quot;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--save_allele_counts&quot;</span><span class="p">,</span>
-                        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--save_weights&quot;</span><span class="p">,</span> 
-                        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
-                        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--patience&quot;</span><span class="p">,</span> 
-                        <span class="n">default</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> 
-                        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--max_epochs&quot;</span><span class="p">,</span> 
-                        <span class="n">default</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--batch_size&quot;</span><span class="p">,</span> 
-                        <span class="n">default</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--seed&quot;</span><span class="p">,</span> 
-                        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
-                        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--train_prop&quot;</span><span class="p">,</span> 
-                        <span class="n">default</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> 
-                        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--gpu_number&quot;</span><span class="p">,</span>  <span class="c1"># need to do something with this</span>
-                        <span class="n">default</span><span class="o">=</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> 
-                        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--tune_model&quot;</span><span class="p">,</span> 
-                        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
-                        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--n_splits&quot;</span><span class="p">,</span> 
-                        <span class="n">default</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> 
-                        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--n_reps&quot;</span><span class="p">,</span> 
-                        <span class="n">default</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> 
-                        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--save_best_mod&quot;</span><span class="p">,</span> 
-                        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
-                        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--save_dir&quot;</span><span class="p">,</span> 
-                        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;out&quot;</span><span class="p">,</span> 
-                        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--plot_history&quot;</span><span class="p">,</span>
-                        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">)</span>
-    <span class="n">args</span><span class="o">=</span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
-
-    <span class="c1"># Similar syntax to R optparse()</span>
-    <span class="n">infile_kfcv</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">infile_kfcv</span>
-    <span class="n">infile_all</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">infile_all</span>
-    <span class="n">sample_data</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">sample_data</span>
-    <span class="n">save_allele_counts</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">save_allele_counts</span>
-    <span class="n">save_weights</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">save_weights</span>
-    <span class="n">patience</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">patience</span>
-    <span class="n">batch_size</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">batch_size</span>
-    <span class="n">max_epochs</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">max_epochs</span>
-    <span class="n">seed</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">seed</span>
-    <span class="n">train_prop</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">train_prop</span>
-    <span class="n">gpu_number</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">gpu_number</span>
-    <span class="n">tune_model</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">tune_model</span>
-    <span class="n">n_splits</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_splits</span>
-    <span class="n">n_reps</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n_reps</span>
-    <span class="n">save_best_mod</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">save_best_mod</span>
-    <span class="n">save_dir</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">save_dir</span>
 
 <span class="c1"># Create function for labelling models in kfcv</span>
 <div class="viewcode-block" id="get_model_name"><a class="viewcode-back" href="../../source/pop_finder.html#pop_finder.pop_finder.get_model_name">[docs]</a><span class="k">def</span> <span class="nf">get_model_name</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns a string model name.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    k : int</span>
 <span class="sd">        Model number.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="s1">&#39;model_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="s2">&quot;model_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="run_neural_net"><a class="viewcode-back" href="../../source/pop_finder.html#pop_finder.pop_finder.run_neural_net">[docs]</a><span class="k">def</span> <span class="nf">run_neural_net</span><span class="p">(</span><span class="n">infile_kfcv</span><span class="p">,</span> <span class="n">infile_all</span><span class="p">,</span> <span class="n">sample_data</span><span class="p">,</span>
-                   <span class="n">save_allele_counts</span><span class="p">,</span> <span class="n">save_weights</span><span class="p">,</span> <span class="n">patience</span><span class="p">,</span>
-                   <span class="n">batch_size</span><span class="p">,</span> <span class="n">max_epochs</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">train_prop</span><span class="p">,</span>
-                   <span class="n">gpu_number</span><span class="p">,</span> <span class="n">tune_model</span><span class="p">,</span> <span class="n">n_splits</span><span class="p">,</span> <span class="n">n_reps</span><span class="p">,</span>
-                   <span class="n">save_best_mod</span><span class="p">,</span> <span class="n">save_dir</span><span class="p">,</span> <span class="n">plot_history</span><span class="p">):</span>
+
+<div class="viewcode-block" id="run_neural_net"><a class="viewcode-back" href="../../source/pop_finder.html#pop_finder.pop_finder.run_neural_net">[docs]</a><span class="k">def</span> <span class="nf">run_neural_net</span><span class="p">(</span>
+    <span class="n">infile_kfcv</span><span class="p">,</span>
+    <span class="n">infile_all</span><span class="p">,</span>
+    <span class="n">sample_data</span><span class="p">,</span>
+    <span class="n">save_allele_counts</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">save_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">patience</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+    <span class="n">max_epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">train_prop</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">gpu_number</span><span class="o">=</span><span class="s2">&quot;0&quot;</span><span class="p">,</span>
+    <span class="n">tune_model</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">n_reps</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">save_best_mod</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">save_dir</span><span class="o">=</span><span class="s2">&quot;out&quot;</span><span class="p">,</span>
+    <span class="n">plot_history</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Uses input arguments from the command line to tune, train,</span>
 <span class="sd">    evaluate an ensemble of neural networks, then predicts the</span>
 <span class="sd">    population of origin for samples of unknown origin.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    infile_kfcv : string</span>
@@ -155,16 +103,16 @@
 <span class="sd">        Whether or not to store derived allele counts in hdf5</span>
 <span class="sd">        file (Default=False).</span>
 <span class="sd">    save_weights : boolean</span>
-<span class="sd">        Save model weights so you don&#39;t have to retrain again </span>
+<span class="sd">        Save model weights so you don&#39;t have to retrain again</span>
 <span class="sd">        later (Default=False).</span>
 <span class="sd">    patience : int</span>
-<span class="sd">        Hyperparameter for leniency on early-stopping </span>
+<span class="sd">        Hyperparameter for leniency on early-stopping</span>
 <span class="sd">        (Default=10).</span>
 <span class="sd">    batch_size : int</span>
-<span class="sd">        Number of samples to use in training for each batch </span>
+<span class="sd">        Number of samples to use in training for each batch</span>
 <span class="sd">        (Default=32).</span>
 <span class="sd">    max_epochs : int</span>
-<span class="sd">        Number of epochs to train over.</span>
+<span class="sd">        Number of epochs to train over (Default=10.</span>
 <span class="sd">    seed : int</span>
 <span class="sd">        Random seed (Default=None).</span>
 <span class="sd">    train_prop : float</span>
@@ -172,25 +120,25 @@
 <span class="sd">    gpu_number : string</span>
 <span class="sd">        Whether to use GPUs (Default=&#39;0&#39;).</span>
 <span class="sd">    tune_model : boolean</span>
-<span class="sd">        Whether to tune model or just use default </span>
+<span class="sd">        Whether to tune model or just use default</span>
 <span class="sd">        (Default=False).</span>
 <span class="sd">    n_splits : int</span>
-<span class="sd">        Number of folds in k-fold cross-validation </span>
+<span class="sd">        Number of folds in k-fold cross-validation</span>
 <span class="sd">        (Default=5).</span>
 <span class="sd">    n_reps : int</span>
 <span class="sd">        Number of times to repeat k-fold cross-validation,</span>
-<span class="sd">        creating the number of models in the ensemble </span>
+<span class="sd">        creating the number of models in the ensemble</span>
 <span class="sd">        (Default=5).</span>
 <span class="sd">    save_best_mod : boolean</span>
-<span class="sd">        Whether to save the model with the highest accuracy </span>
+<span class="sd">        Whether to save the model with the highest accuracy</span>
 <span class="sd">        (Default=False).</span>
 <span class="sd">    save_dir : string</span>
 <span class="sd">        Directory where results will be stored (Default=&#39;out&#39;).</span>
 <span class="sd">    plot_history : boolean</span>
 <span class="sd">        Whether or not to plot the training vs validation loss</span>
 <span class="sd">        over time (Default=False).</span>
-<span class="sd">    </span>
-<span class="sd">    </span>
+
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    A dataframe in csv format called &#39;metrics.csv&#39; that gives</span>
@@ -207,26 +155,32 @@
 
     <span class="c1"># Read data</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Reading data...&quot;</span><span class="p">)</span>
-    <span class="n">samp_list</span><span class="p">,</span> <span class="n">dc</span> <span class="o">=</span> <span class="n">read</span><span class="o">.</span><span class="n">read_data</span><span class="p">(</span><span class="n">infile</span><span class="o">=</span><span class="n">infile_kfcv</span><span class="p">,</span>
-                                <span class="n">sample_data</span><span class="o">=</span><span class="n">sample_data</span><span class="p">,</span>
-                                <span class="n">save_allele_counts</span><span class="o">=</span><span class="n">save_allele_counts</span><span class="p">,</span>
-                                <span class="n">kfcv</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">samp_list</span><span class="p">,</span> <span class="n">dc</span> <span class="o">=</span> <span class="n">read</span><span class="o">.</span><span class="n">read_data</span><span class="p">(</span>
+        <span class="n">infile</span><span class="o">=</span><span class="n">infile_kfcv</span><span class="p">,</span>
+        <span class="n">sample_data</span><span class="o">=</span><span class="n">sample_data</span><span class="p">,</span>
+        <span class="n">save_allele_counts</span><span class="o">=</span><span class="n">save_allele_counts</span><span class="p">,</span>
+        <span class="n">kfcv</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
 
     <span class="c1"># Read data with unknowns so errors caught before training/tuning</span>
-    <span class="n">samp_list2</span><span class="p">,</span> <span class="n">dc2</span><span class="p">,</span> <span class="n">unknowns</span> <span class="o">=</span> <span class="n">read</span><span class="o">.</span><span class="n">read_data</span><span class="p">(</span><span class="n">infile</span><span class="o">=</span><span class="n">infile_all</span><span class="p">,</span>
-                                            <span class="n">sample_data</span><span class="o">=</span><span class="n">sample_data</span><span class="p">,</span>
-                                            <span class="n">save_allele_counts</span><span class="o">=</span><span class="n">save_allele_counts</span><span class="p">,</span>
-                                            <span class="n">kfcv</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">samp_list2</span><span class="p">,</span> <span class="n">dc2</span><span class="p">,</span> <span class="n">unknowns</span> <span class="o">=</span> <span class="n">read</span><span class="o">.</span><span class="n">read_data</span><span class="p">(</span>
+        <span class="n">infile</span><span class="o">=</span><span class="n">infile_all</span><span class="p">,</span>
+        <span class="n">sample_data</span><span class="o">=</span><span class="n">sample_data</span><span class="p">,</span>
+        <span class="n">save_allele_counts</span><span class="o">=</span><span class="n">save_allele_counts</span><span class="p">,</span>
+        <span class="n">kfcv</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
 
     <span class="c1"># Split data into training and hold-out test set</span>
-    <span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">dc</span><span class="p">,</span>
-                                                        <span class="n">samp_list</span><span class="p">,</span>
-                                                        <span class="n">stratify</span><span class="o">=</span><span class="n">samp_list</span><span class="p">[</span><span class="s1">&#39;pops&#39;</span><span class="p">],</span>
-                                                        <span class="n">train_size</span><span class="o">=</span><span class="n">train_prop</span><span class="p">)</span>
+    <span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
+        <span class="n">dc</span><span class="p">,</span> <span class="n">samp_list</span><span class="p">,</span> <span class="n">stratify</span><span class="o">=</span><span class="n">samp_list</span><span class="p">[</span><span class="s2">&quot;pops&quot;</span><span class="p">],</span> <span class="n">train_size</span><span class="o">=</span><span class="n">train_prop</span>
+    <span class="p">)</span>
 
     <span class="c1"># Make sure all classes are represented in test set</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">samp_list</span><span class="p">[</span><span class="s1">&#39;pops&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_test</span><span class="p">[</span><span class="s1">&#39;pops&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())):</span>
-        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s2">&quot;Not all classes represented in test data; choose smaller train_prop value&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">samp_list</span><span class="p">[</span><span class="s2">&quot;pops&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_test</span><span class="p">[</span><span class="s2">&quot;pops&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()):</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span>
+            <span class="s2">&quot;Not all classes represented in test data;</span><span class="se">\</span>
+<span class="s2">             choose smaller train_prop value&quot;</span>
+        <span class="p">)</span>
 
     <span class="c1"># Want stratified because we want to preserve percentages of each pop</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Splitting data into K-folds...&quot;</span><span class="p">)</span>
@@ -237,278 +191,348 @@
 
     <span class="c1"># Create output directory to write results to</span>
     <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">([</span><span class="s2">&quot;mkdir&quot;</span><span class="p">,</span> <span class="s2">&quot;-p&quot;</span><span class="p">,</span> <span class="n">save_dir</span><span class="p">])</span>
-    <span class="n">fold_var</span><span class="o">=</span><span class="mi">1</span>
+    <span class="n">fold_var</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">mod_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
 
-    <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">rskf</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">[</span><span class="s1">&#39;pops&#39;</span><span class="p">]):</span>
-        
+    <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">rskf</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">[</span><span class="s2">&quot;pops&quot;</span><span class="p">]):</span>
+
         <span class="c1"># Set model name</span>
         <span class="n">mod_name</span> <span class="o">=</span> <span class="n">get_model_name</span><span class="p">(</span><span class="n">fold_var</span><span class="p">)</span>
-        
+
         <span class="c1"># Subset train and validation data</span>
-        <span class="n">traingen</span> <span class="o">=</span> <span class="n">X_train</span><span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="p">:]</span><span class="o">-</span><span class="mi">1</span>
-        <span class="n">valgen</span> <span class="o">=</span> <span class="n">X_train</span><span class="p">[</span><span class="n">v</span><span class="p">,</span> <span class="p">:]</span><span class="o">-</span><span class="mi">1</span>
-        
+        <span class="n">traingen</span> <span class="o">=</span> <span class="n">X_train</span><span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">valgen</span> <span class="o">=</span> <span class="n">X_train</span><span class="p">[</span><span class="n">v</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="mi">1</span>
+
         <span class="c1"># One hot encoding</span>
-        <span class="n">enc</span> <span class="o">=</span> <span class="n">OneHotEncoder</span><span class="p">(</span><span class="n">handle_unknown</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
-        <span class="n">y_train_enc</span> <span class="o">=</span> <span class="n">enc</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">y_train</span><span class="p">[</span><span class="s1">&#39;pops&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+        <span class="n">enc</span> <span class="o">=</span> <span class="n">OneHotEncoder</span><span class="p">(</span><span class="n">handle_unknown</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+        <span class="n">y_train_enc</span> <span class="o">=</span> <span class="n">enc</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span>
+            <span class="n">y_train</span><span class="p">[</span><span class="s2">&quot;pops&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
         <span class="n">popnames</span> <span class="o">=</span> <span class="n">enc</span><span class="o">.</span><span class="n">categories_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        
+
         <span class="n">trainpops</span> <span class="o">=</span> <span class="n">y_train_enc</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
         <span class="n">valpops</span> <span class="o">=</span> <span class="n">y_train_enc</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
 
-        <span class="n">valsamples</span> <span class="o">=</span> <span class="n">y_train</span><span class="p">[</span><span class="s1">&#39;samples&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
-        
+        <span class="n">valsamples</span> <span class="o">=</span> <span class="n">y_train</span><span class="p">[</span><span class="s2">&quot;samples&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+
         <span class="c1"># Use default model</span>
-        <span class="k">if</span> <span class="n">tune_model</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
-            <span class="n">model</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">Sequential</span><span class="p">()</span>
-            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="n">traingen</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],)))</span>
-            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span><span class="n">activation</span><span class="o">=</span><span class="s2">&quot;elu&quot;</span><span class="p">))</span>
-            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span><span class="n">activation</span><span class="o">=</span><span class="s2">&quot;elu&quot;</span><span class="p">))</span>
-            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span><span class="n">activation</span><span class="o">=</span><span class="s2">&quot;elu&quot;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">tune_model</span><span class="p">:</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Sequential</span><span class="p">()</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">(</span>
+                <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="n">traingen</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],)</span>
+            <span class="p">))</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;elu&quot;</span><span class="p">))</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;elu&quot;</span><span class="p">))</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;elu&quot;</span><span class="p">))</span>
             <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.25</span><span class="p">))</span>
-            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span><span class="n">activation</span><span class="o">=</span><span class="s2">&quot;elu&quot;</span><span class="p">))</span>
-            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span><span class="n">activation</span><span class="o">=</span><span class="s2">&quot;elu&quot;</span><span class="p">))</span>
-            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span><span class="n">activation</span><span class="o">=</span><span class="s2">&quot;elu&quot;</span><span class="p">))</span>
-            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">popnames</span><span class="p">),</span><span class="n">activation</span><span class="o">=</span><span class="s2">&quot;softmax&quot;</span><span class="p">))</span>
-            <span class="n">aopt</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">lr</span><span class="o">=</span><span class="mf">0.0005</span><span class="p">)</span>
-            <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="s2">&quot;categorical_crossentropy&quot;</span><span class="p">,</span><span class="n">optimizer</span><span class="o">=</span><span class="n">aopt</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="s2">&quot;accuracy&quot;</span><span class="p">)</span>
-        
+            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;elu&quot;</span><span class="p">))</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;elu&quot;</span><span class="p">))</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;elu&quot;</span><span class="p">))</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">popnames</span><span class="p">),</span>
+                                      <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;softmax&quot;</span><span class="p">))</span>
+            <span class="n">aopt</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">lr</span><span class="o">=</span><span class="mf">0.0005</span><span class="p">)</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+                <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;categorical_crossentropy&quot;</span><span class="p">,</span>
+                <span class="n">optimizer</span><span class="o">=</span><span class="n">aopt</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="s2">&quot;accuracy&quot;</span>
+            <span class="p">)</span>
+
         <span class="c1"># Or tune the model for best results</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">hypermodel</span> <span class="o">=</span> <span class="n">hp_tuning</span><span class="o">.</span><span class="n">classifierHyperModel</span><span class="p">(</span>
                 <span class="n">input_shape</span><span class="o">=</span><span class="n">traingen</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
                 <span class="n">num_classes</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">popnames</span><span class="p">)</span>
             <span class="p">)</span>
-            
+
             <span class="c1"># If tuned model already exists, rewrite</span>
-            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">save_dir</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">mod_name</span><span class="p">):</span>
-                <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">([</span><span class="s1">&#39;rm&#39;</span><span class="p">,</span> <span class="s1">&#39;-rf&#39;</span><span class="p">,</span> <span class="n">save_dir</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">mod_name</span><span class="p">])</span>
-        
-        
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">mod_name</span><span class="p">):</span>
+                <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">([</span><span class="s2">&quot;rm&quot;</span><span class="p">,</span>
+                                         <span class="s2">&quot;-rf&quot;</span><span class="p">,</span>
+                                         <span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">mod_name</span><span class="p">])</span>
+
             <span class="n">tuner</span> <span class="o">=</span> <span class="n">RandomSearch</span><span class="p">(</span>
                 <span class="n">hypermodel</span><span class="p">,</span>
-                <span class="n">objective</span><span class="o">=</span><span class="s1">&#39;loss&#39;</span><span class="p">,</span>
+                <span class="n">objective</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>
                 <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
                 <span class="n">max_trials</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
                 <span class="n">executions_per_trial</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
                 <span class="n">directory</span><span class="o">=</span><span class="n">save_dir</span><span class="p">,</span>
-                <span class="n">project_name</span><span class="o">=</span><span class="n">mod_name</span>
+                <span class="n">project_name</span><span class="o">=</span><span class="n">mod_name</span><span class="p">,</span>
             <span class="p">)</span>
 
-            <span class="n">tuner</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">traingen</span><span class="p">,</span> <span class="n">trainpops</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="p">(</span><span class="n">train_prop</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+            <span class="n">tuner</span><span class="o">.</span><span class="n">search</span><span class="p">(</span>
+                <span class="n">traingen</span><span class="p">,</span>
+                <span class="n">trainpops</span><span class="p">,</span>
+                <span class="n">epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                <span class="n">validation_split</span><span class="o">=</span><span class="p">(</span><span class="n">train_prop</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span>
 
             <span class="n">model</span> <span class="o">=</span> <span class="n">tuner</span><span class="o">.</span><span class="n">get_best_models</span><span class="p">(</span><span class="n">num_models</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-        
+
         <span class="c1"># Create callbacks</span>
-        <span class="n">checkpointer</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">ModelCheckpoint</span><span class="p">(</span>
-                <span class="n">filepath</span><span class="o">=</span><span class="n">save_dir</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">mod_name</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span>
-                <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">save_best_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">save_weights_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;val_loss&quot;</span><span class="p">,</span>
-                <span class="n">save_freq</span><span class="o">=</span><span class="s1">&#39;epoch&#39;</span><span class="p">)</span>
-        <span class="n">earlystop</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span><span class="p">(</span><span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;val_loss&quot;</span><span class="p">,</span>
-                                            <span class="n">min_delta</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                                            <span class="n">patience</span><span class="o">=</span><span class="n">patience</span><span class="p">)</span>
-        <span class="n">reducelr</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">ReduceLROnPlateau</span><span class="p">(</span><span class="n">monitor</span><span class="o">=</span><span class="s1">&#39;val_loss&#39;</span><span class="p">,</span>
-                                                <span class="n">factor</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
-                                                <span class="n">patience</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">patience</span><span class="o">/</span><span class="mi">3</span><span class="p">),</span>
-                                                <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                                                <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span>
-                                                <span class="n">min_delta</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                                                <span class="n">cooldown</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                                                <span class="n">min_lr</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">checkpointer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">ModelCheckpoint</span><span class="p">(</span>
+            <span class="n">filepath</span><span class="o">=</span><span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">mod_name</span> <span class="o">+</span> <span class="s2">&quot;.h5&quot;</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">save_best_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">save_weights_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;val_loss&quot;</span><span class="p">,</span>
+            <span class="n">save_freq</span><span class="o">=</span><span class="s2">&quot;epoch&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">earlystop</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span><span class="p">(</span>
+            <span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;val_loss&quot;</span><span class="p">,</span>
+            <span class="n">min_delta</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">patience</span><span class="o">=</span><span class="n">patience</span>
+        <span class="p">)</span>
+        <span class="n">reducelr</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">ReduceLROnPlateau</span><span class="p">(</span>
+            <span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;val_loss&quot;</span><span class="p">,</span>
+            <span class="n">factor</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+            <span class="n">patience</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">patience</span> <span class="o">/</span> <span class="mi">3</span><span class="p">),</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+            <span class="n">min_delta</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">cooldown</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">min_lr</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="n">callback_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">checkpointer</span><span class="p">,</span> <span class="n">earlystop</span><span class="p">,</span> <span class="n">reducelr</span><span class="p">]</span>
-        
+
         <span class="c1"># Train model</span>
-        <span class="n">history</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">traingen</span><span class="p">,</span> <span class="n">trainpops</span><span class="p">,</span>
-                        <span class="n">batch_size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">batch_size</span><span class="p">),</span>
-                        <span class="n">epochs</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">max_epochs</span><span class="p">),</span>
-                        <span class="n">callbacks</span><span class="o">=</span><span class="n">callback_list</span><span class="p">,</span>
-                        <span class="n">validation_data</span><span class="o">=</span><span class="p">(</span><span class="n">valgen</span><span class="p">,</span> <span class="n">valpops</span><span class="p">))</span>
-        
+        <span class="n">history</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+            <span class="n">traingen</span><span class="p">,</span>
+            <span class="n">trainpops</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">batch_size</span><span class="p">),</span>
+            <span class="n">epochs</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">max_epochs</span><span class="p">),</span>
+            <span class="n">callbacks</span><span class="o">=</span><span class="n">callback_list</span><span class="p">,</span>
+            <span class="n">validation_data</span><span class="o">=</span><span class="p">(</span><span class="n">valgen</span><span class="p">,</span> <span class="n">valpops</span><span class="p">),</span>
+        <span class="p">)</span>
+
         <span class="c1"># Load best model</span>
-        <span class="n">model</span><span class="o">.</span><span class="n">load_weights</span><span class="p">(</span><span class="n">save_dir</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">mod_name</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">)</span>
-        
-        <span class="k">if</span> <span class="n">save_weights</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">save_dir</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">mod_name</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">)</span>
-            
+        <span class="n">model</span><span class="o">.</span><span class="n">load_weights</span><span class="p">(</span><span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">mod_name</span> <span class="o">+</span> <span class="s2">&quot;.h5&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">save_weights</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">mod_name</span> <span class="o">+</span> <span class="s2">&quot;.h5&quot;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">fold_var</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">preds</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">valgen</span><span class="p">))</span>
             <span class="n">preds</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">popnames</span>
-            <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;sampleID&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">valsamples</span>
-            <span class="n">preds</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mod_name</span>
+            <span class="n">preds</span><span class="p">[</span><span class="s2">&quot;sampleID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">valsamples</span>
+            <span class="n">preds</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mod_name</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">preds_new</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">valgen</span><span class="p">))</span>
             <span class="n">preds_new</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">popnames</span>
-            <span class="n">preds_new</span><span class="p">[</span><span class="s1">&#39;sampleID&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">valsamples</span>
-            <span class="n">preds_new</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mod_name</span>
+            <span class="n">preds_new</span><span class="p">[</span><span class="s2">&quot;sampleID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">valsamples</span>
+            <span class="n">preds_new</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mod_name</span>
             <span class="n">preds</span> <span class="o">=</span> <span class="n">preds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">preds_new</span><span class="p">)</span>
-        
-        <span class="c1">#plot training history</span>
-        <span class="k">if</span> <span class="n">plot_history</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">switch_backend</span><span class="p">(</span><span class="s1">&#39;agg&#39;</span><span class="p">)</span>
-            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mf">1.5</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;font.size&#39;</span><span class="p">:</span> <span class="mi">7</span><span class="p">})</span>
-            <span class="n">ax1</span><span class="o">=</span><span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
-            <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s1">&#39;val_loss&#39;</span><span class="p">][</span><span class="mi">3</span><span class="p">:],</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
-                     <span class="n">lw</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Validation Loss&quot;</span><span class="p">)</span>
-            <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">][</span><span class="mi">3</span><span class="p">:],</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
-                     <span class="n">lw</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Training Loss&quot;</span><span class="p">)</span>
+
+        <span class="c1"># plot training history</span>
+        <span class="k">if</span> <span class="n">plot_history</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">switch_backend</span><span class="p">(</span><span class="s2">&quot;agg&quot;</span><span class="p">)</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;font.size&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">})</span>
+            <span class="n">ax1</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+                <span class="n">history</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s2">&quot;val_loss&quot;</span><span class="p">][</span><span class="mi">3</span><span class="p">:],</span>
+                <span class="s2">&quot;--&quot;</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+                <span class="n">lw</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Validation Loss&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+                <span class="n">history</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s2">&quot;loss&quot;</span><span class="p">][</span><span class="mi">3</span><span class="p">:],</span>
+                <span class="s2">&quot;-&quot;</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+                <span class="n">lw</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Training Loss&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
             <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Epoch&quot;</span><span class="p">)</span>
             <span class="n">ax1</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_dir</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">mod_name</span><span class="o">+</span><span class="s1">&#39;_history.pdf&#39;</span><span class="p">,</span>
-                        <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">mod_name</span> <span class="o">+</span> <span class="s2">&quot;_history.pdf&quot;</span><span class="p">,</span>
+                        <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
 
-        <span class="c1"># Save results    </span>
+        <span class="c1"># Save results</span>
         <span class="n">results</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">valgen</span><span class="p">,</span> <span class="n">valpops</span><span class="p">)</span>
         <span class="n">results</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">metrics_names</span><span class="p">,</span> <span class="n">results</span><span class="p">))</span>
-        
-        <span class="n">VALIDATION_ACCURACY</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">])</span>
-        <span class="n">VALIDATION_LOSS</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">])</span>
-        
+
+        <span class="n">VALIDATION_ACCURACY</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;accuracy&quot;</span><span class="p">])</span>
+        <span class="n">VALIDATION_LOSS</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;loss&quot;</span><span class="p">])</span>
+
         <span class="n">mod_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-        
+
         <span class="n">tf</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">clear_session</span><span class="p">()</span>
-        
+
         <span class="n">fold_var</span> <span class="o">+=</span> <span class="mi">1</span>
 
     <span class="c1"># Add true populations to predictions dataframe and output csv</span>
-    <span class="n">preds</span> <span class="o">=</span> <span class="n">preds</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">samp_list</span><span class="p">,</span> <span class="n">left_on</span><span class="o">=</span><span class="s1">&#39;sampleID&#39;</span><span class="p">,</span> <span class="n">right_on</span><span class="o">=</span><span class="s1">&#39;samples&#39;</span><span class="p">)</span>
-    <span class="n">preds</span> <span class="o">=</span> <span class="n">preds</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;samples&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">preds</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">save_dir</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="s2">&quot;preds.csv&quot;</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">preds</span> <span class="o">=</span> <span class="n">preds</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">samp_list</span><span class="p">,</span>
+                        <span class="n">left_on</span><span class="o">=</span><span class="s2">&quot;sampleID&quot;</span><span class="p">,</span>
+                        <span class="n">right_on</span><span class="o">=</span><span class="s2">&quot;samples&quot;</span><span class="p">)</span>
+    <span class="n">preds</span> <span class="o">=</span> <span class="n">preds</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s2">&quot;samples&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">preds</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="s2">&quot;preds.csv&quot;</span><span class="p">,</span>
+                 <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="c1"># Extract the best model and calculate accuracy on test set</span>
     <span class="c1"># print(len(mod_list))</span>
     <span class="n">best_mod</span> <span class="o">=</span> <span class="n">mod_list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">VALIDATION_ACCURACY</span><span class="p">)]</span>
 
     <span class="c1"># One hot encode test set</span>
-    <span class="n">y_train_enc</span> <span class="o">=</span> <span class="n">enc</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">y_train</span><span class="p">[</span><span class="s1">&#39;pops&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
-    <span class="n">y_test_enc</span> <span class="o">=</span> <span class="n">enc</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">y_test</span><span class="p">[</span><span class="s1">&#39;pops&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+    <span class="n">y_train_enc</span> <span class="o">=</span> <span class="n">enc</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span>
+        <span class="n">y_train</span><span class="p">[</span><span class="s2">&quot;pops&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+    <span class="n">y_test_enc</span> <span class="o">=</span> <span class="n">enc</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span>
+        <span class="n">y_test</span><span class="p">[</span><span class="s2">&quot;pops&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
 
     <span class="c1"># Create lists to fill with test information</span>
     <span class="n">TEST_ACCURACY</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">TEST_95CI</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">TEST_LOSS</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="n">checkpointer</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">ModelCheckpoint</span><span class="p">(</span>
-            <span class="n">filepath</span><span class="o">=</span> <span class="n">save_dir</span><span class="o">+</span><span class="s1">&#39;/checkpoint.h5&#39;</span><span class="p">,</span>
-            <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">save_best_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">save_weights_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>
-            <span class="n">save_freq</span><span class="o">=</span><span class="s1">&#39;epoch&#39;</span><span class="p">)</span>
-    <span class="n">earlystop</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span><span class="p">(</span><span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>
-                                            <span class="n">min_delta</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                                            <span class="n">patience</span><span class="o">=</span><span class="n">patience</span><span class="p">)</span>
-    <span class="n">reducelr</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">ReduceLROnPlateau</span><span class="p">(</span><span class="n">monitor</span><span class="o">=</span><span class="s1">&#39;loss&#39;</span><span class="p">,</span>
-                                            <span class="n">factor</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
-                                            <span class="n">patience</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">patience</span><span class="o">/</span><span class="mi">3</span><span class="p">),</span>
-                                            <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                                            <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span>
-                                            <span class="n">min_delta</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                                            <span class="n">cooldown</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                                            <span class="n">min_lr</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">checkpointer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">ModelCheckpoint</span><span class="p">(</span>
+        <span class="n">filepath</span><span class="o">=</span><span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/checkpoint.h5&quot;</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">save_best_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">save_weights_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>
+        <span class="n">save_freq</span><span class="o">=</span><span class="s2">&quot;epoch&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">earlystop</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span><span class="p">(</span>
+        <span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span> <span class="n">min_delta</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="n">patience</span>
+    <span class="p">)</span>
+    <span class="n">reducelr</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">ReduceLROnPlateau</span><span class="p">(</span>
+        <span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>
+        <span class="n">factor</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+        <span class="n">patience</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">patience</span> <span class="o">/</span> <span class="mi">3</span><span class="p">),</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+        <span class="n">min_delta</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">cooldown</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">min_lr</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="n">callback_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">checkpointer</span><span class="p">,</span> <span class="n">earlystop</span><span class="p">,</span> <span class="n">reducelr</span><span class="p">]</span>
 
     <span class="c1"># Train model on all the data</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_reps</span> <span class="o">*</span> <span class="n">n_splits</span><span class="p">):</span>
         <span class="n">mod</span> <span class="o">=</span> <span class="n">mod_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-        <span class="n">history</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">y_train_enc</span><span class="p">,</span>
-                        <span class="n">epochs</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">max_epochs</span><span class="p">),</span>
-                        <span class="n">callbacks</span><span class="o">=</span><span class="n">callback_list</span><span class="p">)</span>
+        <span class="n">history</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+            <span class="n">X_train</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">y_train_enc</span><span class="p">,</span>
+            <span class="n">epochs</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">max_epochs</span><span class="p">),</span>
+            <span class="n">callbacks</span><span class="o">=</span><span class="n">callback_list</span>
+        <span class="p">)</span>
 
-        <span class="n">test_loss</span><span class="p">,</span> <span class="n">test_acc</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">X_test</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">y_test_enc</span><span class="p">)</span>
+        <span class="n">test_loss</span><span class="p">,</span> <span class="n">test_acc</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">X_test</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                                           <span class="n">y_test_enc</span><span class="p">)</span>
 
         <span class="c1"># Find confidence interval of best model</span>
         <span class="n">test_err</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">test_acc</span>
-        <span class="n">test_95CI</span> <span class="o">=</span> <span class="mf">1.96</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="p">(</span><span class="n">test_err</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">test_err</span><span class="p">))</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_test_enc</span><span class="p">))</span>
+        <span class="n">test_95CI</span> <span class="o">=</span> <span class="mf">1.96</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">test_err</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">test_err</span><span class="p">))</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_test_enc</span><span class="p">))</span>
 
         <span class="c1"># Fill test lists with information</span>
         <span class="n">TEST_LOSS</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">test_loss</span><span class="p">)</span>
         <span class="n">TEST_ACCURACY</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">test_acc</span><span class="p">)</span>
         <span class="n">TEST_95CI</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">test_95CI</span><span class="p">)</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Accuracy of model </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> is </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">test_acc</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2"> +/- </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">test_95CI</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Accuracy of model </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> is </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">test_acc</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="se">\</span>
+<span class="s2">            +/- </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">test_95CI</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
 
     <span class="c1"># Print metrics to csv</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Creating outputs...&quot;</span><span class="p">)</span>
-    <span class="n">metrics</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;metric&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Total validation accuracy&quot;</span><span class="p">,</span> <span class="s2">&quot;Validation accuracy SD&quot;</span><span class="p">,</span>
-                                    <span class="s2">&quot;Best model validation accuracy&quot;</span><span class="p">,</span>
-                                    <span class="s2">&quot;Total validation loss&quot;</span><span class="p">,</span> <span class="s2">&quot;Best model validation loss&quot;</span><span class="p">,</span>
-                                    <span class="s2">&quot;Best model&quot;</span><span class="p">,</span> <span class="s2">&quot;Test accuracy&quot;</span><span class="p">,</span>
-                                    <span class="s2">&quot;Test 95% CI&quot;</span><span class="p">,</span>
-                                    <span class="s2">&quot;Test loss&quot;</span><span class="p">],</span>
-                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">VALIDATION_ACCURACY</span><span class="p">),</span>
-                                    <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">VALIDATION_ACCURACY</span><span class="p">),</span>
-                                    <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">VALIDATION_ACCURACY</span><span class="p">),</span>
-                                    <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">VALIDATION_LOSS</span><span class="p">),</span>
-                                    <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">VALIDATION_LOSS</span><span class="p">),</span>
-                                    <span class="n">get_model_name</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">VALIDATION_ACCURACY</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
-                                    <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">TEST_ACCURACY</span><span class="p">),</span>
-                                    <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">TEST_95CI</span><span class="p">),</span>
-                                    <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">TEST_LOSS</span><span class="p">)]})</span>
-    <span class="n">metrics</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">save_dir</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="s2">&quot;metrics.csv&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">metrics</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;metric&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">&quot;Total validation accuracy&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Validation accuracy SD&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Best model validation accuracy&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Total validation loss&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Best model validation loss&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Best model&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Test accuracy&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Test 95% CI&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Test loss&quot;</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">VALIDATION_ACCURACY</span><span class="p">),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">VALIDATION_ACCURACY</span><span class="p">),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">VALIDATION_ACCURACY</span><span class="p">),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">VALIDATION_LOSS</span><span class="p">),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">VALIDATION_LOSS</span><span class="p">),</span>
+                <span class="n">get_model_name</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">VALIDATION_ACCURACY</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">TEST_ACCURACY</span><span class="p">),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">TEST_95CI</span><span class="p">),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">TEST_LOSS</span><span class="p">),</span>
+            <span class="p">],</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="n">metrics</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="s2">&quot;metrics.csv&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="c1"># Return the best model for future predictions</span>
-    <span class="k">if</span> <span class="n">save_best_mod</span><span class="o">==</span><span class="kc">True</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">save_dir</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">get_model_name</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">VALIDATION_ACCURACY</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">save_dir</span><span class="o">+</span><span class="s1">&#39;/best_model&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">save_best_mod</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">get_model_name</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">VALIDATION_ACCURACY</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="p">))</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/best_model&quot;</span><span class="p">)</span>
         <span class="n">best_mod</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">save_dir</span><span class="p">)</span>
-        
-    <span class="c1">## MAKE PREDICTIONS ON UNKNOWN DATA ##</span>
+
+    <span class="c1"># MAKE PREDICTIONS ON UNKNOWN DATA</span>
     <span class="c1"># One hot encode label data</span>
-    <span class="n">enc</span> <span class="o">=</span> <span class="n">OneHotEncoder</span><span class="p">(</span><span class="n">handle_unknown</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
-    <span class="n">pops</span> <span class="o">=</span> <span class="n">enc</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">samp_list2</span><span class="p">[[</span><span class="s1">&#39;pops&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
     <span class="n">popnames</span> <span class="o">=</span> <span class="n">enc</span><span class="o">.</span><span class="n">categories_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="c1"># Organize unknown data</span>
-    <span class="n">unknown_inds</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">unknowns</span><span class="p">[</span><span class="s1">&#39;order&#39;</span><span class="p">])</span>
-    <span class="n">ukgen</span><span class="o">=</span><span class="n">dc2</span><span class="p">[</span><span class="n">unknown_inds</span><span class="p">,:]</span><span class="o">-</span><span class="mi">1</span>
-    <span class="n">uksamples</span><span class="o">=</span><span class="n">unknowns</span><span class="p">[</span><span class="s1">&#39;sampleID&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    <span class="n">unknown_inds</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">unknowns</span><span class="p">[</span><span class="s2">&quot;order&quot;</span><span class="p">])</span>
+    <span class="n">ukgen</span> <span class="o">=</span> <span class="n">dc2</span><span class="p">[</span><span class="n">unknown_inds</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">uksamples</span> <span class="o">=</span> <span class="n">unknowns</span><span class="p">[</span><span class="s2">&quot;sampleID&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
 
     <span class="c1"># Predict on unknown samples with ensemble of models</span>
-    <span class="n">pred_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;count&#39;</span><span class="p">:[],</span> <span class="s1">&#39;df&#39;</span><span class="p">:[]}</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_splits</span><span class="o">*</span><span class="n">n_reps</span><span class="p">):</span>
+    <span class="n">pred_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;df&quot;</span><span class="p">:</span> <span class="p">[]}</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_splits</span> <span class="o">*</span> <span class="n">n_reps</span><span class="p">):</span>
         <span class="n">mod</span> <span class="o">=</span> <span class="n">mod_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-        <span class="n">tmp_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">ukgen</span><span class="p">)</span><span class="o">*</span><span class="n">TEST_ACCURACY</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">tmp_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">ukgen</span><span class="p">)</span> <span class="o">*</span> <span class="n">TEST_ACCURACY</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
         <span class="n">tmp_df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">popnames</span>
-        <span class="n">tmp_df</span><span class="p">[</span><span class="s1">&#39;sampleID&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">uksamples</span>
-        <span class="n">tmp_df</span><span class="p">[</span><span class="s1">&#39;iter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
-        <span class="n">pred_dict</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-        <span class="n">pred_dict</span><span class="p">[</span><span class="s1">&#39;df&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp_df</span><span class="p">)</span>
+        <span class="n">tmp_df</span><span class="p">[</span><span class="s2">&quot;sampleID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">uksamples</span>
+        <span class="n">tmp_df</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="n">pred_dict</span><span class="p">[</span><span class="s2">&quot;count&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">pred_dict</span><span class="p">[</span><span class="s2">&quot;df&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp_df</span><span class="p">)</span>
 
     <span class="c1"># Find the frequency of assignment for different populations</span>
-    <span class="n">top_pops</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;df&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;pops&#39;</span><span class="p">:</span> <span class="p">[]}</span>
+    <span class="n">top_pops</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;df&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;pops&quot;</span><span class="p">:</span> <span class="p">[]}</span>
 
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_splits</span><span class="o">*</span><span class="n">n_reps</span><span class="p">):</span>
-        <span class="n">top_pops</span><span class="p">[</span><span class="s1">&#39;df&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-        <span class="n">top_pops</span><span class="p">[</span><span class="s1">&#39;pops&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pred_dict</span><span class="p">[</span><span class="s1">&#39;df&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span><span class="mi">0</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">popnames</span><span class="p">)]</span><span class="o">.</span><span class="n">idxmax</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_splits</span> <span class="o">*</span> <span class="n">n_reps</span><span class="p">):</span>
+        <span class="n">top_pops</span><span class="p">[</span><span class="s2">&quot;df&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">top_pops</span><span class="p">[</span><span class="s2">&quot;pops&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">pred_dict</span><span class="p">[</span><span class="s2">&quot;df&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">popnames</span><span class="p">)]</span><span class="o">.</span><span class="n">idxmax</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
 
-    <span class="n">top_pops_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">top_pops</span><span class="p">[</span><span class="s1">&#39;pops&#39;</span><span class="p">])</span>
+    <span class="n">top_pops_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">top_pops</span><span class="p">[</span><span class="s2">&quot;pops&quot;</span><span class="p">])</span>
     <span class="n">top_pops_df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">uksamples</span>
-    <span class="n">top_freqs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;sample&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;freq&#39;</span><span class="p">:</span> <span class="p">[]}</span>
+    <span class="n">top_freqs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;sample&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;freq&quot;</span><span class="p">:</span> <span class="p">[]}</span>
 
     <span class="k">for</span> <span class="n">samp</span> <span class="ow">in</span> <span class="n">uksamples</span><span class="p">:</span>
-        <span class="n">top_freqs</span><span class="p">[</span><span class="s1">&#39;sample&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">samp</span><span class="p">)</span>
-        <span class="n">top_freqs</span><span class="p">[</span><span class="s1">&#39;freq&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">top_pops_df</span><span class="p">[</span><span class="n">samp</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">top_pops_df</span><span class="p">))</span>
+        <span class="n">top_freqs</span><span class="p">[</span><span class="s2">&quot;sample&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">samp</span><span class="p">)</span>
+        <span class="n">top_freqs</span><span class="p">[</span><span class="s2">&quot;freq&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">top_pops_df</span><span class="p">[</span><span class="n">samp</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">top_pops_df</span><span class="p">)</span>
+        <span class="p">)</span>
 
     <span class="c1"># Save frequencies to csv for plotting</span>
-    <span class="n">top_freqs_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">top_freqs</span><span class="p">[</span><span class="s1">&#39;freq&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">top_freqs_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">save_dir</span><span class="o">+</span><span class="s1">&#39;/pop_assign_freqs.csv&#39;</span><span class="p">)</span>
+    <span class="n">top_freqs_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">top_freqs</span><span class="p">[</span><span class="s2">&quot;freq&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">top_freqs_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/pop_assign_freqs.csv&quot;</span><span class="p">)</span>
 
     <span class="c1"># Create table to assignments by frequency</span>
-    <span class="n">freq_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">top_freqs</span><span class="p">[</span><span class="s1">&#39;freq&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
-            <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">top_freqs</span><span class="p">[</span><span class="s1">&#39;freq&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">idxmax</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
-    <span class="n">freq_df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Assigned Pop&#39;</span><span class="p">,</span> <span class="s1">&#39;Frequency&#39;</span><span class="p">,</span> <span class="s1">&#39;Sample ID&#39;</span><span class="p">]</span>
+    <span class="n">freq_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">top_freqs</span><span class="p">[</span><span class="s2">&quot;freq&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+            <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">top_freqs</span><span class="p">[</span><span class="s2">&quot;freq&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">idxmax</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+        <span class="p">],</span>
+        <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+    <span class="n">freq_df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Assigned Pop&quot;</span><span class="p">,</span> <span class="s2">&quot;Frequency&quot;</span><span class="p">,</span> <span class="s2">&quot;Sample ID&quot;</span><span class="p">]</span>
 
     <span class="c1"># Save predictions</span>
-    <span class="n">freq_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">save_dir</span><span class="o">+</span><span class="s1">&#39;/pop_assign_ensemble.csv&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  
-    
-    <span class="k">if</span> <span class="n">save_weights</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">save_dir</span><span class="o">+</span><span class="s1">&#39;/checkpoint.h5&#39;</span><span class="p">)</span>
+    <span class="n">freq_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/pop_assign_ensemble.csv&quot;</span><span class="p">,</span>
+                   <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">save_weights</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/checkpoint.h5&quot;</span><span class="p">)</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Process complete&quot;</span><span class="p">)</span></div>
 </pre></div>
@@ -557,7 +581,7 @@
       &copy;2021, Katie Birchard.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
