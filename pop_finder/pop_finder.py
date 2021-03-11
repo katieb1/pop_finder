@@ -55,7 +55,7 @@ def run_neural_net(
     Parameters
     ----------
     infile_kfcv : string
-        Path to VCF or hdf5 file with genetic information for 
+        Path to VCF or hdf5 file with genetic information for
         only samples of known origin. No samples of unknown
         origin should be in this file.
     infile_all : string
@@ -194,12 +194,12 @@ def run_neural_net(
             model.add(tf.layers.Dense(128, activation="elu"))
             model.add(tf.layers.Dense(128, activation="elu"))
             model.add(tf.layers.Dense(128, activation="elu"))
-            model.add(tf.layers.Dense(len(popnames),
-                                      activation="softmax"))
+            model.add(tf.layers.Dense(len(popnames), activation="softmax"))
             aopt = tf.optimizers.Adam(lr=0.0005)
             model.compile(
                 loss="categorical_crossentropy",
-                optimizer=aopt, metrics="accuracy"
+                optimizer=aopt,
+                metrics="accuracy"
             )
 
         # Or tune the model for best results
@@ -211,9 +211,9 @@ def run_neural_net(
 
             # If tuned model already exists, rewrite
             if os.path.exists(save_dir + "/" + mod_name):
-                subprocess.check_output(["rm",
-                                         "-rf",
-                                         save_dir + "/" + mod_name])
+                subprocess.check_output(
+                    ["rm", "-rf", save_dir + "/" + mod_name]
+                )
 
             tuner = RandomSearch(
                 hypermodel,
@@ -244,9 +244,7 @@ def run_neural_net(
             save_freq="epoch",
         )
         earlystop = tf.callbacks.EarlyStopping(
-            monitor="val_loss",
-            min_delta=0,
-            patience=patience
+            monitor="val_loss", min_delta=0, patience=patience
         )
         reducelr = tf.callbacks.ReduceLROnPlateau(
             monitor="val_loss",
@@ -310,8 +308,10 @@ def run_neural_net(
             )
             ax1.set_xlabel("Epoch")
             ax1.legend()
-            fig.savefig(save_dir + "/" + mod_name + "_history.pdf",
-                        bbox_inches="tight")
+            fig.savefig(
+                save_dir + "/" + mod_name + "_history.pdf",
+                bbox_inches="tight"
+            )
 
         # Save results
         results = model.evaluate(valgen, valpops)
@@ -331,8 +331,7 @@ def run_neural_net(
                         left_on="sampleID",
                         right_on="samples")
     preds = preds.drop("samples", axis=1)
-    preds.to_csv(save_dir + "/" + "preds.csv",
-                 index=False)
+    preds.to_csv(save_dir + "/" + "preds.csv", index=False)
 
     # Extract the best model and calculate accuracy on test set
     # print(len(mod_list))
@@ -384,13 +383,13 @@ def run_neural_net(
             callbacks=callback_list
         )
 
-        test_loss, test_acc = mod.evaluate(X_test - 1,
-                                           y_test_enc)
+        test_loss, test_acc = mod.evaluate(X_test - 1, y_test_enc)
 
         # Find confidence interval of best model
         test_err = 1 - test_acc
         test_95CI = 1.96 * np.sqrt(
-            (test_err * (1 - test_err)) / len(y_test_enc))
+            (test_err * (1 - test_err)) / len(y_test_enc)
+        )
 
         # Fill test lists with information
         TEST_LOSS.append(test_loss)
@@ -435,8 +434,8 @@ def run_neural_net(
     # Return the best model for future predictions
     if save_best_mod:
         print(save_dir + "/" + get_model_name(
-            np.argmax(VALIDATION_ACCURACY) + 1
-        ))
+            np.argmax(VALIDATION_ACCURACY) + 1)
+             )
         os.mkdir(save_dir + "/best_model")
         best_mod.save(save_dir)
 
