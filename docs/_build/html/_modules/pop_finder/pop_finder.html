@@ -88,17 +88,16 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    infile_kfcv : string</span>
-<span class="sd">        Path to k-fold cross-validation input file, which is</span>
-<span class="sd">        a tab-delimited text file with columns x, y, pop, and</span>
-<span class="sd">        sampleID. No samples of unknown origin should be in</span>
-<span class="sd">        this file.</span>
+<span class="sd">        Path to VCF or hdf5 file with genetic information for</span>
+<span class="sd">        only samples of known origin. No samples of unknown</span>
+<span class="sd">        origin should be in this file.</span>
 <span class="sd">    infile_all : string</span>
+<span class="sd">        Path to VCF or hdf5 file with genetic information</span>
+<span class="sd">        for all samples (including samples of unknown origin).</span>
+<span class="sd">    sample_data : string</span>
 <span class="sd">        Path to input file with all samples present (including</span>
 <span class="sd">        samples of unknown origin), which is a tab-delimited</span>
 <span class="sd">        text file with columns x, y, pop, and sampleID.</span>
-<span class="sd">    sample_data : string</span>
-<span class="sd">        Path to VCF or hdf5 file with genetic information</span>
-<span class="sd">        for all samples (including samples of unknown origin).</span>
 <span class="sd">    save_allele counts : boolean</span>
 <span class="sd">        Whether or not to store derived allele counts in hdf5</span>
 <span class="sd">        file (Default=False).</span>
@@ -228,12 +227,12 @@
             <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;elu&quot;</span><span class="p">))</span>
             <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;elu&quot;</span><span class="p">))</span>
             <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;elu&quot;</span><span class="p">))</span>
-            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">popnames</span><span class="p">),</span>
-                                      <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;softmax&quot;</span><span class="p">))</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">popnames</span><span class="p">),</span> <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;softmax&quot;</span><span class="p">))</span>
             <span class="n">aopt</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">lr</span><span class="o">=</span><span class="mf">0.0005</span><span class="p">)</span>
             <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
                 <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;categorical_crossentropy&quot;</span><span class="p">,</span>
-                <span class="n">optimizer</span><span class="o">=</span><span class="n">aopt</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="s2">&quot;accuracy&quot;</span>
+                <span class="n">optimizer</span><span class="o">=</span><span class="n">aopt</span><span class="p">,</span>
+                <span class="n">metrics</span><span class="o">=</span><span class="s2">&quot;accuracy&quot;</span>
             <span class="p">)</span>
 
         <span class="c1"># Or tune the model for best results</span>
@@ -245,9 +244,9 @@
 
             <span class="c1"># If tuned model already exists, rewrite</span>
             <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">mod_name</span><span class="p">):</span>
-                <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">([</span><span class="s2">&quot;rm&quot;</span><span class="p">,</span>
-                                         <span class="s2">&quot;-rf&quot;</span><span class="p">,</span>
-                                         <span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">mod_name</span><span class="p">])</span>
+                <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span>
+                    <span class="p">[</span><span class="s2">&quot;rm&quot;</span><span class="p">,</span> <span class="s2">&quot;-rf&quot;</span><span class="p">,</span> <span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">mod_name</span><span class="p">]</span>
+                <span class="p">)</span>
 
             <span class="n">tuner</span> <span class="o">=</span> <span class="n">RandomSearch</span><span class="p">(</span>
                 <span class="n">hypermodel</span><span class="p">,</span>
@@ -278,9 +277,7 @@
             <span class="n">save_freq</span><span class="o">=</span><span class="s2">&quot;epoch&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">earlystop</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">EarlyStopping</span><span class="p">(</span>
-            <span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;val_loss&quot;</span><span class="p">,</span>
-            <span class="n">min_delta</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-            <span class="n">patience</span><span class="o">=</span><span class="n">patience</span>
+            <span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;val_loss&quot;</span><span class="p">,</span> <span class="n">min_delta</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="n">patience</span>
         <span class="p">)</span>
         <span class="n">reducelr</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">ReduceLROnPlateau</span><span class="p">(</span>
             <span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;val_loss&quot;</span><span class="p">,</span>
@@ -344,8 +341,10 @@
             <span class="p">)</span>
             <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Epoch&quot;</span><span class="p">)</span>
             <span class="n">ax1</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">mod_name</span> <span class="o">+</span> <span class="s2">&quot;_history.pdf&quot;</span><span class="p">,</span>
-                        <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
+                <span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">mod_name</span> <span class="o">+</span> <span class="s2">&quot;_history.pdf&quot;</span><span class="p">,</span>
+                <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span>
+            <span class="p">)</span>
 
         <span class="c1"># Save results</span>
         <span class="n">results</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">valgen</span><span class="p">,</span> <span class="n">valpops</span><span class="p">)</span>
@@ -365,8 +364,7 @@
                         <span class="n">left_on</span><span class="o">=</span><span class="s2">&quot;sampleID&quot;</span><span class="p">,</span>
                         <span class="n">right_on</span><span class="o">=</span><span class="s2">&quot;samples&quot;</span><span class="p">)</span>
     <span class="n">preds</span> <span class="o">=</span> <span class="n">preds</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s2">&quot;samples&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">preds</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="s2">&quot;preds.csv&quot;</span><span class="p">,</span>
-                 <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">preds</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="s2">&quot;preds.csv&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="c1"># Extract the best model and calculate accuracy on test set</span>
     <span class="c1"># print(len(mod_list))</span>
@@ -418,13 +416,13 @@
             <span class="n">callbacks</span><span class="o">=</span><span class="n">callback_list</span>
         <span class="p">)</span>
 
-        <span class="n">test_loss</span><span class="p">,</span> <span class="n">test_acc</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">X_test</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
-                                           <span class="n">y_test_enc</span><span class="p">)</span>
+        <span class="n">test_loss</span><span class="p">,</span> <span class="n">test_acc</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">X_test</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y_test_enc</span><span class="p">)</span>
 
         <span class="c1"># Find confidence interval of best model</span>
         <span class="n">test_err</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">test_acc</span>
         <span class="n">test_95CI</span> <span class="o">=</span> <span class="mf">1.96</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
-            <span class="p">(</span><span class="n">test_err</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">test_err</span><span class="p">))</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_test_enc</span><span class="p">))</span>
+            <span class="p">(</span><span class="n">test_err</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">test_err</span><span class="p">))</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_test_enc</span><span class="p">)</span>
+        <span class="p">)</span>
 
         <span class="c1"># Fill test lists with information</span>
         <span class="n">TEST_LOSS</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">test_loss</span><span class="p">)</span>
@@ -469,8 +467,8 @@
     <span class="c1"># Return the best model for future predictions</span>
     <span class="k">if</span> <span class="n">save_best_mod</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">get_model_name</span><span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">VALIDATION_ACCURACY</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
-        <span class="p">))</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">VALIDATION_ACCURACY</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+             <span class="p">)</span>
         <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/best_model&quot;</span><span class="p">)</span>
         <span class="n">best_mod</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">save_dir</span><span class="p">)</span>
 

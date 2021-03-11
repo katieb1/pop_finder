@@ -121,6 +121,342 @@ RandomSearch()).</p>
 </dd></dl>
 
 </div>
+<div class="section" id="module-pop_finder.locator_mod">
+<span id="pop-finder-locator-mod-module"></span><h2>pop_finder.locator_mod module<a class="headerlink" href="#module-pop_finder.locator_mod" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="pop_finder.locator_mod.filter_snps">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.locator_mod.</span></code><code class="sig-name descname"><span class="pre">filter_snps</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">genotypes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_mac</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_SNPs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">impute_missing</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/locator_mod.html#filter_snps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.locator_mod.filter_snps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filters SNPs based on parameters specified.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>genotypes</strong> – </p></li>
+<li><p><strong>min_mac</strong> – </p></li>
+<li><p><strong>max_SNPs</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>ac</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>allele counts</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pop_finder.locator_mod.load_callbacks">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.locator_mod.</span></code><code class="sig-name descname"><span class="pre">load_callbacks</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacknife</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keras_verbose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/locator_mod.html#load_callbacks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.locator_mod.load_callbacks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies Keras callbacks, including checkpoints, early stopping,
+and reducing learning rate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>boot</strong> – </p></li>
+<li><p><strong>bootstrap</strong> – </p></li>
+<li><p><strong>jacknife</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>checkpointer</em></p></li>
+<li><p><em>earlystop</em></p></li>
+<li><p><em>reducelr</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pop_finder.locator_mod.load_genotypes">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.locator_mod.</span></code><code class="sig-name descname"><span class="pre">load_genotypes</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gen_dat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vcf'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/locator_mod.html#load_genotypes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.locator_mod.load_genotypes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads genetic data and parses into relevant genotype
+and sample data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gen_dat</strong> – </p></li>
+<li><p><strong>data_format</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>genotypes</strong> (<em>GenotypeArray</em>)</p></li>
+<li><p><strong>samples</strong> (<em>np.array</em>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pop_finder.locator_mod.load_network">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.locator_mod.</span></code><code class="sig-name descname"><span class="pre">load_network</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">traingen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nlayers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/locator_mod.html#load_network"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.locator_mod.load_network" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates neural network based on specifications.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>traingen</strong> – </p></li>
+<li><p><strong>dropout_prop</strong> – </p></li>
+<li><p><strong>nlayers</strong> – </p></li>
+<li><p><strong>width</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pop_finder.locator_mod.locator">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.locator_mod.</span></code><code class="sig-name descname"><span class="pre">locator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_dat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vcf'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">windows</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_stop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacknife</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacknife_prop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nboots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_mac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_SNPs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">impute_missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_prop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nlayers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'out'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_history</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keras_verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/locator_mod.html#locator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.locator_mod.locator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates sample locations from genotype matrices. Code
+modified from Battey et al. 2020:
+<a class="reference external" href="https://github.com/kr-colab/locator">https://github.com/kr-colab/locator</a></p>
+<dl class="simple">
+<dt>sample_data<span class="classifier">string</span></dt><dd><p>Tab-delimited text file with columns ‘sampleID’, ‘x’,
+and ‘y’. SampleIDs must exactly match those of the
+VCF. Samples without known locations should be NA.</p>
+</dd>
+<dt>data_format<span class="classifier">string</span></dt><dd><p>File format of SNPs for all samples. Options include
+‘vcf’, ‘zarr’, and ‘matrix’ (Default=’vcf’).</p>
+</dd>
+<dt>train_split<span class="classifier">float</span></dt><dd><p>Proportion of samples to be used for training, ranges
+from 0-1 (Default=0.9).</p>
+</dd>
+<dt>windows<span class="classifier">boolean</span></dt><dd><p>Run windowed analysis over a single chromosome (requires
+zarr input; Default=False).</p>
+</dd>
+<dt>window_start<span class="classifier">int</span></dt><dd><p>Starting point of windowed analysis (Default=0).</p>
+</dd>
+<dt>window_stop<span class="classifier">int</span></dt><dd><p>Stopping point of windowed analysis (Default=None).</p>
+</dd>
+<dt>window_size<span class="classifier">int</span></dt><dd><p>Size of window for windowed analysis (Default=5e5).</p>
+</dd>
+<dt>bootstrap<span class="classifier">boolean</span></dt><dd><p>Run bootstrap replicates by retraining on bootstrapped
+data (Default=False).</p>
+</dd>
+<dt>jacknife<span class="classifier">boolean</span></dt><dd><p>Run jacknife uncertainty estimate on a trained network.
+NOTE: we recommend this onyl as a fast heuristic –
+use bootstrap option or run windowed analysis for final
+results (Default=False).</p>
+</dd>
+<dt>nboots<span class="classifier">int</span></dt><dd><p>Number of bootstrap replicates to run (Default=50).</p>
+</dd>
+<dt>batch_size<span class="classifier">int</span></dt><dd><p>Number of samples per batch (Default=32).</p>
+</dd>
+<dt>max_epochs<span class="classifier">int</span></dt><dd><p>Number of epochs (Default=5000).</p>
+</dd>
+<dt>patience<span class="classifier">int</span></dt><dd><p>Number of epochs to run the optimizer after last
+improvement in validation loss (Default=100).</p>
+</dd>
+<dt>min_mac<span class="classifier">int</span></dt><dd><p>Minimum minor allele count (Default=2).</p>
+</dd>
+<dt>max_SNPs<span class="classifier">int</span></dt><dd><p>Randomly select max_SNPs variants to use in the
+analysis (Default=None).</p>
+</dd>
+<dt>impute_missing<span class="classifier">boolean</span></dt><dd><p>If False, all alleles at missing sites are ancestral
+Default=False).</p>
+</dd>
+<dt>dropout_prop<span class="classifier">float</span></dt><dd><p>Proportion of weights to zero at the dropout layer
+(Default=0.25).</p>
+</dd>
+<dt>nlayers<span class="classifier">int</span></dt><dd><p>Number of layers in the network (Default=10).</p>
+</dd>
+<dt>width<span class="classifier">int</span></dt><dd><p>Number of units per layer in the network (Default=256).</p>
+</dd>
+<dt>out<span class="classifier">string</span></dt><dd><p>File name stem for output (Default=’out’).</p>
+</dd>
+<dt>seed<span class="classifier">int</span></dt><dd><p>Random seed for train/test splits and SNP subsetting
+(Default=None).</p>
+</dd>
+<dt>gpu_number<span class="classifier">string</span></dt><dd><p>GPU (Default=None).</p>
+</dd>
+<dt>plot_history<span class="classifier">boolean</span></dt><dd><p>Plot training history (Default=True).</p>
+</dd>
+<dt>keep_weights<span class="classifier">boolean</span></dt><dd><p>Keep model weights after training (Default=False).</p>
+</dd>
+<dt>load_params<span class="classifier">string</span></dt><dd><p>Path to a _params.json file to load parameters from a
+previous run. Parameters from the json file will
+supersede all parameters provided (Default=None).</p>
+</dd>
+<dt>keras_verbose<span class="classifier">int</span></dt><dd><p>Verbose argument passed to keras in model training.
+0 = silent; 1 = progress bars for minibatches;
+2 = show epochs. Yes, 1 is more verbose than 2. Blame
+keras (Default=1).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pop_finder.locator_mod.normalize_locs">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.locator_mod.</span></code><code class="sig-name descname"><span class="pre">normalize_locs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">locs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/locator_mod.html#normalize_locs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.locator_mod.normalize_locs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalize location corrdinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>locs</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>meanlong</em></p></li>
+<li><p><em>sdlong</em></p></li>
+<li><p><em>meanlat</em></p></li>
+<li><p><em>sdlat</em></p></li>
+<li><p><em>locs</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pop_finder.locator_mod.plot_history_fn">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.locator_mod.</span></code><code class="sig-name descname"><span class="pre">plot_history_fn</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/locator_mod.html#plot_history_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.locator_mod.plot_history_fn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots training vs validation history over time (epochs).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>history</strong> – </p></li>
+<li><p><strong>dists</strong> – </p></li>
+<li><p><strong>out</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>PDF</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pop_finder.locator_mod.predict_locs">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.locator_mod.</span></code><code class="sig-name descname"><span class="pre">predict_locs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predgen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sdlong</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meanlong</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sdlat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meanlat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testlocs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testgen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacknife</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">windows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">history</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/locator_mod.html#predict_locs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.locator_mod.predict_locs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict locations from trained neural network.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> – </p></li>
+<li><p><strong>predgen</strong> – </p></li>
+<li><p><strong>sdlong</strong> – </p></li>
+<li><p><strong>meanlong</strong> – </p></li>
+<li><p><strong>sdlat</strong> – </p></li>
+<li><p><strong>meanlat</strong> – </p></li>
+<li><p><strong>testlocs</strong> – </p></li>
+<li><p><strong>pred</strong> – </p></li>
+<li><p><strong>samples</strong> – </p></li>
+<li><p><strong>testgen</strong> – </p></li>
+<li><p><strong>verbose</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dists</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pop_finder.locator_mod.replace_md">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.locator_mod.</span></code><code class="sig-name descname"><span class="pre">replace_md</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">genotypes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/locator_mod.html#replace_md"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.locator_mod.replace_md" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace missing sites with values taken from binomial
+distribution with parameter mean_allele_frequency.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>genotypes</strong> (<em>GenotypeArray</em>) – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>ac</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>allele count array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pop_finder.locator_mod.sort_samples">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.locator_mod.</span></code><code class="sig-name descname"><span class="pre">sort_samples</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">genotypes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/locator_mod.html#sort_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.locator_mod.sort_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sorts samples so they are in the same order as the vcf.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>samples</strong> (<em>list</em>) – List of sampleIDs from the vcf file</p></li>
+<li><p><strong>sample_data</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>sample_data</strong> (<em>Dataframe</em>)</p></li>
+<li><p><strong>locs</strong> (<em>np.array</em>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pop_finder.locator_mod.split_train_test">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.locator_mod.</span></code><code class="sig-name descname"><span class="pre">split_train_test</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ac</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">locs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_split</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/locator_mod.html#split_train_test"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.locator_mod.split_train_test" title="Permalink to this definition">¶</a></dt>
+<dd><p>Splits data into test, train, and prediction sets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ac</strong> – </p></li>
+<li><p><strong>locs</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>train</em></p></li>
+<li><p><em>test</em></p></li>
+<li><p><em>traingen</em></p></li>
+<li><p><em>testgen</em></p></li>
+<li><p><em>trainlocs</em></p></li>
+<li><p><em>testlocs</em></p></li>
+<li><p><em>pred</em></p></li>
+<li><p><em>predgen</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pop_finder.locator_mod.train_network">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.locator_mod.</span></code><code class="sig-name descname"><span class="pre">train_network</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traingen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testgen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trainlocs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testlocs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacknife</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpointer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">earlystop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reducelr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keras_verbose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boot</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/locator_mod.html#train_network"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.locator_mod.train_network" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trains neural network using given parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> – </p></li>
+<li><p><strong>traingen</strong> – </p></li>
+<li><p><strong>testgen</strong> – </p></li>
+<li><p><strong>trainlocs</strong> – </p></li>
+<li><p><strong>testlocs</strong> – </p></li>
+<li><p><strong>bootstrap</strong> – </p></li>
+<li><p><strong>jacknife</strong> – </p></li>
+<li><p><strong>checkpointer</strong> – </p></li>
+<li><p><strong>earlystop</strong> – </p></li>
+<li><p><strong>reducelr</strong> – </p></li>
+<li><p><strong>keras_verbose</strong> – </p></li>
+<li><p><strong>max_epochs</strong> – </p></li>
+<li><p><strong>batch_size</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>history</em></p></li>
+<li><p><em>model</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
 <div class="section" id="module-pop_finder.pop_finder">
 <span id="pop-finder-pop-finder-module"></span><h2>pop_finder.pop_finder module<a class="headerlink" href="#module-pop_finder.pop_finder" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
@@ -143,15 +479,14 @@ population of origin for samples of unknown origin.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>infile_kfcv</strong> (<em>string</em>) – Path to k-fold cross-validation input file, which is
-a tab-delimited text file with columns x, y, pop, and
-sampleID. No samples of unknown origin should be in
-this file.</p></li>
-<li><p><strong>infile_all</strong> (<em>string</em>) – Path to input file with all samples present (including
+<li><p><strong>infile_kfcv</strong> (<em>string</em>) – Path to VCF or hdf5 file with genetic information for
+only samples of known origin. No samples of unknown
+origin should be in this file.</p></li>
+<li><p><strong>infile_all</strong> (<em>string</em>) – Path to VCF or hdf5 file with genetic information
+for all samples (including samples of unknown origin).</p></li>
+<li><p><strong>sample_data</strong> (<em>string</em>) – Path to input file with all samples present (including
 samples of unknown origin), which is a tab-delimited
 text file with columns x, y, pop, and sampleID.</p></li>
-<li><p><strong>sample_data</strong> (<em>string</em>) – Path to VCF or hdf5 file with genetic information
-for all samples (including samples of unknown origin).</p></li>
 <li><p><strong>counts</strong> (<em>save_allele</em>) – Whether or not to store derived allele counts in hdf5
 file (Default=False).</p></li>
 <li><p><strong>save_weights</strong> (<em>boolean</em>) – Save model weights so you don’t have to retrain again

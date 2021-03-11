@@ -28,6 +28,14 @@ pop\_finder.hp\_tuning module
    :undoc-members:
    :show-inheritance:
 
+pop\_finder.locator\_mod module
+-------------------------------
+
+.. automodule:: pop_finder.locator_mod
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pop\_finder.pop\_finder module
 ------------------------------
 
