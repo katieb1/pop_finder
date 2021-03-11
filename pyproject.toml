@@ -26,6 +26,7 @@ pytest-cov = "^2.11.1"
 flake8 = "^3.8.4"
 python-semantic-release = "^7.15.0"
 sphinx-rtd-theme = "^0.5.1"
+wheel = "^0.36.2"
 
 [tool.semantic_release]
 version_variable = "pop_finder/__init__.py:__version__"
