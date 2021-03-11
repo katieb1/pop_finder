@@ -55,17 +55,16 @@ def run_neural_net(
     Parameters
     ----------
     infile_kfcv : string
-        Path to k-fold cross-validation input file, which is
-        a tab-delimited text file with columns x, y, pop, and
-        sampleID. No samples of unknown origin should be in
-        this file.
+        Path to VCF or hdf5 file with genetic information for 
+        only samples of known origin. No samples of unknown
+        origin should be in this file.
     infile_all : string
+        Path to VCF or hdf5 file with genetic information
+        for all samples (including samples of unknown origin).
+    sample_data : string
         Path to input file with all samples present (including
         samples of unknown origin), which is a tab-delimited
         text file with columns x, y, pop, and sampleID.
-    sample_data : string
-        Path to VCF or hdf5 file with genetic information
-        for all samples (including samples of unknown origin).
     save_allele counts : boolean
         Whether or not to store derived allele counts in hdf5
         file (Default=False).
