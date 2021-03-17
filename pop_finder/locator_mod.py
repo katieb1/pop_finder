@@ -289,7 +289,7 @@ def locator(
             print("run time " + str(elapsed / 60) + " minutes")
         elif bootstrap:
             boot = "FULL"
-            genotypes, samples = load_genotypes()
+            genotypes, samples = load_genotypes(gen_dat, data_format)
             sample_data, locs = sort_samples(samples, sample_data, genotypes)
             meanlong, sdlong, meanlat, sdlat, locs = normalize_locs(locs)
             ac = filter_snps(genotypes, min_mac, max_SNPs, impute_missing)
@@ -416,7 +416,7 @@ def locator(
                 print("run time " + str(elapsed / 60) + " minutes\n\n")
         elif jacknife:
             boot = "FULL"
-            genotypes, samples = load_genotypes()
+            genotypes, samples = load_genotypes(gen_dat, data_format)
             sample_data, locs = sort_samples(samples, sample_data, genotypes)
             meanlong, sdlong, meanlat, sdlat, locs = normalize_locs(locs)
             ac = filter_snps(genotypes, min_mac, max_SNPs, impute_missing)
