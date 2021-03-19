@@ -1,4 +1,4 @@
-import locator_mod
+from pop_finder import locator_mod
 import pandas as pd
 import numpy as np
 from scipy import stats
@@ -65,7 +65,8 @@ def contour_classifier(
     """
 
     # Check if save_dir exists
-    if os.path.isdir(save_dir) and os.path.isdir(save_dir + "1") is not True:
+    if (os.path.isdir(save_dir) is not True and
+            os.path.isdir(save_dir + "1") is not True):
         raise ValueError("save_dir does not exist")
 
     # Check is sample_data path exists
@@ -128,7 +129,7 @@ def contour_classifier(
                     for i in range(nboots)
                 ]
 
-                if sum(1 for line in open(out_list[0])) != sum(
+                if sum(1 for line in open(out_list[0])) == sum(
                     1 for line in open(out_list[1])
                 ):
 
@@ -158,7 +159,7 @@ def contour_classifier(
                     for i in range(nboots)
                 ]
 
-                if sum(1 for line in open(out_list[0])) != sum(
+                if sum(1 for line in open(out_list[0])) == sum(
                     1 for line in open(out_list[1])
                 ):
 
@@ -181,7 +182,7 @@ def contour_classifier(
                         save_dir+str(i)+"/loc_boot"+str(j)+"_predlocs.txt"
                     )
 
-            if sum(1 for line in open(out_list[0])) != sum(
+            if sum(1 for line in open(out_list[0])) == sum(
                 1 for line in open(out_list[1])
             ):
 

@@ -2,6 +2,7 @@ from pop_finder import __version__
 from pop_finder import pop_finder
 from pop_finder import read
 from pop_finder import hp_tuning
+from pop_finder import contour_classifier
 import pandas as pd
 import numpy as np
 import os
@@ -107,4 +108,24 @@ def test_pop_finder():
             save_best_mod=False,
             save_dir=save_path,
             plot_history=False,
+        )
+
+
+def test_contour_classifier():
+
+    with pytest.raises(ValueError):
+        contour_classifier.contour_classifier(
+            sample_data=sample_data1,
+            save_dir='incorrect'
+        )
+
+    with pytest.raises(ValueError):
+        contour_classifier.contour_classifier(
+            sample_data='incorrect'
+        )
+
+    with pytest.raises(ValueError):
+        contour_classifier.contour_classifier(
+            sample_data=sample_data1,
+            gen_dat='incorrect'
         )
