@@ -74,9 +74,7 @@ def read_data(infile, sample_data, save_allele_counts=False, kfcv=False):
         dc = np.array(ac[biallel, :, 1], dtype="int_")
         dc = np.transpose(dc)
 
-        if save_allele_counts and not infile.endswith(
-            ".locator.hdf5"
-        ):
+        if save_allele_counts and not infile.endswith(".locator.hdf5"):
 
             print("saving derived counts for reanalysis")
             outfile = h5py.File(infile + ".locator.hdf5", "w")
@@ -97,8 +95,11 @@ def read_data(infile, sample_data, save_allele_counts=False, kfcv=False):
     locs = locs.reindex(np.array(samples))
 
     # check that all sample names are present
-    if not all([locs["sampleID"][x] == samples[x]
-                for x in range(len(samples))]):
+    if not all(
+        [
+            locs["sampleID"][x] == samples[x] for x in range(len(samples))
+        ]
+    ):
 
         print("sample ordering failed! Check that sample IDs match the VCF.")
         sys.exit()
