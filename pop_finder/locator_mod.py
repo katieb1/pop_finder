@@ -144,6 +144,9 @@ def locator(
         for key, val in obj.items():
             exec(key + "=val")
 
+    # Set output file prefix
+    out = out + "/loc"
+
     if windows:
         callset = zarr.open_group(zarr, mode="r")
         gt = callset["calldata/GT"]
@@ -599,9 +602,11 @@ def sort_samples(samples, sample_data, genotypes):
         np.array(samples)
     )  # sort loc table so samples are in same order as vcf samples
     if not all(
-        [sample_data["sampleID2"][x] == samples[x] for x in range(
-            len(samples)
-        )]
+        [
+            sample_data[
+                "sampleID2"
+            ][x] == samples[x] for x in range(len(samples))
+        ]
     ):  # check that all sample names are present
         print("sample ordering failed! Check that sample IDs match the VCF.")
         sys.exit()
@@ -664,9 +669,9 @@ def filter_snps(genotypes, min_mac, max_SNPs, impute_missing):
     else:
         ac = genotypes.to_allele_counts()[:, :, 1]
     if max_SNPs is not None:
-        ac = ac[np.random.choice(range(ac.shape[0]),
-                                 max_SNPs,
-                                 replace=False), :]
+        ac = ac[np.random.choice(
+            range(ac.shape[0]), max_SNPs, replace=False
+        ), :]
     print("running on " + str(len(ac)) + " genotypes after filtering\n\n\n")
     return ac
 
@@ -747,9 +752,11 @@ def load_network(traingen, dropout_prop, nlayers, width):
         return K.sqrt(K.sum(K.square(y_pred - y_true), axis=-1))
 
     model = tf.keras.Sequential()
-    model.add(tf.keras.layers.BatchNormalization(
-        input_shape=(traingen.shape[1],)
-    ))
+    model.add(
+        tf.keras.layers.BatchNormalization(
+            input_shape=(traingen.shape[1],)
+        )
+    )
     for i in range(int(np.floor(nlayers / 2))):
         model.add(tf.keras.layers.Dense(width, activation="elu"))
     model.add(tf.keras.layers.Dropout(dropout_prop))
@@ -761,7 +768,8 @@ def load_network(traingen, dropout_prop, nlayers, width):
     return model
 
 
-def load_callbacks(boot, bootstrap, jacknife, out, keras_verbose, patience):
+def load_callbacks(boot, bootstrap, jacknife,
+                   out, keras_verbose, patience):
     """
     Specifies Keras callbacks, including checkpoints, early stopping,
     and reducing learning rate.
@@ -771,6 +779,10 @@ def load_callbacks(boot, bootstrap, jacknife, out, keras_verbose, patience):
     boot
     bootstrap
     jacknife
+    out
+    keras_verbose
+    patience
+    batch_size
 
     Returns
     -------
@@ -785,7 +797,7 @@ def load_callbacks(boot, bootstrap, jacknife, out, keras_verbose, patience):
             save_best_only=True,
             save_weights_only=True,
             monitor="val_loss",
-            period=1,
+            save_freq="epoch",
         )
     else:
         checkpointer = tf.keras.callbacks.ModelCheckpoint(
@@ -794,7 +806,7 @@ def load_callbacks(boot, bootstrap, jacknife, out, keras_verbose, patience):
             save_best_only=True,
             save_weights_only=True,
             monitor="val_loss",
-            period=1,
+            save_freq="epoch",
         )
     earlystop = tf.keras.callbacks.EarlyStopping(
         monitor="val_loss", min_delta=0, patience=patience
@@ -827,7 +839,7 @@ def train_network(
     max_epochs,
     batch_size,
     out,
-    boot
+    boot,
 ):
     """
     Trains neural network using given parameters.

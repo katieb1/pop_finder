@@ -184,9 +184,11 @@ def run_neural_net(
         # Use default model
         if not tune_model:
             model = tf.Sequential()
-            model.add(tf.layers.BatchNormalization(
-                input_shape=(traingen.shape[1],)
-            ))
+            model.add(
+                tf.layers.BatchNormalization(
+                    input_shape=(traingen.shape[1],)
+                )
+            )
             model.add(tf.layers.Dense(128, activation="elu"))
             model.add(tf.layers.Dense(128, activation="elu"))
             model.add(tf.layers.Dense(128, activation="elu"))
@@ -198,15 +200,13 @@ def run_neural_net(
             aopt = tf.optimizers.Adam(lr=0.0005)
             model.compile(
                 loss="categorical_crossentropy",
-                optimizer=aopt,
-                metrics="accuracy"
+                optimizer=aopt, metrics="accuracy"
             )
 
         # Or tune the model for best results
         else:
             hypermodel = hp_tuning.classifierHyperModel(
-                input_shape=traingen.shape[1],
-                num_classes=len(popnames)
+                input_shape=traingen.shape[1], num_classes=len(popnames)
             )
 
             # If tuned model already exists, rewrite
@@ -226,9 +226,7 @@ def run_neural_net(
             )
 
             tuner.search(
-                traingen,
-                trainpops,
-                epochs=10,
+                traingen, trainpops, epochs=10,
                 validation_split=(train_prop - 1)
             )
 
@@ -308,10 +306,8 @@ def run_neural_net(
             )
             ax1.set_xlabel("Epoch")
             ax1.legend()
-            fig.savefig(
-                save_dir + "/" + mod_name + "_history.pdf",
-                bbox_inches="tight"
-            )
+            fig.savefig(save_dir + "/" + mod_name + "_history.pdf",
+                        bbox_inches="tight")
 
         # Save results
         results = model.evaluate(valgen, valpops)
@@ -327,9 +323,7 @@ def run_neural_net(
         fold_var += 1
 
     # Add true populations to predictions dataframe and output csv
-    preds = preds.merge(samp_list,
-                        left_on="sampleID",
-                        right_on="samples")
+    preds = preds.merge(samp_list, left_on="sampleID", right_on="samples")
     preds = preds.drop("samples", axis=1)
     preds.to_csv(save_dir + "/" + "preds.csv", index=False)
 
@@ -377,9 +371,7 @@ def run_neural_net(
     for i in range(n_reps * n_splits):
         mod = mod_list[i]
         history = mod.fit(
-            X_train - 1,
-            y_train_enc,
-            epochs=int(max_epochs),
+            X_train - 1, y_train_enc, epochs=int(max_epochs),
             callbacks=callback_list
         )
 
@@ -493,8 +485,7 @@ def run_neural_net(
     freq_df.columns = ["Assigned Pop", "Frequency", "Sample ID"]
 
     # Save predictions
-    freq_df.to_csv(save_dir + "/pop_assign_ensemble.csv",
-                   index=False)
+    freq_df.to_csv(save_dir + "/pop_assign_ensemble.csv", index=False)
 
     if not save_weights:
         os.remove(save_dir + "/checkpoint.h5")
