@@ -125,6 +125,7 @@ def locator(
         keras (Default=1).
     """
 
+
     # set seed and gpu
     if seed is not None:
         np.random.seed(seed)
@@ -143,6 +144,9 @@ def locator(
         f.close()
         for key, val in obj.items():
             exec(key + "=val")
+            
+    # Set output file prefix
+    out = out + "/loc"
 
     if windows:
         callset = zarr.open_group(zarr, mode="r")
@@ -761,7 +765,8 @@ def load_network(traingen, dropout_prop, nlayers, width):
     return model
 
 
-def load_callbacks(boot, bootstrap, jacknife, out, keras_verbose, patience):
+def load_callbacks(boot, bootstrap, jacknife, out, keras_verbose,
+                   patience):
     """
     Specifies Keras callbacks, including checkpoints, early stopping,
     and reducing learning rate.
@@ -771,6 +776,10 @@ def load_callbacks(boot, bootstrap, jacknife, out, keras_verbose, patience):
     boot
     bootstrap
     jacknife
+    out
+    keras_verbose
+    patience
+    batch_size
 
     Returns
     -------
@@ -785,7 +794,7 @@ def load_callbacks(boot, bootstrap, jacknife, out, keras_verbose, patience):
             save_best_only=True,
             save_weights_only=True,
             monitor="val_loss",
-            period=1,
+            save_freq='epoch',
         )
     else:
         checkpointer = tf.keras.callbacks.ModelCheckpoint(
@@ -794,7 +803,7 @@ def load_callbacks(boot, bootstrap, jacknife, out, keras_verbose, patience):
             save_best_only=True,
             save_weights_only=True,
             monitor="val_loss",
-            period=1,
+            save_freq='epoch',
         )
     earlystop = tf.keras.callbacks.EarlyStopping(
         monitor="val_loss", min_delta=0, patience=patience
