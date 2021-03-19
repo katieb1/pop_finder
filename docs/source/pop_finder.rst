@@ -20,6 +20,14 @@ pop\_finder.conf\_matrix module
    :undoc-members:
    :show-inheritance:
 
+pop\_finder.contour\_classifier module
+--------------------------------------
+
+.. automodule:: pop_finder.contour_classifier
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pop\_finder.hp\_tuning module
 -----------------------------
 

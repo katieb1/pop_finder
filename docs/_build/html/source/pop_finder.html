@@ -94,6 +94,97 @@ save_dir folder.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="module-pop_finder.contour_classifier">
+<span id="pop-finder-contour-classifier-module"></span><h2>pop_finder.contour_classifier module<a class="headerlink" href="#module-pop_finder.contour_classifier" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="pop_finder.contour_classifier.cont_finder">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.contour_classifier.</span></code><code class="sig-name descname"><span class="pre">cont_finder</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">true_dat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/contour_classifier.html#cont_finder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.contour_classifier.cont_finder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds population in densest contour.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>true_dat</strong> (<em>pd.DataFrame</em>) – Dataframe containing x and y coordinates of all populations in
+training set.</p></li>
+<li><p><strong>cset</strong> (<em>matplotlib.contour.QuadContourSet</em>) – Contour values for each contour polygon.</p></li>
+<li><p><strong>Returns</strong> – </p></li>
+<li><p><strong>pred_pop</strong> (<em>string</em>) – Name of population in densest contour.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pop_finder.contour_classifier.contour_classifier">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.contour_classifier.</span></code><code class="sig-name descname"><span class="pre">contour_classifier</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_contours</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_locator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_dat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nboots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_plots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_df</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'out'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/contour_classifier.html#contour_classifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.contour_classifier.contour_classifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper function that runs locator to generate a density of predictions,
+then uses contour lines to choose the most likely population.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sample_data</strong> (<em>string</em>) – Filepath to input file containing coordinates and populations of
+samples, including individuals from unknown populations.</p></li>
+<li><p><strong>num_contours</strong> (<em>int</em>) – Number of contours to generate and search for closest population in
+(Default=10).</p></li>
+<li><p><strong>run_locator</strong> (<em>boolean</em>) – Run locator and use outputs to generate classifications. If set to
+False, then will look in specified save_dir for the <a href="#id1"><span class="problematic" id="id2">*</span></a>_predlocs.txt
+files from a previous locator run. If set to True, ensure that
+gen_dat is not None (Default=False).</p></li>
+<li><p><strong>gen_dat</strong> (<em>string</em>) – Filepath to input genetic data in VCF format (Default=None).</p></li>
+<li><p><strong>nboots</strong> (<em>int</em>) – Number of bootstrap iterations (Default=50).</p></li>
+<li><p><strong>return_plots</strong> (<em>boolean</em>) – Return contour plots of prediction densities overlayed with true
+population locations (Default=True).</p></li>
+<li><p><strong>return_df</strong> (<em>boolean</em>) – If true, saves the results in a csv file in the save_dir folder
+(Default=True).</p></li>
+<li><p><strong>save_dir</strong> (<em>string</em>) – Folder to save results. Folder should already be in directory. If
+using results from multiple iterations, only include prefix (e.g.
+‘out’ for ‘out1’, ‘out2’, ‘out3’; Default=’out’).</p></li>
+<li><p><strong>multi_iter</strong> (<em>int</em>) – How many times to run locator to get predictions. If the sample size
+is small, it is better to run multiple iterations (Default=1).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>class_df</strong> – Dataframe containing classifications of samples of unknown origin.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pop_finder.contour_classifier.kfcv">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.contour_classifier.</span></code><code class="sig-name descname"><span class="pre">kfcv</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_dat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_runs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'kfcv'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/contour_classifier.html#kfcv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.contour_classifier.kfcv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs K-fold Cross-Validation and returns classification
+report on model performance with given data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sample_data</strong> (<em>string</em>) – Path to tab-delimited file containing known sample
+information, including x, y, pop, and sampleID columns.
+NAs can be included in this file, but they will not be
+used in the analysis.</p></li>
+<li><p><strong>gen_dat</strong> (<em>string</em>) – Path to VCF file containing genetic information for all
+samples of known origin. Do not include samples of unknown
+origin in this file.</p></li>
+<li><p><strong>n_splits</strong> (<em>int</em>) – Number of folds for the K-fold cross-validation (Default=5).</p></li>
+<li><p><strong>n_runs</strong> (<em>int</em>) – Number of times to run K-fold cross-validation (Default=5).</p></li>
+<li><p><strong>return_plot</strong> (<em>boolean</em>) – Return confusion matrix plot in output folder (Default=True).</p></li>
+<li><p><strong>save_dir</strong> (<em>string</em>) – Path to output folder where confusion matrix and classification
+report will be stored.</p></li>
+<li><p><strong>**kwargs</strong> – Arguments for locator. See locator documentation for details.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>report</strong> – Classification report containing precision, recall, F1 score,
+and accuracy for the model.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
 <div class="section" id="module-pop_finder.hp_tuning">
 <span id="pop-finder-hp-tuning-module"></span><h2>pop_finder.hp_tuning module<a class="headerlink" href="#module-pop_finder.hp_tuning" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
