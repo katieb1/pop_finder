@@ -3,16 +3,20 @@
 # Load packages
 import tensorflow.keras as tf
 from kerastuner.tuners import RandomSearch
+from kerastuner import HyperModel
 import numpy as np
 import pandas as pd
+import allel
+import zarr
+import h5py
 import subprocess
 from sklearn.model_selection import RepeatedStratifiedKFold, train_test_split
 from sklearn.preprocessing import OneHotEncoder
-from pop_finder import read
-from pop_finder import hp_tuning
 import sys
 import os
 from matplotlib import pyplot as plt
+from matplotlib.colors import ListedColormap
+import seaborn as sn
 
 
 # Create function for labelling models in kfcv
@@ -121,7 +125,7 @@ def run_neural_net(
 
     # Read data
     print("Reading data...")
-    samp_list, dc = read.read_data(
+    samp_list, dc = read_data(
         infile=infile_kfcv,
         sample_data=sample_data,
         save_allele_counts=save_allele_counts,
@@ -129,7 +133,7 @@ def run_neural_net(
     )
 
     # Read data with unknowns so errors caught before training/tuning
-    samp_list2, dc2, unknowns = read.read_data(
+    samp_list2, dc2, unknowns = read_data(
         infile=infile_all,
         sample_data=sample_data,
         save_allele_counts=save_allele_counts,
@@ -205,7 +209,7 @@ def run_neural_net(
 
         # Or tune the model for best results
         else:
-            hypermodel = hp_tuning.classifierHyperModel(
+            hypermodel = classifierHyperModel(
                 input_shape=traingen.shape[1], num_classes=len(popnames)
             )
 
@@ -491,3 +495,466 @@ def run_neural_net(
         os.remove(save_dir + "/checkpoint.h5")
 
     print("Process complete")
+
+
+def read_data(infile, sample_data, save_allele_counts=False, kfcv=False):
+    """
+    Reads a .zarr, .vcf, or h5py file containing genetic data and
+    creates subsettable data for a classifier neural network.
+
+    Parameters
+    ----------
+    infile : string
+        Path to the .zarr, .vcf, or h5py file.
+    sample_data : string
+        Path to .txt file containing sample information
+        (columns are x, y, sampleID, and pop).
+    save_allele_counts : boolean
+        Saves derived allele count information (Default=False).
+    kfcv : boolean
+        If being used to test accuracy with k-fold cross-
+        validation (i.e. no NAs in the sample data), set to
+        True (Default=False).
+
+    Returns
+    -------
+    samp_list : dataframe
+        Contains information on corresponding sampleID and
+        population classifications.
+    dc : np.array
+        Array of derived allele counts.
+    unknowns : dataframe
+        If kfcv is set to False, returns a dataframe with
+        information about sampleID and indices for samples
+        of unknown origin.
+    """
+
+    # Check formats of datatypes
+
+    # Load genotypes
+    print("loading genotypes")
+    if infile.endswith(".zarr"):
+
+        callset = zarr.open_group(infile, mode="r")
+        gt = callset["calldata/GT"]
+        gen = allel.GenotypeArray(gt[:])
+        samples = callset["samples"][:]
+
+    elif infile.endswith(".vcf") or infile.endswith(".vcf.gz"):
+
+        vcf = allel.read_vcf(infile, log=sys.stderr)
+        gen = allel.GenotypeArray(vcf["calldata/GT"])
+        samples = vcf["samples"]
+
+    elif infile.endswith(".locator.hdf5"):
+
+        h5 = h5py.File(infile, "r")
+        dc = np.array(h5["derived_counts"])
+        samples = np.array(h5["samples"])
+        h5.close()
+
+    # count derived alleles for biallelic sites
+    if not infile.endswith(".locator.hdf5"):
+
+        print("counting alleles")
+        ac = gen.to_allele_counts()
+        biallel = gen.count_alleles().is_biallelic()
+        dc = np.array(ac[biallel, :, 1], dtype="int_")
+        dc = np.transpose(dc)
+
+        if save_allele_counts and not infile.endswith(".locator.hdf5"):
+
+            print("saving derived counts for reanalysis")
+            outfile = h5py.File(infile + ".locator.hdf5", "w")
+            outfile.create_dataset("derived_counts", data=dc)
+            outfile.create_dataset(
+                "samples", data=samples, dtype=h5py.string_dtype()
+            )  # note this requires h5py v 2.10.0
+            outfile.close()
+            # sys.exit()
+
+    # Load data and organize for output
+    print("loading sample data")
+    locs = pd.read_csv(sample_data, sep="\t")
+    locs["id"] = locs["sampleID"]
+    locs.set_index("id", inplace=True)
+
+    # sort loc table so samples are in same order as genotype samples
+    locs = locs.reindex(np.array(samples))
+
+    # check that all sample names are present
+    if not all(
+        [
+            locs["sampleID"][x] == samples[x] for x in range(len(samples))
+        ]
+    ):
+
+        print("sample ordering failed! Check that sample IDs match the VCF.")
+        sys.exit()
+
+    if kfcv:
+
+        locs = np.array(locs["pop"])
+        samp_list = pd.DataFrame({"samples": samples, "pops": locs})
+
+        # Return the sample list to be funneled into kfcv
+        return samp_list, dc
+
+    else:
+
+        locs["order"] = np.arange(len(locs))
+
+        # Find unknown locations as NAs in the dataset
+        unknowns = locs.iloc[np.where(pd.isnull(locs["pop"]))]
+
+        # Extract known location information for training
+        samples = samples[np.where(pd.notnull(locs["pop"]))]
+        locs = locs.iloc[np.where(pd.notnull(locs["pop"]))]
+        order = np.array(locs["order"])
+        locs = np.array(locs["pop"])
+        samp_list = pd.DataFrame({"samples": samples,
+                                  "pops": locs,
+                                  "order": order})
+
+        return samp_list, dc, unknowns
+
+
+class classifierHyperModel(HyperModel):
+    def __init__(self, input_shape, num_classes):
+        """
+        Initializes object of class classifierHyperModel.
+
+        Parameters
+        ----------
+        input_shape : int
+            Number of training examples.
+        num_classes : int
+            Number of populations or labels.
+        """
+        self.input_shape = input_shape
+        self.num_classes = num_classes
+
+    def build(self, hp):
+        """
+        Builds a model with the specified hyperparameters.
+
+        Parameters
+        ----------
+        hp : keras.tuners class
+            Class that defines how to sample hyperparameters (e.g.
+            RandomSearch()).
+
+        Returns
+        -------
+        model : Keras sequential model
+            Model with all the layers and specified hyperparameters.
+        """
+        model = tf.Sequential()
+        model.add(
+            tf.layers.BatchNormalization(
+                input_shape=(self.input_shape,)
+            )
+        )
+        model.add(
+            tf.layers.Dense(
+                units=hp.Int(
+                    "units_1",
+                    # placeholder values for now
+                    min_value=32,
+                    max_value=512,
+                    step=32,
+                    default=128,
+                ),
+                activation=hp.Choice(
+                    "dense_activation_1",
+                    values=["elu", "relu", "tanh", "sigmoid"],
+                    default="elu",
+                ),
+            )
+        )
+        model.add(
+            tf.layers.Dense(
+                units=hp.Int(
+                    "units_2",
+                    # placeholder values for now
+                    min_value=32,
+                    max_value=512,
+                    step=32,
+                    default=128,
+                ),
+                activation=hp.Choice(
+                    "dense_activation_2",
+                    values=["elu", "relu", "tanh", "sigmoid"],
+                    default="elu",
+                ),
+            )
+        )
+        model.add(
+            tf.layers.Dense(
+                units=hp.Int(
+                    "units_3",
+                    # placeholder values for now
+                    min_value=32,
+                    max_value=512,
+                    step=32,
+                    default=128,
+                ),
+                activation=hp.Choice(
+                    "dense_activation_3",
+                    values=["elu", "relu", "tanh", "sigmoid"],
+                    default="elu",
+                ),
+            )
+        )
+        model.add(
+            tf.layers.Dropout(
+                rate=hp.Float(
+                    "dropout",
+                    min_value=0.0,
+                    max_value=0.5,
+                    default=0.25,
+                    step=0.05
+                )
+            )
+        )
+        model.add(
+            tf.layers.Dense(
+                units=hp.Int(
+                    "units_4",
+                    # placeholder values for now
+                    min_value=32,
+                    max_value=512,
+                    step=32,
+                    default=128,
+                ),
+                activation=hp.Choice(
+                    "dense_activation_4",
+                    values=["elu", "relu", "tanh", "sigmoid"],
+                    default="elu",
+                ),
+            )
+        )
+        model.add(
+            tf.layers.Dense(
+                units=hp.Int(
+                    "units_5",
+                    # placeholder values for now
+                    min_value=32,
+                    max_value=512,
+                    step=32,
+                    default=128,
+                ),
+                activation=hp.Choice(
+                    "dense_activation_5",
+                    values=["elu", "relu", "tanh", "sigmoid"],
+                    default="elu",
+                ),
+            )
+        )
+        model.add(
+            tf.layers.Dense(
+                units=hp.Int(
+                    "units_6",
+                    # placeholder values for now
+                    min_value=32,
+                    max_value=512,
+                    step=32,
+                    default=128,
+                ),
+                activation=hp.Choice(
+                    "dense_activation_6",
+                    values=["elu", "relu", "tanh", "sigmoid"],
+                    default="elu",
+                ),
+            )
+        )
+        model.add(tf.layers.Dense(self.num_classes, activation="softmax"))
+
+        model.compile(
+            optimizer=tf.optimizers.Adam(
+                hp.Float(
+                    "learning_rate",
+                    min_value=1e-4,
+                    max_value=1e-2,
+                    sampling="LOG",
+                    default=5e-4,
+                )
+            ),
+            loss="categorical_crossentropy",
+            metrics=["accuracy"],
+        )
+        return model
+
+
+def assign_plot(save_dir, col_scheme="Spectral"):
+    """
+    Plots the frequency of assignment of individuals
+    from unknown populations to different populations
+    included in the training data.
+
+    Parameters
+    ----------
+    save_dir : string
+        Path to output file where "preds.csv" lives and
+        also where the resulting plot will be saved.
+    col_scheme : string
+        Colour scheme of confusion matrix. See
+        matplotlib.org/stable/tutorials/colors/colormaps.html
+        for available colour palettes (Default="Spectral").
+
+    Returns
+    -------
+    assign_plot.png : PNG file
+        PNG formatted assignment plot located in the
+        save_dir folder.
+    """
+
+    # Load data
+    e_preds = pd.read_csv(save_dir + "/pop_assign_freqs.csv")
+    e_preds.rename(columns={e_preds.columns[0]: "sampleID"}, inplace=True)
+    e_preds.set_index("sampleID", inplace=True)
+
+    # Set number of classes
+    num_classes = len(e_preds.columns)
+
+    # Create plot
+    sn.set()
+    sn.set_style("ticks")
+    e_preds.plot(
+        kind="bar",
+        stacked=True,
+        colormap=ListedColormap(sn.color_palette(col_scheme, num_classes)),
+        figsize=(12, 6),
+        grid=None,
+    )
+    legend = plt.legend(
+        loc="center right",
+        bbox_to_anchor=(1.2, 0.5),
+        prop={"size": 15},
+        title="Predicted Pop",
+    )
+    plt.setp(legend.get_title(), fontsize="x-large")
+    plt.xlabel("Sample ID", fontsize=20)
+    plt.ylabel("Frequency of Assignment", fontsize=20)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+
+    # Save plot to output directory
+    plt.savefig(save_dir + "/assign_plot.png", bbox_inches="tight")
+
+
+def conf_matrix(save_dir, col_scheme="Purples"):
+    """
+    Takes results from running the neural network with
+    K-fold cross-validation and creates a confusion
+    matrix.
+
+    Parameters
+    ----------
+    save_dir : string
+        Path to output file where "preds.csv" lives and
+        also where the resulting plot will be saved.
+    col_scheme : string
+        Colour scheme of confusion matrix. See
+        matplotlib.org/stable/tutorials/colors/colormaps.html
+        for available colour palettes (Default="Purples").
+
+    Returns
+    -------
+    conf_mat.png : PNG file
+        PNG formatted confusion matrix plot located in the
+        save_dir folder.
+    """
+
+    # Load data
+    preds = pd.read_csv(save_dir + "/preds.csv")
+    npreds = preds.groupby(["pops"]).agg("mean")
+    npreds = npreds.sort_values("pops", ascending=False)
+
+    # Make sure values are correct
+    if not np.round(np.sum(npreds, axis=1), 2).eq(1).all():
+        raise ValueError("Incorrect input values")
+
+    # Create heatmap
+    sn.set(font_scale=1)
+    cm_plot = sn.heatmap(
+        npreds,
+        annot=True,
+        annot_kws={"size": 14},
+        cbar_kws={"label": "Freq"},
+        vmin=0,
+        vmax=1,
+        cmap="Purples",
+    )
+    cm_plot.set(xlabel="Predicted", ylabel="Actual")
+
+    # Save to output folder
+    plt.savefig(save_dir + "/conf_mat.png", bbox_inches="tight")
+
+
+def structure_plot(save_dir, col_scheme="Spectral"):
+    """
+    Takes results from running the neural network with
+    K-fold cross-validation and creates a structure plot
+    showing proportion of assignment of individuals from
+    known populations to predicted populations.
+
+    Parameters
+    ----------
+    save_dir : string
+        Path to output file where "preds.csv" lives and
+        also where the resulting plot will be saved.
+    col_scheme : string
+        Colour scheme of confusion matrix. See
+        matplotlib.org/stable/tutorials/colors/colormaps.html
+        for available colour palettes (Default="Spectral").
+
+    Returns
+    -------
+    structure_plot.png : PNG file
+        PNG formatted structure plot located in the
+        save_dir folder.
+    """
+
+    # Load data
+    preds = pd.read_csv(save_dir + "/preds.csv")
+    npreds = preds.groupby(["pops"]).agg("mean")
+    npreds = npreds.sort_values("pops", ascending=False)
+
+    # Make sure values are correct
+    if not np.round(np.sum(npreds, axis=1), 2).eq(1).all():
+        raise ValueError("Incorrect input values")
+
+    # Find number of unique classes
+    num_classes = len(npreds.index)
+
+    if not len(npreds.index) == len(npreds.columns):
+        raise ValueError(
+            "Number of pops does not \
+                         match number of predicted pops"
+        )
+
+    # Create plot
+    sn.set()
+    sn.set_style("ticks")
+    npreds.plot(
+        kind="bar",
+        stacked=True,
+        colormap=ListedColormap(sn.color_palette(col_scheme, num_classes)),
+        figsize=(12, 6),
+        grid=None,
+    )
+    legend = plt.legend(
+        loc="center right",
+        bbox_to_anchor=(1.2, 0.5),
+        prop={"size": 15},
+        title="Predicted Pop",
+    )
+    plt.setp(legend.get_title(), fontsize="x-large")
+    plt.xlabel("Actual Pop", fontsize=20)
+    plt.ylabel("Frequency of Assignment", fontsize=20)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+
+    # Save plot to output directory
+    plt.savefig(save_dir + "/structure_plot.png", bbox_inches="tight")

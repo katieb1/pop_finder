@@ -1,7 +1,5 @@
 from pop_finder import __version__
 from pop_finder import pop_finder
-from pop_finder import read
-from pop_finder import hp_tuning
 from pop_finder import contour_classifier
 import pandas as pd
 import numpy as np
@@ -27,9 +25,9 @@ def test_version():
 def test_read():
 
     # Read data w/o kfcv
-    x = read.read_data(infile_all,
-                       sample_data2,
-                       save_allele_counts=False)
+    x = pop_finder.read_data(infile_all,
+                             sample_data2,
+                             save_allele_counts=False)
     assert isinstance(x, tuple)
     assert isinstance(x[0], pd.core.frame.DataFrame)
     assert isinstance(x[1], np.ndarray)
@@ -37,10 +35,10 @@ def test_read():
     assert len(x) == 3
 
     # Read data w/ kfcv
-    y = read.read_data(infile_all,
-                       sample_data1,
-                       save_allele_counts=False,
-                       kfcv=True)
+    y = pop_finder.read_data(infile_all,
+                             sample_data1,
+                             save_allele_counts=False,
+                             kfcv=True)
     assert isinstance(y, tuple)
     assert isinstance(y[0], pd.core.frame.DataFrame)
     assert isinstance(y[1], np.ndarray)
@@ -49,8 +47,9 @@ def test_read():
 
 def test_hp_tuning():
 
-    hm_test = hp_tuning.classifierHyperModel(input_shape=2, num_classes=2)
-    assert isinstance(hm_test, hp_tuning.classifierHyperModel)
+    hm_test = pop_finder.classifierHyperModel(input_shape=2,
+                                              num_classes=2)
+    assert isinstance(hm_test, pop_finder.classifierHyperModel)
     assert hm_test.input_shape == 2
     assert hm_test.num_classes == 2
 
