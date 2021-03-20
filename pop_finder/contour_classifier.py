@@ -70,9 +70,9 @@ def contour_classifier(
         raise ValueError("save_dir does not exist")
 
     # Check is sample_data path exists
-    if isinstance(sample_data, pd.DataFrame) is False:
-        if os.path.exists(sample_data) is False:
-            raise ValueError("path to sample_data incorrect")
+    if (isinstance(sample_data, pd.DataFrame) is False and
+            os.path.exists(sample_data) is False):
+        raise ValueError("path to sample_data incorrect")
 
     if run_locator is True:
 
@@ -174,6 +174,7 @@ def contour_classifier(
                                 )
 
         if multi_iter > 1:
+
             out_list = []
 
             for i in range(1, multi_iter + 1):
@@ -236,7 +237,7 @@ def contour_classifier(
 
         try:
             kernel = stats.gaussian_kde(values)
-        except ValueError as e:
+        except (ValueError) as e:
             raise Exception("Too few points to generate contours") from e
 
         Z = np.reshape(kernel(positions).T, X.shape)
@@ -250,6 +251,10 @@ def contour_classifier(
         cset = ax.contour(X, Y, new_z, levels=num_contours, colors="black")
 
         cset.levels = -np.sort(-cset.levels)
+
+        if len(cset.levels) != num_contours + 1:
+            raise ValueError("Number of contours not equal to num_contours")
+
         for pop in true_dat["pop"].values:
             x = true_dat[true_dat["pop"] == pop]["x"].values[0]
             y = true_dat[true_dat["pop"] == pop]["y"].values[0]
@@ -259,6 +264,7 @@ def contour_classifier(
         ax.set_ylabel("Latitude")
         plt.title(sample)
         plt.legend()
+        plt.close()
 
         # Find predicted pop
         pred_pop, kd = cont_finder(true_dat, cset)
@@ -311,7 +317,7 @@ def cont_finder(true_dat, cset):
             for j in range(len(cset.allsegs[i])):
                 path = matplotlib.path.Path(cset.allsegs[i][j].tolist())
                 inside = path.contains_points(point)
-                if inside[0] is True:
+                if inside[0]:
                     cont = i
                     break
                 else:
@@ -371,6 +377,9 @@ def kfcv(
     os.makedirs(save_dir)
 
     # Partition data into k-folds for each run
+    if os.path.exists(sample_data) is False:
+        raise ValueError("path to sample_data incorrect")
+
     true_dat = pd.read_csv(sample_data, sep="\t", engine="python")
 
     # Drop samples of unknown origin from kfcv calculations
@@ -394,7 +403,7 @@ def kfcv(
                 gen_dat=gen_dat,
                 return_plots=False,
                 return_df=False,
-                save_dir="kfcv",
+                save_dir=save_dir,
                 **kwargs,
             )
             all_dat = class_df.merge(true_dat)
@@ -402,6 +411,9 @@ def kfcv(
             # Create vector of predicted and true labels
             pred_labels.append(all_dat["classification"].values)
             true_labels.append(all_dat["pop"].values)
+
+    # Remove temporary file
+    os.remove("kfcv_tmp.csv")
 
     # From vector of predicted and true labels create report
     pred_labels = np.concatenate(pred_labels).ravel()
@@ -439,4 +451,4 @@ def kfcv(
         plt.tight_layout()
         plt.savefig(save_dir + "/cm.png")
 
-    return report
+    return pred_labels, true_labels, report

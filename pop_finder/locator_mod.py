@@ -18,7 +18,6 @@ from tensorflow.keras import backend as K
 def locator(
     sample_data,
     gen_dat,
-    data_format="vcf",
     train_split=0.9,
     windows=False,
     window_start=0,
@@ -56,9 +55,6 @@ def locator(
         Tab-delimited text file with columns 'sampleID', 'x',
         and 'y'. SampleIDs must exactly match those of the
         VCF. Samples without known locations should be NA.
-    data_format : string
-        File format of SNPs for all samples. Options include
-        'vcf', 'zarr', and 'matrix' (Default='vcf').
     train_split : float
         Proportion of samples to be used for training, ranges
         from 0-1 (Default=0.9).
@@ -143,6 +139,14 @@ def locator(
         f.close()
         for key, val in obj.items():
             exec(key + "=val")
+
+    # Get data format from gen_dat suffix
+    if gen_dat.endswith('vcf'):
+        data_format = 'vcf'
+    elif gen_dat.endswith('txt'):
+        data_format = 'matrix'
+    elif gen_dat.endswith('zarr'):
+        data_format = 'zarr'
 
     # Set output file prefix
     out = out + "/loc"
@@ -519,15 +523,18 @@ def locator(
                                shell=True)
 
 
-def load_genotypes(gen_dat, data_format="vcf"):
+def load_genotypes(gen_dat, data_format):
     """
     Loads genetic data and parses into relevant genotype
     and sample data.
 
     Parameters
     ----------
-    gen_dat
-    data_format
+    gen_dat : string
+        Path to genetic data.
+    data_format : string
+        File format of SNPs for all samples. Options include
+        'vcf', 'zarr', and 'matrix'.
 
     Returns
     -------
