@@ -21,7 +21,7 @@ pred_path = "tests/test_inputs/test_out/loc_boot0_predlocs.txt"
 
 
 def test_version():
-    assert __version__ == "0.1.15"
+    assert __version__ == "0.1.16"
 
 
 def test_read():
