@@ -11,7 +11,6 @@ import pytest
 # Path to helper data
 infile_all = "tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5"
 infile_all_vcf = "tests/test_inputs/onlyAtl_500.recode.vcf"
-infile_kfcv = "tests/test_inputs/onlyAtl_500_kfcv.recode.vcf"
 sample_data1 = "tests/test_inputs/onlyAtl_truelocs.txt"
 sample_data2 = "tests/test_inputs/onlyAtl_truelocs_NAs.txt"
 sample_data3 = "tests/test_inputs/onlyAtl_truelocs_extracol.txt"
@@ -19,7 +18,7 @@ pred_path = "tests/test_inputs/test_out/loc_boot0_predlocs.txt"
 
 
 def test_version():
-    assert __version__ == "0.1.17"
+    assert __version__ == "0.1.18"
 
 
 def test_read():
@@ -61,7 +60,6 @@ def test_pop_finder():
 
     save_path = "tests/test_output"
     pop_finder.run_neural_net(
-        infile_kfcv,
         infile_all,
         sample_data2,
         save_allele_counts=False,
@@ -95,7 +93,6 @@ def test_pop_finder():
 
     with pytest.raises(ValueError):
         pop_finder.run_neural_net(
-            infile_kfcv,
             infile_all,
             sample_data2,
             save_allele_counts=False,

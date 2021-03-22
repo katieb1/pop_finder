@@ -33,7 +33,6 @@ def get_model_name(k):
 
 
 def run_neural_net(
-    infile_kfcv,
     infile_all,
     sample_data,
     save_allele_counts=False,
@@ -58,10 +57,6 @@ def run_neural_net(
 
     Parameters
     ----------
-    infile_kfcv : string
-        Path to VCF or hdf5 file with genetic information for
-        only samples of known origin. No samples of unknown
-        origin should be in this file.
     infile_all : string
         Path to VCF or hdf5 file with genetic information
         for all samples (including samples of unknown origin).
@@ -126,7 +121,7 @@ def run_neural_net(
     # Read data
     print("Reading data...")
     samp_list, dc = read_data(
-        infile=infile_kfcv,
+        infile=infile_all,
         sample_data=sample_data,
         save_allele_counts=save_allele_counts,
         kfcv=True,
@@ -576,6 +571,14 @@ def read_data(infile, sample_data, save_allele_counts=False, kfcv=False):
     # Load data and organize for output
     print("loading sample data")
     locs = pd.read_csv(sample_data, sep="\t")
+
+    # If kfcv, cannot have any NAs
+    if kfcv is True:
+        uk_remove = locs[locs['x'].isnull()].index
+        dc = np.delete(dc, uk_remove, axis=0)
+        samples = np.delete(samples, uk_remove)
+        locs = locs.dropna()
+
     locs["id"] = locs["sampleID"]
     locs.set_index("id", inplace=True)
 
