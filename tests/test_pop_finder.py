@@ -18,7 +18,7 @@ pred_path = "tests/test_inputs/test_out/loc_boot0_predlocs.txt"
 
 
 def test_version():
-    assert __version__ == "0.1.18"
+    assert __version__ == "0.1.19"
 
 
 def test_read():
@@ -70,9 +70,7 @@ def test_pop_finder():
         seed=1,
         train_prop=0.8,
         gpu_number="0",
-        tune_model=False,
-        n_splits=5,
-        n_reps=1,
+        ensemble=False,
         save_best_mod=False,
         save_dir=save_path,
         plot_history=False,
@@ -80,15 +78,9 @@ def test_pop_finder():
     assert os.path.isfile(save_path + "/metrics.csv")
     if os.path.isfile(save_path + "/metrics.csv"):
         os.remove(save_path + "/metrics.csv")
-    assert os.path.isfile(save_path + "/pop_assign_freqs.csv")
-    if os.path.isfile(save_path + "/pop_assign_freqs.csv"):
-        os.remove(save_path + "/pop_assign_freqs.csv")
-    assert os.path.isfile(save_path + "/pop_assign_ensemble.csv")
-    if os.path.isfile(save_path + "/pop_assign_ensemble.csv"):
-        os.remove(save_path + "/pop_assign_ensemble.csv")
-    assert os.path.isfile(save_path + "/preds.csv")
-    if os.path.isfile(save_path + "/preds.csv"):
-        os.remove(save_path + "/preds.csv")
+    assert os.path.isfile(save_path + "/pop_assign.csv")
+    if os.path.isfile(save_path + "/pop_assign.csv"):
+        os.remove(save_path + "/pop_assign.csv")
     os.rmdir(save_path)
 
     with pytest.raises(ValueError):
@@ -103,9 +95,7 @@ def test_pop_finder():
             seed=1,
             train_prop=0.95,
             gpu_number="0",
-            tune_model=False,
-            n_splits=5,
-            n_reps=1,
+            ensemble=False,
             save_best_mod=False,
             save_dir=save_path,
             plot_history=False,
@@ -207,7 +197,7 @@ def test_cont_finder():
     plt.close()
 
 
-def test_kfcv():
+def test_kfcv_contour():
 
     with pytest.raises(ValueError, match="path to sample_data incorrect"):
         contour_classifier.kfcv(
