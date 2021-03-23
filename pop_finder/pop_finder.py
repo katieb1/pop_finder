@@ -12,6 +12,9 @@ import h5py
 import subprocess
 from sklearn.model_selection import RepeatedStratifiedKFold, train_test_split
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.metrics import classification_report, confusion_matrix
+import itertools
+import shutil
 import sys
 import os
 from matplotlib import pyplot as plt
@@ -44,7 +47,7 @@ def hyper_tune(infile, sample_data, max_trials=10, runs_per_trial=10,
         save_allele_counts=False,
         kfcv=True,
     )
-    
+
     # Split data into training and hold-out test set
     X_train, X_val, y_train, y_val = train_test_split(
         dc, samp_list, stratify=samp_list["pops"],
@@ -60,7 +63,7 @@ def hyper_tune(infile, sample_data, max_trials=10, runs_per_trial=10,
         y_val['pops'].values.reshape(-1, 1)
     ).toarray()
     popnames = enc.categories_[0]
-    
+
     hypermodel = classifierHyperModel(
         input_shape=X_train.shape[1], num_classes=len(popnames)
     )
@@ -88,12 +91,13 @@ def hyper_tune(infile, sample_data, max_trials=10, runs_per_trial=10,
 
     best_mod = tuner.get_best_models(num_models=1)[0]
     tuner.get_best_models(num_models=1)[0].save(save_dir+"/best_mod")
-    #best_mod.save(save_dir+'/best_mod')
-    
+    # best_mod.save(save_dir+'/best_mod')
+
     return best_mod, y_train, y_val
 
 
-def kfcv(infile, sample_data, mod_path=None, n_splits=5, n_reps=5, save_dir='kfcv_output', return_plot=True,
+def kfcv(infile, sample_data, mod_path=None, n_splits=5, n_reps=5,
+         save_dir='kfcv_output', return_plot=True,
          save_allele_counts=False, patience=10, batch_size=32,
          max_epochs=10, seed=None):
     """
@@ -139,7 +143,7 @@ def kfcv(infile, sample_data, mod_path=None, n_splits=5, n_reps=5, save_dir='kfc
     plot_history : boolean
         Whether or not to plot the training vs validation loss
         over time (Default=False).
-        
+
     Returns
     -------
     mod_list : list
@@ -147,7 +151,7 @@ def kfcv(infile, sample_data, mod_path=None, n_splits=5, n_reps=5, save_dir='kfc
     mod_acc : pd.DataFrame
         Dataframe containing information on accuracy of each model.
     """
-    
+
     # Read data
     samp_list, dc = read_data(
         infile=infile,
@@ -155,10 +159,10 @@ def kfcv(infile, sample_data, mod_path=None, n_splits=5, n_reps=5, save_dir='kfc
         save_allele_counts=save_allele_counts,
         kfcv=True,
     )
-    
+
     # Create stratified k-fold
     rskf = RepeatedStratifiedKFold(n_splits=n_splits, n_repeats=n_reps)
-    
+
     # Create results storage
     VALIDATION_ACCURACY = []
     VALIDATION_LOSS = []
@@ -167,9 +171,9 @@ def kfcv(infile, sample_data, mod_path=None, n_splits=5, n_reps=5, save_dir='kfc
     if os.path.exists(save_dir):
         shutil.rmtree(save_dir)
     os.makedirs(save_dir)
-    
+
     fold_var = 1
-    
+
     # X_train = dc
     # y_train = samp_list['pops']
     for t, v in rskf.split(dc, samp_list["pops"]):
@@ -191,7 +195,7 @@ def kfcv(infile, sample_data, mod_path=None, n_splits=5, n_reps=5, save_dir='kfc
         y_val = y_train_enc[v]
 
         valsamples = samp_list["samples"].iloc[v].to_numpy()
-        
+
         if mod_path is None:
             model = tf.Sequential()
             model.add(
@@ -214,7 +218,7 @@ def kfcv(infile, sample_data, mod_path=None, n_splits=5, n_reps=5, save_dir='kfc
             )
         else:
             model = tf.models.load_model(mod_path + '/best_mod')
-            
+
         # Create callbacks
         checkpointer = tf.callbacks.ModelCheckpoint(
             filepath=save_dir + "/checkpoint.h5",
@@ -240,12 +244,13 @@ def kfcv(infile, sample_data, mod_path=None, n_splits=5, n_reps=5, save_dir='kfc
         callback_list = [checkpointer, earlystop, reducelr]
 
         # Train model
-        history = model.fit(
+        model.fit(
             X_train,
             y_train,
             batch_size=int(batch_size),
             epochs=int(max_epochs),
-            verbose=0
+            verbose=0,
+            callbacks=callback_list
         )
 
         if fold_var == 1:
@@ -268,27 +273,27 @@ def kfcv(infile, sample_data, mod_path=None, n_splits=5, n_reps=5, save_dir='kfc
         tf.backend.clear_session()
 
         fold_var += 1
-    
+
     preds = preds.merge(samp_list, left_on="sampleID", right_on="samples")
     preds = preds.drop("samples", axis=1)
     preds.to_csv(save_dir + "/preds.csv", index=False)
-    
+
     num_pops = len(preds.columns) - 2
     preds['classification'] = preds.iloc[:, 0:num_pops].idxmax(axis=1)
-    
+
     pred_labels = preds['classification'].values
     true_labels = preds['pops'].values
-    
+
     # Create report with precision, recall, and F1 scores
     report = classification_report(true_labels,
-                               pred_labels,
-                               zero_division=1,
-                               output_dict=True)
+                                   pred_labels,
+                                   zero_division=1,
+                                   output_dict=True)
     report = pd.DataFrame(report).transpose()
     report.to_csv(save_dir + "/classification_report.csv")
-    
+
     if return_plot is True:
-        
+
         cm = confusion_matrix(true_labels, pred_labels, normalize="true")
         cm = np.round(cm, 2)
         plt.style.use("default")
@@ -312,7 +317,7 @@ def kfcv(infile, sample_data, mod_path=None, n_splits=5, n_reps=5, save_dir='kfc
             )
         plt.tight_layout()
         plt.savefig(save_dir + "/cm.png")
-        
+
     return report, VALIDATION_ACCURACY, VALIDATION_LOSS
 
 
@@ -416,13 +421,13 @@ def run_neural_net(
         kfcv=False,
     )
     dc_new = np.delete(dc, unknowns['order'].values, axis=0)
-    
+
     # Split data into training and hold-out test set
     X_train, X_test, y_train, y_test = train_test_split(
         dc_new, samp_list, stratify=samp_list["pops"],
         train_size=train_prop
     )
-    
+
     # Make sure all classes are represented in test set
     if len(samp_list["pops"].unique()) != len(y_test["pops"].unique()):
         sys.exit(
@@ -447,12 +452,12 @@ def run_neural_net(
 #                                  n_reps,
 #                                  save_dir)
     else:
-        
+
         # Split training data into training and validation
         X_train, X_val, y_train, y_val = train_test_split(
             X_train, y_train, stratify=y_train['pops']
         )
-        
+
         # One hot encoding
         enc = OneHotEncoder(handle_unknown="ignore")
         y_train_enc = enc.fit_transform(
@@ -488,10 +493,9 @@ def run_neural_net(
                 loss="categorical_crossentropy",
                 optimizer=aopt, metrics="accuracy"
             )
-            
+
         else:
             model = tf.models.load_model(mod_path + '/best_mod')
- 
 
         # Create callbacks
         checkpointer = tf.callbacks.ModelCheckpoint(
@@ -556,7 +560,7 @@ def run_neural_net(
             )
             ax1.set_xlabel("Epoch")
             ax1.legend()
-            fig.savefig(save_dir + "/" + mod_name + "_history.pdf",
+            fig.savefig(save_dir + "/history.pdf",
                         bbox_inches="tight")
 
         tf.backend.clear_session()
@@ -592,7 +596,7 @@ def run_neural_net(
 #             min_lr=0,
 #         )
 #         callback_list = [checkpointer, earlystop, reducelr]
-        
+
 #         for i in range(n_reps * n_splits):
 #             mod = mod_list[i]
 #             history = mod.fit(
@@ -654,7 +658,7 @@ def run_neural_net(
             ],
         }
     )
-    
+
     metrics.to_csv(save_dir + "/metrics.csv", index=False)
 
     # Return the best model for future predictions
@@ -720,7 +724,7 @@ def run_neural_net(
 
 #         # Save predictions
 #         freq_df.to_csv(save_dir + "/pop_assign_ensemble.csv", index=False)
-    
+
     else:
         tmp_df = pd.DataFrame(model.predict(ukgen) * TEST_ACCURACY[0])
         tmp_df.columns = popnames
@@ -809,13 +813,13 @@ def read_data(infile, sample_data, save_allele_counts=False, kfcv=False):
     # Load data and organize for output
     print("loading sample data")
     locs = pd.read_csv(sample_data, sep="\t")
-    
+
     locs["id"] = locs["sampleID"]
     locs.set_index("id", inplace=True)
 
     # sort loc table so samples are in same order as genotype samples
     locs = locs.reindex(np.array(samples))
-    
+
     # Create order column for indexing
     locs['order'] = np.arange(0, len(locs))
 
