@@ -18,7 +18,7 @@ pred_path = "tests/test_inputs/test_out/loc_boot0_predlocs.txt"
 
 
 def test_version():
-    assert __version__ == "0.1.18"
+    assert __version__ == "0.1.19"
 
 
 def test_read():
@@ -207,7 +207,7 @@ def test_cont_finder():
     plt.close()
 
 
-def test_kfcv():
+def test_kfcv_contour():
 
     with pytest.raises(ValueError, match="path to sample_data incorrect"):
         contour_classifier.kfcv(
