@@ -32,10 +32,70 @@ def get_model_name(k):
     return "model_" + str(k)
 
 
-def kfcv(infile, sample_data, n_splits=5, n_reps=100, save_dir='kfcv_output',
-         return_plot=True, save_allele_counts=False, tune_model=False,
-         patience=10, batch_size=32, max_epochs=10, save_weights=False,
-         plot_history=False):
+def hyper_tune(infile, sample_data, max_trials=10, runs_per_trial=10,
+               max_epochs=10, train_prop=0.8, seed=None, save_dir='out',
+               mod_name='hyper_tune'):
+    """
+    """
+    # Read data
+    samp_list, dc = read_data(
+        infile=infile,
+        sample_data=sample_data,
+        save_allele_counts=False,
+        kfcv=True,
+    )
+    
+    # Split data into training and hold-out test set
+    X_train, X_val, y_train, y_val = train_test_split(
+        dc, samp_list, stratify=samp_list["pops"],
+        train_size=train_prop
+    )
+
+    # One hot encoding
+    enc = OneHotEncoder(handle_unknown="ignore")
+    y_train_enc = enc.fit_transform(
+        y_train['pops'].values.reshape(-1, 1)
+    ).toarray()
+    y_val_enc = enc.fit_transform(
+        y_val['pops'].values.reshape(-1, 1)
+    ).toarray()
+    popnames = enc.categories_[0]
+    
+    hypermodel = classifierHyperModel(
+        input_shape=X_train.shape[1], num_classes=len(popnames)
+    )
+
+    # If tuned model already exists, rewrite
+    if os.path.exists(save_dir + "/" + mod_name):
+        subprocess.check_output(
+            ["rm", "-rf", save_dir + "/" + mod_name]
+        )
+
+    tuner = RandomSearch(
+        hypermodel,
+        objective='val_loss',
+        seed=seed,
+        max_trials=max_trials,
+        executions_per_trial=runs_per_trial,
+        directory=save_dir,
+        project_name=mod_name,
+    )
+
+    tuner.search(
+        X_train - 1, y_train_enc, epochs=max_epochs,
+        validation_data=(X_val - 1, y_val_enc)
+    )
+
+    best_mod = tuner.get_best_models(num_models=1)[0]
+    tuner.get_best_models(num_models=1)[0].save(save_dir+"/best_mod")
+    #best_mod.save(save_dir+'/best_mod')
+    
+    return best_mod, y_train, y_val
+
+
+def kfcv(infile, sample_data, mod_path=None, n_splits=5, n_reps=5, save_dir='kfcv_output', return_plot=True,
+         save_allele_counts=False, patience=10, batch_size=32,
+         max_epochs=10, seed=None):
     """
     Runs K-fold cross-validation to get an accuracy estimate of the model.
 
@@ -107,19 +167,18 @@ def kfcv(infile, sample_data, n_splits=5, n_reps=100, save_dir='kfcv_output',
     if os.path.exists(save_dir):
         shutil.rmtree(save_dir)
     os.makedirs(save_dir)
+    
     fold_var = 1
-    mod_list = []
     
     # X_train = dc
     # y_train = samp_list['pops']
     for t, v in rskf.split(dc, samp_list["pops"]):
-
-        # Set model name
-        mod_name = get_model_name(fold_var)
+        print(t)
+        print(v)
 
         # Subset train and validation data
-        traingen = dc[t, :] - 1
-        valgen = dc[v, :] - 1
+        X_train = dc[t, :] - 1
+        X_val = dc[v, :] - 1
 
         # One hot encoding
         enc = OneHotEncoder(handle_unknown="ignore")
@@ -128,17 +187,16 @@ def kfcv(infile, sample_data, n_splits=5, n_reps=100, save_dir='kfcv_output',
         ).toarray()
         popnames = enc.categories_[0]
 
-        trainpops = y_train_enc[t]
-        valpops = y_train_enc[v]
+        y_train = y_train_enc[t]
+        y_val = y_train_enc[v]
 
         valsamples = samp_list["samples"].iloc[v].to_numpy()
-
-        # Use default model
-        if not tune_model:
+        
+        if mod_path is None:
             model = tf.Sequential()
             model.add(
                 tf.layers.BatchNormalization(
-                    input_shape=(traingen.shape[1],)
+                    input_shape=(X_train.shape[1],)
                 )
             )
             model.add(tf.layers.Dense(128, activation="elu"))
@@ -154,50 +212,23 @@ def kfcv(infile, sample_data, n_splits=5, n_reps=100, save_dir='kfcv_output',
                 loss="categorical_crossentropy",
                 optimizer=aopt, metrics="accuracy"
             )
-
-        # Or tune the model for best results
         else:
-            hypermodel = classifierHyperModel(
-                input_shape=traingen.shape[1], num_classes=len(popnames)
-            )
-
-            # If tuned model already exists, rewrite
-            if os.path.exists(save_dir + "/" + mod_name):
-                subprocess.check_output(
-                    ["rm", "-rf", save_dir + "/" + mod_name]
-                )
-
-            tuner = RandomSearch(
-                hypermodel,
-                objective="loss",
-                seed=seed,
-                max_trials=10,
-                executions_per_trial=10,
-                directory=save_dir,
-                project_name=mod_name,
-            )
-
-            tuner.search(
-                traingen, trainpops, epochs=10,
-                validation_split=(train_prop - 1)
-            )
-
-            model = tuner.get_best_models(num_models=1)[0]
-
+            model = tf.models.load_model(mod_path + '/best_mod')
+            
         # Create callbacks
         checkpointer = tf.callbacks.ModelCheckpoint(
-            filepath=save_dir + "/" + mod_name + ".h5",
+            filepath=save_dir + "/checkpoint.h5",
             verbose=1,
             save_best_only=True,
             save_weights_only=True,
-            monitor="val_loss",
+            monitor="loss",
             save_freq="epoch",
         )
         earlystop = tf.callbacks.EarlyStopping(
-            monitor="val_loss", min_delta=0, patience=patience
+            monitor="loss", min_delta=0, patience=patience
         )
         reducelr = tf.callbacks.ReduceLROnPlateau(
-            monitor="val_loss",
+            monitor="loss",
             factor=0.2,
             patience=int(patience / 3),
             verbose=1,
@@ -210,81 +241,39 @@ def kfcv(infile, sample_data, n_splits=5, n_reps=100, save_dir='kfcv_output',
 
         # Train model
         history = model.fit(
-            traingen,
-            trainpops,
+            X_train,
+            y_train,
             batch_size=int(batch_size),
             epochs=int(max_epochs),
-            callbacks=callback_list,
-            validation_data=(valgen, valpops),
+            verbose=0
         )
 
-        # Load model weights
-        model.load_weights(save_dir + "/" + mod_name + ".h5")
-
-        if not save_weights:
-            os.remove(save_dir + "/" + mod_name + ".h5")
-
         if fold_var == 1:
-            preds = pd.DataFrame(model.predict(valgen))
+            preds = pd.DataFrame(model.predict(X_val))
             preds.columns = popnames
             preds["sampleID"] = valsamples
-            preds["model"] = mod_name
         else:
-            preds_new = pd.DataFrame(model.predict(valgen))
+            preds_new = pd.DataFrame(model.predict(X_val))
             preds_new.columns = popnames
             preds_new["sampleID"] = valsamples
-            preds_new["model"] = mod_name
             preds = preds.append(preds_new)
 
-        # plot training history
-        if plot_history:
-            plt.switch_backend("agg")
-            fig = plt.figure(figsize=(3, 1.5), dpi=200)
-            plt.rcParams.update({"font.size": 7})
-            ax1 = fig.add_axes([0, 0, 1, 1])
-            ax1.plot(
-                history.history["val_loss"][3:],
-                "--",
-                color="black",
-                lw=0.5,
-                label="Validation Loss",
-            )
-            ax1.plot(
-                history.history["loss"][3:],
-                "-",
-                color="black",
-                lw=0.5,
-                label="Training Loss",
-            )
-            ax1.set_xlabel("Epoch")
-            ax1.legend()
-            fig.savefig(save_dir + "/" + mod_name + "_history.pdf",
-                        bbox_inches="tight")
-
         # Save results
-        results = model.evaluate(valgen, valpops)
+        results = model.evaluate(X_val, y_val, verbose=0)
         results = dict(zip(model.metrics_names, results))
 
         VALIDATION_ACCURACY.append(results["accuracy"])
         VALIDATION_LOSS.append(results["loss"])
 
-        mod_list.append(model)
-
         tf.backend.clear_session()
 
         fold_var += 1
-        
-    # Add true populations to predictions dataframe and output csv
-    mod_acc = {'model': [], 'acc': np.round(acc, 2)}
-    for i in range(1, len(acc)+1):
-        mod_acc['model'].append(get_model_name(i))
     
     preds = preds.merge(samp_list, left_on="sampleID", right_on="samples")
     preds = preds.drop("samples", axis=1)
-    preds = preds.merge(pd.DataFrame(mod_acc))
     preds.to_csv(save_dir + "/preds.csv", index=False)
     
-    num_pops = len(preds.columns) - 4
+    num_pops = len(preds.columns) - 2
     preds['classification'] = preds.iloc[:, 0:num_pops].idxmax(axis=1)
     
     pred_labels = preds['classification'].values
@@ -324,11 +313,13 @@ def kfcv(infile, sample_data, n_splits=5, n_reps=100, save_dir='kfcv_output',
         plt.tight_layout()
         plt.savefig(save_dir + "/cm.png")
         
-    return mod_list, mod_acc
+    return report, VALIDATION_ACCURACY, VALIDATION_LOSS
+
 
 def run_neural_net(
     infile,
     sample_data,
+    mod_path=None,
     ensemble=False,
     save_allele_counts=False,
     save_weights=False,
@@ -338,17 +329,14 @@ def run_neural_net(
     seed=None,
     train_prop=0.8,
     gpu_number="0",
-    tune_model=False,
-    n_splits=5,
-    n_reps=5,
     save_best_mod=False,
     save_dir="out",
     plot_history=False,
 ):
     """
-    Uses genetic information to tune, train, evaluate a single neural network or
-    an ensemble of neural networks, then predicts the population of origin for
-    samples of unknown origin.
+    Uses input arguments from the command line to tune, train,
+    evaluate an ensemble of neural networks, then predicts the
+    population of origin for samples of unknown origin.
 
     Parameters
     ----------
@@ -443,20 +431,21 @@ def run_neural_net(
         )
 
     if ensemble:
-        # One hot encoding
-        enc = OneHotEncoder(handle_unknown="ignore")
-        y_train_enc = enc.fit_transform(
-            y_train["pops"].values.reshape(-1, 1)
-        ).toarray()
-        y_test_enc = enc.fit_transform(
-            y_test['pops'].values.reshape(-1, 1)
-        ).toarray()
-        popnames = enc.categories_[0]
-        mod_list, mod_acc = kfcv(infile_kfcv,
-                                 sample_data,
-                                 n_splits,
-                                 n_reps,
-                                 save_dir)
+        print("Feature coming soon...")
+#         # One hot encoding
+#         enc = OneHotEncoder(handle_unknown="ignore")
+#         y_train_enc = enc.fit_transform(
+#             y_train["pops"].values.reshape(-1, 1)
+#         ).toarray()
+#         y_test_enc = enc.fit_transform(
+#             y_test['pops'].values.reshape(-1, 1)
+#         ).toarray()
+#         popnames = enc.categories_[0]
+#         mod_list, mod_acc = kfcv(infile_kfcv,
+#                                  sample_data,
+#                                  n_splits,
+#                                  n_reps,
+#                                  save_dir)
     else:
         
         # Split training data into training and validation
@@ -479,7 +468,7 @@ def run_neural_net(
         popnames = enc.categories_[0]
 
         # Use default model
-        if not tune_model:
+        if mod_path is None:
             model = tf.Sequential()
             model.add(
                 tf.layers.BatchNormalization(
@@ -499,35 +488,10 @@ def run_neural_net(
                 loss="categorical_crossentropy",
                 optimizer=aopt, metrics="accuracy"
             )
-
-        # Or tune the model for best results
+            
         else:
-            hypermodel = classifierHyperModel(
-                input_shape=X_train.shape[1], num_classes=len(popnames)
-            )
-
-            # If tuned model already exists, rewrite
-            if os.path.exists(save_dir + "/" + mod_name):
-                subprocess.check_output(
-                    ["rm", "-rf", save_dir + "/" + mod_name]
-                )
-
-            tuner = RandomSearch(
-                hypermodel,
-                objective="loss",
-                seed=seed,
-                max_trials=10,
-                executions_per_trial=10,
-                directory=save_dir,
-                project_name=mod_name,
-            )
-
-            tuner.search(
-                X_train, y_train, epochs=10,
-                validation_split=(train_prop - 1)
-            )
-
-            model = tuner.get_best_models(num_models=1)[0]
+            model = tf.models.load_model(mod_path + '/best_mod')
+ 
 
         # Create callbacks
         checkpointer = tf.callbacks.ModelCheckpoint(
@@ -561,6 +525,7 @@ def run_neural_net(
             epochs=int(max_epochs),
             callbacks=callback_list,
             validation_data=(X_val - 1, y_val_enc),
+            verbose=0
         )
 
         # Load best model
@@ -603,57 +568,57 @@ def run_neural_net(
 
     # Train model on all the data
     if ensemble:
+        print("Coming soon...")
         # Create callbacks
-        checkpointer = tf.callbacks.ModelCheckpoint(
-            filepath=save_dir + "/checkpoint.h5",
-            verbose=1,
-            save_best_only=True,
-            save_weights_only=True,
-            monitor="loss",
-            save_freq="epoch",
-        )
-        earlystop = tf.callbacks.EarlyStopping(
-            monitor="loss", min_delta=0, patience=patience
-        )
-        reducelr = tf.callbacks.ReduceLROnPlateau(
-            monitor="loss",
-            factor=0.2,
-            patience=int(patience / 3),
-            verbose=1,
-            mode="auto",
-            min_delta=0,
-            cooldown=0,
-            min_lr=0,
-        )
-        callback_list = [checkpointer, earlystop, reducelr]
+#         checkpointer = tf.callbacks.ModelCheckpoint(
+#             filepath=save_dir + "/checkpoint.h5",
+#             verbose=1,
+#             save_best_only=True,
+#             save_weights_only=True,
+#             monitor="loss",
+#             save_freq="epoch",
+#         )
+#         earlystop = tf.callbacks.EarlyStopping(
+#             monitor="loss", min_delta=0, patience=patience
+#         )
+#         reducelr = tf.callbacks.ReduceLROnPlateau(
+#             monitor="loss",
+#             factor=0.2,
+#             patience=int(patience / 3),
+#             verbose=1,
+#             mode="auto",
+#             min_delta=0,
+#             cooldown=0,
+#             min_lr=0,
+#         )
+#         callback_list = [checkpointer, earlystop, reducelr]
         
-        # Fit each of the models using the entire training set
-        for i in range(n_reps * n_splits):
-            mod = mod_list[i]
-            # Can I even do this ??? - nooo
-            history = mod.fit(
-                X_train - 1, y_train_enc,
-                epochs=int(max_epochs),
-                callbacks=callback_list
-            )
+#         for i in range(n_reps * n_splits):
+#             mod = mod_list[i]
+#             history = mod.fit(
+#                 X_train - 1, y_train_enc,
+#                 epochs=int(max_epochs),
+#                 callbacks=callback_list
+#             )
 
-            test_loss, test_acc = mod.evaluate(X_test - 1, y_test_enc)
+#             test_loss, test_acc = mod.evaluate(X_test - 1, y_test_enc)
 
-            # Find confidence interval of best model
-            test_err = 1 - test_acc
-            test_95CI = 1.96 * np.sqrt(
-                (test_err * (1 - test_err)) / len(y_test_enc)
-            )
+#             # Find confidence interval of best model
+#             test_err = 1 - test_acc
+#             test_95CI = 1.96 * np.sqrt(
+#                 (test_err * (1 - test_err)) / len(y_test_enc)
+#             )
 
-            # Fill test lists with information
-            TEST_LOSS.append(test_loss)
-            TEST_ACCURACY.append(test_acc)
-            TEST_95CI.append(test_95CI)
+#             # Fill test lists with information
+#             TEST_LOSS.append(test_loss)
+#             TEST_ACCURACY.append(test_acc)
+#             TEST_95CI.append(test_95CI)
 
-            print(
-                f"Accuracy of model {i} is {np.round(test_acc, 2)}\
-                +/- {np.round(test_95CI,2)}"
-            )
+#             print(
+#                 f"Accuracy of model {i} is {np.round(test_acc, 2)}\
+#                 +/- {np.round(test_95CI,2)}"
+#            )
+
     else:
         test_loss, test_acc = model.evaluate(X_test - 1, y_test_enc)
 
@@ -709,58 +674,58 @@ def run_neural_net(
 
     # Predict on unknown samples with ensemble of models
     if ensemble:
-        
-        pred_dict = {"count": [], "df": []}
-        for i in range(n_splits * n_reps):
-            mod = mod_list[i]
-            tmp_df = pd.DataFrame(mod.predict(ukgen) * TEST_ACCURACY[i])
-            tmp_df.columns = popnames
-            tmp_df["sampleID"] = uksamples
-            tmp_df["iter"] = i
-            pred_dict["count"].append(i)
-            pred_dict["df"].append(tmp_df)
+        print("Coming soon...")
+#         pred_dict = {"count": [], "df": []}
+#         for i in range(n_splits * n_reps):
+#             mod = mod_list[i]
+#             tmp_df = pd.DataFrame(mod.predict(ukgen) * TEST_ACCURACY[i])
+#             tmp_df.columns = popnames
+#             tmp_df["sampleID"] = uksamples
+#             tmp_df["iter"] = i
+#             pred_dict["count"].append(i)
+#             pred_dict["df"].append(tmp_df)
 
-        # Find the frequency of assignment for different populations
-        top_pops = {"df": [], "pops": []}
+#         # Find the frequency of assignment for different populations
+#         top_pops = {"df": [], "pops": []}
 
-        for i in range(n_splits * n_reps):
-            top_pops["df"].append(i)
-            top_pops["pops"].append(
-                pred_dict["df"][i].iloc[:, 0:len(popnames)].idxmax(axis=1)
-            )
+#         for i in range(n_splits * n_reps):
+#             top_pops["df"].append(i)
+#             top_pops["pops"].append(
+#                 pred_dict["df"][i].iloc[:, 0:len(popnames)].idxmax(axis=1)
+#             )
 
-        top_pops_df = pd.DataFrame(top_pops["pops"])
-        top_pops_df.columns = uksamples
-        top_freqs = {"sample": [], "freq": []}
+#         top_pops_df = pd.DataFrame(top_pops["pops"])
+#         top_pops_df.columns = uksamples
+#         top_freqs = {"sample": [], "freq": []}
 
-        for samp in uksamples:
-            top_freqs["sample"].append(samp)
-            top_freqs["freq"].append(
-                top_pops_df[samp].value_counts() / len(top_pops_df)
-            )
+#         for samp in uksamples:
+#             top_freqs["sample"].append(samp)
+#             top_freqs["freq"].append(
+#                 top_pops_df[samp].value_counts() / len(top_pops_df)
+#             )
 
-        # Save frequencies to csv for plotting
-        top_freqs_df = pd.DataFrame(top_freqs["freq"]).fillna(0)
-        top_freqs_df.to_csv(save_dir + "/pop_assign_freqs.csv")
+#         # Save frequencies to csv for plotting
+#         top_freqs_df = pd.DataFrame(top_freqs["freq"]).fillna(0)
+#         top_freqs_df.to_csv(save_dir + "/pop_assign_freqs.csv")
 
-        # Create table to assignments by frequency
-        freq_df = pd.concat(
-            [
-                pd.DataFrame(top_freqs["freq"]).max(axis=1),
-                pd.DataFrame(top_freqs["freq"]).idxmax(axis=1),
-            ],
-            axis=1,
-        ).reset_index()
-        freq_df.columns = ["Assigned Pop", "Frequency", "Sample ID"]
+#         # Create table to assignments by frequency
+#         freq_df = pd.concat(
+#             [
+#                 pd.DataFrame(top_freqs["freq"]).max(axis=1),
+#                 pd.DataFrame(top_freqs["freq"]).idxmax(axis=1),
+#             ],
+#             axis=1,
+#         ).reset_index()
+#         freq_df.columns = ["Assigned Pop", "Frequency", "Sample ID"]
 
-        # Save predictions
-        freq_df.to_csv(save_dir + "/pop_assign_ensemble.csv", index=False)
+#         # Save predictions
+#         freq_df.to_csv(save_dir + "/pop_assign_ensemble.csv", index=False)
     
     else:
         tmp_df = pd.DataFrame(model.predict(ukgen) * TEST_ACCURACY[0])
         tmp_df.columns = popnames
         tmp_df["sampleID"] = uksamples
-        tmp_df.to_csv(save_dir + "/pop_assign.csv")
+        tmp_df.to_csv(save_dir + "/pop_assign.csv", index=False)
 
     print("Process complete")
 
