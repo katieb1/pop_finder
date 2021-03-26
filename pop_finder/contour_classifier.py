@@ -99,6 +99,8 @@ def contour_classifier(
                 **kwargs,
             )
 
+        plt.close()
+
         out_list = []
 
         for i in range(1, multi_iter + 1):
@@ -267,7 +269,6 @@ def contour_classifier(
         ax.set_ylabel("Latitude")
         plt.title(sample)
         plt.legend()
-        plt.close()
 
         # Find predicted pop
         pred_pop, kd = cont_finder(true_dat, cset)
