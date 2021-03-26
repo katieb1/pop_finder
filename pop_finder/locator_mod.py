@@ -151,301 +151,154 @@ def locator(
     # Set output file prefix
     out = out + "/loc"
 
-    if windows:
-        callset = zarr.open_group(zarr, mode="r")
-        gt = callset["calldata/GT"]
-        samples = callset["samples"][:]
-        positions = np.array(callset["variants/POS"])
-        start = int(window_start)
-        if window_stop is None:
-            stop = np.max(positions)
-        else:
-            stop = int(window_stop)
-        size = int(window_size)
-        for i in np.arange(start, stop, size):
-            mask = np.logical_and(positions >= i, positions < i + size)
-            a = np.min(np.argwhere(mask))
-            b = np.max(np.argwhere(mask))
-            print(a, b)
-            genotypes = allel.GenotypeArray(gt[a:b, :, :])
-            sample_data, locs = sort_samples(samples, sample_data, genotypes)
-            meanlong, sdlong, meanlat, sdlat, locs = normalize_locs(locs)
-            ac = filter_snps(genotypes, min_mac, max_SNPs, impute_missing)
-            checkpointer, earlystop, reducelr = load_callbacks(
-                "FULL", bootstrap, jacknife, out, keras_verbose, patience
-            )
-            (
-                train,
-                test,
-                traingen,
-                testgen,
-                trainlocs,
-                testlocs,
-                pred,
-                predgen,
-            ) = split_train_test(ac, locs, train_split)
-            model = load_network(traingen, dropout_prop, nlayers, width)
-            t1 = time.time()
-            history, model = train_network(
-                model,
-                traingen,
-                testgen,
-                trainlocs,
-                testlocs,
-                bootstrap,
-                jacknife,
-                checkpointer,
-                earlystop,
-                reducelr,
-                keras_verbose,
-                max_epochs,
-                batch_size,
-                out,
-                boot="FULL",
-            )
-            dists = predict_locs(
-                model,
-                predgen,
-                sdlong,
-                meanlong,
-                sdlat,
-                meanlat,
-                testlocs,
-                pred,
-                samples,
-                testgen,
-                bootstrap,
-                jacknife,
-                windows,
-                out,
-                history,
-                boot="FULL",
-                size=size,
-                i=i,
-            )
-            if plot_history:
-                plot_history_fn(history, dists, out)
-            if not keep_weights:
-                subprocess.run("rm " + out + "_weights.hdf5", shell=True)
-            t2 = time.time()
-            elapsed = t2 - t1
-            print("run time " + str(elapsed / 60) + " minutes")
-    else:
-        if not bootstrap and not jacknife:
-            boot = None
-            genotypes, samples = load_genotypes(gen_dat, data_format)
-            sample_data, locs = sort_samples(samples, sample_data, genotypes)
-            meanlong, sdlong, meanlat, sdlat, locs = normalize_locs(locs)
-            ac = filter_snps(genotypes, min_mac, max_SNPs, impute_missing)
-            checkpointer, earlystop, reducelr = load_callbacks(
-                "FULL", bootstrap, jacknife, out, keras_verbose, patience
-            )
-            (
-                train,
-                test,
-                traingen,
-                testgen,
-                trainlocs,
-                testlocs,
-                pred,
-                predgen,
-            ) = split_train_test(ac, locs, train_split)
-            model = load_network(traingen, dropout_prop, nlayers, width)
-            start = time.time()
-            history, model = train_network(
-                model,
-                traingen,
-                testgen,
-                trainlocs,
-                testlocs,
-                bootstrap,
-                jacknife,
-                checkpointer,
-                earlystop,
-                reducelr,
-                keras_verbose,
-                max_epochs,
-                batch_size,
-                out,
-                boot,
-            )
-            dists = predict_locs(
-                model,
-                predgen,
-                sdlong,
-                meanlong,
-                sdlat,
-                meanlat,
-                testlocs,
-                pred,
-                samples,
-                testgen,
-                bootstrap,
-                jacknife,
-                windows,
-                out,
-                history,
-                boot,
-            )
-            if plot_history:
-                plot_history_fn(history, dists, out)
-            if not keep_weights:
-                subprocess.run("rm " + out + "_weights.hdf5", shell=True)
-            end = time.time()
-            elapsed = end - start
-            print("run time " + str(elapsed / 60) + " minutes")
-        elif bootstrap:
-            boot = "FULL"
-            genotypes, samples = load_genotypes(gen_dat, data_format)
-            sample_data, locs = sort_samples(samples, sample_data, genotypes)
-            meanlong, sdlong, meanlat, sdlat, locs = normalize_locs(locs)
-            ac = filter_snps(genotypes, min_mac, max_SNPs, impute_missing)
-            checkpointer, earlystop, reducelr = load_callbacks(
-                "FULL", bootstrap, jacknife, out, keras_verbose, patience
-            )
-            (
-                train,
-                test,
-                traingen,
-                testgen,
-                trainlocs,
-                testlocs,
-                pred,
-                predgen,
-            ) = split_train_test(ac, locs, train_split)
-            model = load_network(traingen, dropout_prop, nlayers, width)
-            start = time.time()
-            history, model = train_network(
-                model,
-                traingen,
-                testgen,
-                trainlocs,
-                testlocs,
-                bootstrap,
-                jacknife,
-                checkpointer,
-                earlystop,
-                reducelr,
-                keras_verbose,
-                max_epochs,
-                batch_size,
-                out,
-                boot,
-            )
-            dists = predict_locs(
-                model,
-                predgen,
-                sdlong,
-                meanlong,
-                sdlat,
-                meanlat,
-                testlocs,
-                pred,
-                samples,
-                testgen,
-                bootstrap,
-                jacknife,
-                windows,
-                out,
-                history,
-                boot,
-            )
-            if plot_history:
-                plot_history_fn(history, dists, out)
-            if not keep_weights:
-                subprocess.run("rm " + out + "_bootFULL_weights.hdf5",
-                               shell=True)
-            end = time.time()
-            elapsed = end - start
-            print("run time " + str(elapsed / 60) + " minutes")
-            for boot in range(nboots):
-                np.random.seed(np.random.choice(range(int(1e6)), 1))
-                checkpointer, earlystop, reducelr = load_callbacks(
-                    boot, bootstrap, jacknife, out, keras_verbose, patience
-                )
-                print("starting bootstrap " + str(boot))
-                traingen2 = copy.deepcopy(traingen)
-                testgen2 = copy.deepcopy(testgen)
-                predgen2 = copy.deepcopy(predgen)
-                site_order = np.random.choice(
-                    traingen2.shape[1], traingen2.shape[1], replace=True
-                )
-                traingen2 = traingen2[:, site_order]
-                testgen2 = testgen2[:, site_order]
-                predgen2 = predgen2[:, site_order]
-                model = load_network(traingen2, dropout_prop, nlayers, width)
-                start = time.time()
-                history, model = train_network(
-                    model,
-                    traingen2,
-                    testgen2,
-                    trainlocs,
-                    testlocs,
-                    bootstrap,
-                    jacknife,
-                    checkpointer,
-                    earlystop,
-                    reducelr,
-                    keras_verbose,
-                    max_epochs,
-                    batch_size,
-                    out,
-                    boot,
-                )
-                dists = predict_locs(
-                    model,
-                    predgen2,
-                    sdlong,
-                    meanlong,
-                    sdlat,
-                    meanlat,
-                    testlocs,
-                    pred,
-                    samples,
-                    testgen2,
-                    bootstrap,
-                    jacknife,
-                    windows,
-                    out,
-                    history,
-                    boot,
-                )
-                if plot_history:
-                    plot_history_fn(history, dists, out)
-                if not keep_weights:
-                    subprocess.run(
-                        "rm " + out + "_boot" + str(boot) + "_weights.hdf5",
-                        shell=True
-                    )
-                end = time.time()
-                elapsed = end - start
-                K.clear_session()
-                print("run time " + str(elapsed / 60) + " minutes\n\n")
-        elif jacknife:
-            boot = "FULL"
-            genotypes, samples = load_genotypes(gen_dat, data_format)
-            sample_data, locs = sort_samples(samples, sample_data, genotypes)
-            meanlong, sdlong, meanlat, sdlat, locs = normalize_locs(locs)
-            ac = filter_snps(genotypes, min_mac, max_SNPs, impute_missing)
+    if not bootstrap and not jacknife:
+        boot = None
+        genotypes, samples = load_genotypes(gen_dat, data_format)
+        sample_data, locs = sort_samples(samples, sample_data, genotypes)
+        meanlong, sdlong, meanlat, sdlat, locs = normalize_locs(locs)
+        ac = filter_snps(genotypes, min_mac, max_SNPs, impute_missing)
+        checkpointer, earlystop, reducelr = load_callbacks(
+            "FULL", bootstrap, jacknife, out, keras_verbose, patience
+        )
+        (
+            train,
+            test,
+            traingen,
+            testgen,
+            trainlocs,
+            testlocs,
+            pred,
+            predgen,
+        ) = split_train_test(ac, locs, train_split)
+        model = load_network(traingen, dropout_prop, nlayers, width)
+        start = time.time()
+        history, model = train_network(
+            model,
+            traingen,
+            testgen,
+            trainlocs,
+            testlocs,
+            bootstrap,
+            jacknife,
+            checkpointer,
+            earlystop,
+            reducelr,
+            keras_verbose,
+            max_epochs,
+            batch_size,
+            out,
+            boot,
+        )
+        dists = predict_locs(
+            model,
+            predgen,
+            sdlong,
+            meanlong,
+            sdlat,
+            meanlat,
+            testlocs,
+            pred,
+            samples,
+            testgen,
+            bootstrap,
+            jacknife,
+            windows,
+            out,
+            history,
+            boot,
+        )
+        if plot_history:
+            plot_history_fn(history, dists, out)
+        if not keep_weights:
+            subprocess.run("rm " + out + "_weights.hdf5", shell=True)
+        end = time.time()
+        elapsed = end - start
+        print("run time " + str(elapsed / 60) + " minutes")
+    elif bootstrap:
+        boot = "FULL"
+        genotypes, samples = load_genotypes(gen_dat, data_format)
+        sample_data, locs = sort_samples(samples, sample_data, genotypes)
+        meanlong, sdlong, meanlat, sdlat, locs = normalize_locs(locs)
+        ac = filter_snps(genotypes, min_mac, max_SNPs, impute_missing)
+        checkpointer, earlystop, reducelr = load_callbacks(
+            "FULL", bootstrap, jacknife, out, keras_verbose, patience
+        )
+        (
+            train,
+            test,
+            traingen,
+            testgen,
+            trainlocs,
+            testlocs,
+            pred,
+            predgen,
+        ) = split_train_test(ac, locs, train_split)
+        model = load_network(traingen, dropout_prop, nlayers, width)
+        start = time.time()
+        history, model = train_network(
+            model,
+            traingen,
+            testgen,
+            trainlocs,
+            testlocs,
+            bootstrap,
+            jacknife,
+            checkpointer,
+            earlystop,
+            reducelr,
+            keras_verbose,
+            max_epochs,
+            batch_size,
+            out,
+            boot,
+        )
+        dists = predict_locs(
+            model,
+            predgen,
+            sdlong,
+            meanlong,
+            sdlat,
+            meanlat,
+            testlocs,
+            pred,
+            samples,
+            testgen,
+            bootstrap,
+            jacknife,
+            windows,
+            out,
+            history,
+            boot,
+        )
+        if plot_history:
+            plot_history_fn(history, dists, out)
+        if not keep_weights:
+            subprocess.run("rm " + out + "_bootFULL_weights.hdf5",
+                           shell=True)
+        end = time.time()
+        elapsed = end - start
+        print("run time " + str(elapsed / 60) + " minutes")
+        for boot in range(nboots):
+            np.random.seed(np.random.choice(range(int(1e6)), 1))
             checkpointer, earlystop, reducelr = load_callbacks(
                 boot, bootstrap, jacknife, out, keras_verbose, patience
             )
-            (
-                train,
-                test,
-                traingen,
-                testgen,
-                trainlocs,
-                testlocs,
-                pred,
-                predgen,
-            ) = split_train_test(ac, locs, train_split)
-            model = load_network(traingen, dropout_prop, nlayers, width)
+            print("starting bootstrap " + str(boot))
+            traingen2 = copy.deepcopy(traingen)
+            testgen2 = copy.deepcopy(testgen)
+            predgen2 = copy.deepcopy(predgen)
+            site_order = np.random.choice(
+                traingen2.shape[1], traingen2.shape[1], replace=True
+            )
+            traingen2 = traingen2[:, site_order]
+            testgen2 = testgen2[:, site_order]
+            predgen2 = predgen2[:, site_order]
+            model = load_network(traingen2, dropout_prop, nlayers, width)
             start = time.time()
             history, model = train_network(
                 model,
-                traingen,
-                testgen,
+                traingen2,
+                testgen2,
                 trainlocs,
                 testlocs,
                 bootstrap,
@@ -461,7 +314,114 @@ def locator(
             )
             dists = predict_locs(
                 model,
-                predgen,
+                predgen2,
+                sdlong,
+                meanlong,
+                sdlat,
+                meanlat,
+                testlocs,
+                pred,
+                samples,
+                testgen2,
+                bootstrap,
+                jacknife,
+                windows,
+                out,
+                history,
+                boot,
+            )
+            if plot_history:
+                plot_history_fn(history, dists, out)
+            if not keep_weights:
+                subprocess.run(
+                    "rm " + out + "_boot" + str(boot) + "_weights.hdf5",
+                    shell=True
+                )
+            end = time.time()
+            elapsed = end - start
+            K.clear_session()
+            print("run time " + str(elapsed / 60) + " minutes\n\n")
+    elif jacknife:
+        boot = "FULL"
+        genotypes, samples = load_genotypes(gen_dat, data_format)
+        sample_data, locs = sort_samples(samples, sample_data, genotypes)
+        meanlong, sdlong, meanlat, sdlat, locs = normalize_locs(locs)
+        ac = filter_snps(genotypes, min_mac, max_SNPs, impute_missing)
+        checkpointer, earlystop, reducelr = load_callbacks(
+            boot, bootstrap, jacknife, out, keras_verbose, patience
+        )
+        (
+            train,
+            test,
+            traingen,
+            testgen,
+            trainlocs,
+            testlocs,
+            pred,
+            predgen,
+        ) = split_train_test(ac, locs, train_split)
+        model = load_network(traingen, dropout_prop, nlayers, width)
+        start = time.time()
+        history, model = train_network(
+            model,
+            traingen,
+            testgen,
+            trainlocs,
+            testlocs,
+            bootstrap,
+            jacknife,
+            checkpointer,
+            earlystop,
+            reducelr,
+            keras_verbose,
+            max_epochs,
+            batch_size,
+            out,
+            boot,
+        )
+        dists = predict_locs(
+            model,
+            predgen,
+            sdlong,
+            meanlong,
+            sdlat,
+            meanlat,
+            testlocs,
+            pred,
+            samples,
+            testgen,
+            bootstrap,
+            jacknife,
+            windows,
+            out,
+            history,
+            boot,
+        )
+        if plot_history:
+            plot_history_fn(history, dists, out)
+        end = time.time()
+        elapsed = end - start
+        print("run time " + str(elapsed / 60) + " minutes")
+        print("starting jacknife resampling")
+        af = []
+        for i in tqdm(range(ac.shape[0])):
+            af.append(sum(ac[i, :]) / (ac.shape[1] * 2))
+        af = np.array(af)
+        for boot in tqdm(range(nboots)):
+            checkpointer, earlystop, reducelr = load_callbacks(
+                boot, bootstrap, jacknife, out, keras_verbose, patience
+            )
+            pg = copy.deepcopy(predgen)  # this asshole
+            sites_to_remove = np.random.choice(
+                pg.shape[1], int(pg.shape[1] * jacknife_prop),
+                replace=False
+            )  # treat X% of sites as missing data
+            for i in sites_to_remove:
+                pg[:, i] = np.random.binomial(2, af[i], pg.shape[0])
+                # pg[:,i]=af[i]
+            dists = predict_locs(
+                model,
+                pg,
                 sdlong,
                 meanlong,
                 sdlat,
@@ -476,51 +436,11 @@ def locator(
                 out,
                 history,
                 boot,
+                verbose=False,
             )
-            if plot_history:
-                plot_history_fn(history, dists, out)
-            end = time.time()
-            elapsed = end - start
-            print("run time " + str(elapsed / 60) + " minutes")
-            print("starting jacknife resampling")
-            af = []
-            for i in tqdm(range(ac.shape[0])):
-                af.append(sum(ac[i, :]) / (ac.shape[1] * 2))
-            af = np.array(af)
-            for boot in tqdm(range(nboots)):
-                checkpointer, earlystop, reducelr = load_callbacks(
-                    boot, bootstrap, jacknife, out, keras_verbose, patience
-                )
-                pg = copy.deepcopy(predgen)  # this asshole
-                sites_to_remove = np.random.choice(
-                    pg.shape[1], int(pg.shape[1] * jacknife_prop),
-                    replace=False
-                )  # treat X% of sites as missing data
-                for i in sites_to_remove:
-                    pg[:, i] = np.random.binomial(2, af[i], pg.shape[0])
-                    # pg[:,i]=af[i]
-                dists = predict_locs(
-                    model,
-                    pg,
-                    sdlong,
-                    meanlong,
-                    sdlat,
-                    meanlat,
-                    testlocs,
-                    pred,
-                    samples,
-                    testgen,
-                    bootstrap,
-                    jacknife,
-                    windows,
-                    out,
-                    history,
-                    boot,
-                    verbose=False,
-                )
-            if not keep_weights:
-                subprocess.run("rm " + out + "_bootFULL_weights.hdf5",
-                               shell=True)
+        if not keep_weights:
+            subprocess.run("rm " + out + "_bootFULL_weights.hdf5",
+                           shell=True)
 
 
 def load_genotypes(gen_dat, data_format):
