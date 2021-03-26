@@ -1,4 +1,4 @@
-x	y	pop	sampleID	extra
+x	y	pop	sampleId	extra
 11.8818	67.4273	Hernyken	LESP_8517721	1
 11.8818	67.4273	Hernyken	LESP_8517723	1
 11.8818	67.4273	Hernyken	LESP_8517726	1

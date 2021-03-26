@@ -182,8 +182,10 @@ def test_contour_classifier():
             multi_iter=1,
         )
 
-    with pytest.raises(ValueError,
-                       match="sample_data file is in wrong format"):
+    with pytest.raises(
+        ValueError,
+        match="sample_data file should have columns x, y, pop, and sampleID"
+    ):
         contour_classifier.contour_classifier(
             sample_data=sample_data3,
             save_dir="tests/test_inputs/test_out"
