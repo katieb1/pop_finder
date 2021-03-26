@@ -54,6 +54,11 @@ def hyper_tune(infile, sample_data, max_trials=10, runs_per_trial=10,
         train_size=train_prop
     )
 
+    # Make sure all classes represented in y_val
+    if len(np.unique(y_train['pops'])) != len(np.unique(y_val['pops'])):
+        raise ValueError("Not all pops represented in validation set \
+                          choose smaller value for train_prop.")
+
     # One hot encoding
     enc = OneHotEncoder(handle_unknown="ignore")
     y_train_enc = enc.fit_transform(
@@ -68,11 +73,10 @@ def hyper_tune(infile, sample_data, max_trials=10, runs_per_trial=10,
         input_shape=X_train.shape[1], num_classes=len(popnames)
     )
 
-    # If tuned model already exists, rewrite
-    if os.path.exists(save_dir + "/" + mod_name):
-        subprocess.check_output(
-            ["rm", "-rf", save_dir + "/" + mod_name]
-        )
+    # Overwrite contents of save_dir
+    if os.path.exists(save_dir):
+        shutil.rmtree(save_dir)
+    os.mkdir(save_dir)
 
     tuner = RandomSearch(
         hypermodel,
@@ -726,7 +730,7 @@ def run_neural_net(
 #         freq_df.to_csv(save_dir + "/pop_assign_ensemble.csv", index=False)
 
     else:
-        tmp_df = pd.DataFrame(model.predict(ukgen) * TEST_ACCURACY[0])
+        tmp_df = pd.DataFrame(model.predict(ukgen))
         tmp_df.columns = popnames
         tmp_df["sampleID"] = uksamples
         tmp_df.to_csv(save_dir + "/pop_assign.csv", index=False)

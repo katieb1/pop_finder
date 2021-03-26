@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
 import os
+import shutil
 import pytest
 
 # Path to helper data
@@ -18,7 +19,7 @@ pred_path = "tests/test_inputs/test_out/loc_boot0_predlocs.txt"
 
 
 def test_version():
-    assert __version__ == "0.1.19"
+    assert __version__ == "0.1.20"
 
 
 def test_read():
@@ -52,6 +53,39 @@ def test_hp_tuning():
     assert hm_test.input_shape == 2
     assert hm_test.num_classes == 2
 
+def test_hyper_tune():
+    
+    # General run
+    tuner_test = pop_finder.hyper_tune(
+        infile="tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5",
+        sample_data='tests/test_inputs/onlyAtl_truelocs_NAs.txt',
+        max_epochs=10,
+        save_dir='hyper_tune_test_out',
+        mod_name='hyper_tune'
+    )
+    
+    assert type(tuner_test[0] == 'tensorflow.python.keras.engine.sequential.Sequential')
+    
+    # Make sure correct files are output
+    assert os.path.exists('hyper_tune_test_out')
+    assert os.path.exists("hyper_tune_test_out/best_mod")
+    
+    # Remove files for next run
+    if os.path.exists("hyper_tune_test_out/best_mod"):
+        shutil.rmtree("hyper_tune_test_out/best_mod")
+    
+    # Test if value error thrown if y_val != y_train
+    with pytest.raises(ValueError):
+        pop_finder.hyper_tune(
+            infile="tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5",
+            sample_data='tests/test_inputs/onlyAtl_truelocs_NAs.txt',
+            max_epochs=10,
+            save_dir='hyper_tune_test_out',
+            mod_name='hyper_tune',
+            train_prop=0.99
+        )
+        
+    
 
 def test_pop_finder():
 
@@ -121,6 +155,14 @@ def test_contour_classifier():
             gen_dat="incorrect",
             save_dir="tests/test_inputs/test_out",
         )
+        
+    with pytest.raises(ValueError, match="Cannot use hdf5 file"):
+        contour_classifier.contour_classifier(        
+            sample_data=sample_data1,
+            run_locator=True,
+            gen_dat="tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5",
+            save_dir="tests/test_inputs/test_out",
+        )       
 
     with pytest.raises(ValueError, match="bootstraps"):
         contour_classifier.contour_classifier(

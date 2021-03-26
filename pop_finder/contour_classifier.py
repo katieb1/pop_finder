@@ -73,6 +73,10 @@ def contour_classifier(
     if (isinstance(sample_data, pd.DataFrame) is False and
             os.path.exists(sample_data) is False):
         raise ValueError("path to sample_data incorrect")
+        
+    # Make sure hdf5 file is not used as gen_dat
+    if run_locator is True and gen_dat.endswith('hdf5'):
+        raise ValueError("Cannot use hdf5 file, please use vcf")
 
     if run_locator is True:
 
@@ -199,10 +203,9 @@ def contour_classifier(
     else:
         true_dat = sample_data
 
-    if len(true_dat.columns) != 4:
+    if not set(['x', 'y', 'pop', 'sampleID']).issubset(true_dat.columns):
         raise ValueError(
-            "sample_data file is in wrong format - make sure\
-        it is tab-delimited with columns x, y, pop, and sampleID"
+            "sample_data file should have columns x, y, pop, and sampleID"
         )
 
     # Find number of NAs (samples for assignment)
@@ -384,6 +387,15 @@ def kfcv(
 
     # Drop samples of unknown origin from kfcv calculations
     true_dat = true_dat.dropna()
+    
+    if not set(['x', 'y', 'pop', 'sampleID']).issubset(true_dat.columns):
+        raise ValueError(
+            "sample_data file should have columns x, y, pop, and sampleID"
+        )
+    
+    # Make sure columns are in correct order
+    cols = ['sampleID', 'x', 'y', 'pop']
+    true_dat = true_dat[cols]
 
     pred_labels = []
     true_labels = []
@@ -393,8 +405,9 @@ def kfcv(
             true_dat.index.values, true_dat["pop"]
         ):
             k = true_dat.copy()
-            k.iloc[test_index, 0:3] = np.NaN
-            k.to_csv("kfcv_tmp.csv", sep="\t", index=False)
+            length = len(k.columns)
+            k.iloc[test_index, length-3:length+1] = np.NaN
+            k.to_csv("kfcv_tmp.csv", sep="\t")
 
             # k becomes the sample data that goes into locator
             class_df = contour_classifier(
