@@ -73,7 +73,7 @@ def contour_classifier(
     if (isinstance(sample_data, pd.DataFrame) is False and
             os.path.exists(sample_data) is False):
         raise ValueError("path to sample_data incorrect")
-        
+
     # Make sure hdf5 file is not used as gen_dat
     if run_locator is True and gen_dat.endswith('hdf5'):
         raise ValueError("Cannot use hdf5 file, please use vcf")
@@ -387,12 +387,12 @@ def kfcv(
 
     # Drop samples of unknown origin from kfcv calculations
     true_dat = true_dat.dropna()
-    
+
     if not set(['x', 'y', 'pop', 'sampleID']).issubset(true_dat.columns):
         raise ValueError(
             "sample_data file should have columns x, y, pop, and sampleID"
         )
-    
+
     # Make sure columns are in correct order
     cols = ['sampleID', 'x', 'y', 'pop']
     true_dat = true_dat[cols]

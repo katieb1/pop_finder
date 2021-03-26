@@ -9,7 +9,6 @@ import pandas as pd
 import allel
 import zarr
 import h5py
-import subprocess
 from sklearn.model_selection import RepeatedStratifiedKFold, train_test_split
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.metrics import classification_report, confusion_matrix
