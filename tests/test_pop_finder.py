@@ -9,13 +9,13 @@ import os
 import shutil
 import pytest
 
-# Path to helper data
+# helper data
 infile_all = "tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5"
 infile_all_vcf = "tests/test_inputs/onlyAtl_500.recode.vcf"
 infile_kfcv = "tests/test_inputs/onlyAtl_500_kfcv.recode.vcf"
 sample_data1 = "tests/test_inputs/onlyAtl_truelocs.txt"
 sample_data2 = "tests/test_inputs/onlyAtl_truelocs_NAs.txt"
-sample_data3 = "tests/test_inputs/onlyAtl_truelocs_extracol.txt"
+sample_data3 = "tests/test_inputs/onlyAtl_truelocs_badsamps.txt"
 sample_data4 = "tests/test_inputs/onlyAtl_truelocs_3col.txt"
 pred_path = "tests/test_inputs/test_out/loc_boot0_predlocs.txt"
 X_train = np.load("tests/test_inputs/X_train.npy")
@@ -28,10 +28,12 @@ y_test = pd.read_csv("tests/test_inputs/y_test.csv")
 y_test_empty = pd.DataFrame()
 unknowns = pd.read_csv("tests/test_inputs/test_unknowns.csv")
 unknowns_empty = pd.DataFrame()
+ukgen = np.load("tests/test_inputs/ukgen.npy")
+ukgen_empty = np.zeros(shape=0)
 
 
 def test_version():
-    assert __version__ == "0.1.22"
+    assert __version__ == "0.1.19"
 
 
 def test_read_data():
@@ -58,12 +60,12 @@ def test_read_data():
     with pytest.raises(ValueError,
                        match="Path to infile does not exist"):
         pop_finder.read_data(infile="hello",
-                             sample_data2)
+                             sample_data=sample_data2)
     with pytest.raises(
         ValueError,
         match="Infile must have extension 'zarr', 'vcf', or 'hdf5'"):
         pop_finder.read_data(infile=sample_data1,
-                             sample_data2)
+                             sample_data=sample_data2)
     with pytest.raises(ValueError,
                        match="Path to sample_data does not exist"):
         pop_finder.read_data(infile_all,
@@ -73,9 +75,9 @@ def test_read_data():
         pop_finder.read_data(infile_all,
                              sample_data=sample_data4)        
     with pytest.raises(ValueError,
-                       match="sample ordering failed! Check that sample IDs match the VCF."):
+                       match="sample ordering failed! Check that sample IDs match VCF."):
         pop_finder.read_data(infile_kfcv,
-                             sample_data2)
+                             sample_data3)
 
 
 def test_hp_tuning():
@@ -113,7 +115,7 @@ def test_hyper_tune():
     # Test if value error thrown if y_val != y_train
     with pytest.raises(
         ValueError,
-        match="Not all pops represented in validation set"
+        match="train_prop is too high"
     ):
         pop_finder.hyper_tune(
             infile=infile_all,
@@ -355,6 +357,7 @@ def test_pop_finder():
         X_test=X_test,
         y_test=y_test,
         unknowns=unknowns,
+        ukgen=ukgen,
         save_dir="tests/test_output",
         max_epochs=10
     )
@@ -367,6 +370,7 @@ def test_pop_finder():
         X_test=X_test,
         y_test=y_test,
         unknowns=unknowns,
+        ukgen=ukgen,
         ensemble=True,
         nbags=2,
         save_dir="tests/test_output",
@@ -387,6 +391,7 @@ def test_pop_finder():
             X_test=X_test,
             y_test=y_test,
             unknowns=unknowns,
+            ukgen=ukgen,
             save_dir="tests/test_output",
             max_epochs=10
         )
@@ -400,6 +405,7 @@ def test_pop_finder():
             X_test=X_test,
             y_test=y_test,
             unknowns=unknowns,
+            ukgen=ukgen,
             save_dir="tests/test_output",
             max_epochs=10
         )
@@ -413,6 +419,7 @@ def test_pop_finder():
             X_test=X_test,
             y_test=2,
             unknowns=unknowns,
+            ukgen=ukgen,
             save_dir="tests/test_output",
             max_epochs=10
         )
@@ -426,6 +433,7 @@ def test_pop_finder():
             X_test=X_test,
             y_test=y_test_empty,
             unknowns=unknowns,
+            ukgen=ukgen,
             save_dir="tests/test_output",
             max_epochs=10
         )
@@ -439,6 +447,7 @@ def test_pop_finder():
             X_test=X_test,
             y_test=y_test,
             unknowns=unknowns,
+            ukgen=ukgen,
             save_dir="tests/test_output",
             max_epochs=10
         )
@@ -452,6 +461,7 @@ def test_pop_finder():
             X_test=X_test,
             y_test=y_test,
             unknowns=unknowns,
+            ukgen=ukgen,
             save_dir="tests/test_output",
             max_epochs=10
         )
@@ -465,6 +475,7 @@ def test_pop_finder():
             X_test=2,
             y_test=y_test,
             unknowns=unknowns,
+            ukgen=ukgen,
             save_dir="tests/test_output",
             max_epochs=10
         )
@@ -478,9 +489,66 @@ def test_pop_finder():
             X_test=X_test_empty,
             y_test=y_test,
             unknowns=unknowns,
+            ukgen=ukgen,
+            save_dir="tests/test_output",
+            max_epochs=10
+        )        
+    with pytest.raises(
+        ValueError,
+        match="ukgen is not a numpy array"
+    ):
+        pop_finder.pop_finder(
+            X_train=X_train,
+            y_train=y_train,
+            X_test=X_test,
+            y_test=y_test,
+            unknowns=unknowns,
+            ukgen=2,
             save_dir="tests/test_output",
             max_epochs=10
         )
+    with pytest.raises(
+        ValueError,
+        match="ukgen exists, but is empty"
+    ):
+        pop_finder.pop_finder(
+            X_train=X_train,
+            y_train=y_train,
+            X_test=X_test,
+            y_test=y_test,
+            unknowns=unknowns,
+            ukgen=ukgen_empty,
+            save_dir="tests/test_output",
+            max_epochs=10
+        )
+    with pytest.raises(
+        ValueError,
+        match="unknowns is not pandas dataframe"
+    ):
+        pop_finder.pop_finder(
+            X_train=X_train,
+            y_train=y_train,
+            X_test=X_test,
+            y_test=y_test,
+            unknowns="unknowns",
+            ukgen=ukgen,
+            save_dir="tests/test_output",
+            max_epochs=10
+        )
+    with pytest.raises(
+        ValueError,
+        match="unknowns exists, but is empty"
+    ):
+        pop_finder.pop_finder(
+            X_train=X_train,
+            y_train=y_train,
+            X_test=X_test,
+            y_test=y_test,
+            unknowns=unknowns_empty,
+            ukgen=ukgen,
+            save_dir="tests/test_output",
+            max_epochs=10
+        )        
     with pytest.raises(
         ValueError,
         match="ensemble should be a boolean"
@@ -491,6 +559,7 @@ def test_pop_finder():
             X_test=X_test,
             y_test=y_test,
             unknowns=unknowns,
+            ukgen=ukgen,
             ensemble="True",
             save_dir="tests/test_output",
             max_epochs=10
@@ -505,6 +574,7 @@ def test_pop_finder():
             X_test=X_test,
             y_test=y_test,
             unknowns=unknowns,
+            ukgen=ukgen,
             try_stacking="True",
             save_dir="tests/test_output",
             max_epochs=10
@@ -519,6 +589,7 @@ def test_pop_finder():
             X_test=X_test,
             y_test=y_test,
             unknowns=unknowns,
+            ukgen=ukgen,
             ensemble=True,
             nbags=1.5,
             save_dir="tests/test_output",
@@ -534,6 +605,7 @@ def test_pop_finder():
             X_test=X_test,
             y_test=y_test,
             unknowns=unknowns,
+            ukgen=ukgen,
             train_prop=1,
             save_dir="tests/test_output",
             max_epochs=10
@@ -548,6 +620,7 @@ def test_pop_finder():
             X_test=X_test,
             y_test=y_test,
             unknowns=unknowns,
+            ukgen=ukgen,
             predict="True",
             save_dir="tests/test_output",
             max_epochs=10
@@ -562,6 +635,7 @@ def test_pop_finder():
             X_test=X_test,
             y_test=y_test,
             unknowns=unknowns,
+            ukgen=ukgen,
             save_dir=2,
             max_epochs=10
         )
@@ -575,6 +649,7 @@ def test_pop_finder():
             X_test=X_test,
             y_test=y_test,
             unknowns=unknowns,
+            ukgen=ukgen,
             save_weights="True",
             save_dir="tests/test_output",
             max_epochs=10
@@ -589,6 +664,7 @@ def test_pop_finder():
             X_test=X_test,
             y_test=y_test,
             unknowns=unknowns,
+            ukgen=ukgen,
             patience=5.6,
             save_dir="tests/test_output",
             max_epochs=10
@@ -603,6 +679,7 @@ def test_pop_finder():
             X_test=X_test,
             y_test=y_test,
             unknowns=unknowns,
+            ukgen=ukgen,
             batch_size=5.6,
             save_dir="tests/test_output",
             max_epochs=10
@@ -617,9 +694,9 @@ def test_pop_finder():
             X_test=X_test,
             y_test=y_test,
             unknowns=unknowns,
+            ukgen=ukgen,
             max_epochs=5.6,
-            save_dir="tests/test_output",
-            max_epochs=10
+            save_dir="tests/test_output"
         )
     with pytest.raises(
         ValueError,
@@ -631,13 +708,14 @@ def test_pop_finder():
             X_test=X_test,
             y_test=y_test,
             unknowns=unknowns,
+            ukgen=ukgen,
             plot_history="True",
             save_dir="tests/test_output",
             max_epochs=10
         )
     with pytest.raises(
         ValueError,
-        match="patience should be an integer"
+        match="mod_path should be a string or None"
     ):
         pop_finder.pop_finder(
             X_train=X_train,
@@ -645,6 +723,7 @@ def test_pop_finder():
             X_test=X_test,
             y_test=y_test,
             unknowns=unknowns,
+            ukgen=ukgen,
             mod_path=2,
             save_dir="tests/test_output",
             max_epochs=10
@@ -659,6 +738,7 @@ def test_pop_finder():
             X_test=X_test,
             y_test=y_test,
             unknowns="hello",
+            ukgen=ukgen,
             save_dir="tests/test_output",
             max_epochs=10
         )
@@ -672,9 +752,24 @@ def test_pop_finder():
             X_test=X_test,
             y_test=y_test,
             unknowns=unknowns_empty,
+            ukgen=ukgen,
             save_dir="tests/test_output",
             max_epochs=10
-        )         
+        )   
+    with pytest.raises(ValueError,
+                       match="train_prop is too high"):
+        pop_finder.pop_finder(
+            X_train=X_train,
+            y_train=y_train,
+            X_test=X_test,
+            y_test=y_test,
+            unknowns=unknowns,
+            ukgen=ukgen,
+            save_dir="tests/test_output",
+            max_epochs=10,
+            train_prop=0.99,
+            seed=1234
+        )        
 
 
 def test_run_neural_net():
@@ -713,7 +808,7 @@ def test_run_neural_net():
     with pytest.raises(ValueError, match="Path to infile does not exist"):
         pop_finder.run_neural_net(
             infile="hello",
-            sample_data2,
+            sample_data=sample_data2,
             patience=10,
             max_epochs=2,
             save_dir=save_path,
@@ -755,7 +850,28 @@ def test_run_neural_net():
             patience=10,
             max_epochs=2,
             save_dir=save_path,
-        ) 
+        )
+    with pytest.raises(ValueError,
+                       match="train_prop should be a float"):
+        pop_finder.run_neural_net(
+            infile_all,
+            sample_data2,
+            patience=10,
+            max_epochs=2,
+            save_dir=save_path,
+            train_prop=1
+        )         
+    with pytest.raises(ValueError,
+                       match="train_prop is too high"):
+        pop_finder.run_neural_net(
+            infile_all,
+            sample_data2,
+            patience=10,
+            max_epochs=2,
+            save_dir=save_path,
+            train_prop=0.99
+        )    
+
         
 def test_assign_plot():
 
@@ -887,10 +1003,19 @@ def test_contour_classifier():
 
     with pytest.raises(
         ValueError,
-        match="sample_data file should have columns x, y, pop, and sampleID"
+        match="Something went wrong with the prediction data"
     ):
         contour_classifier.contour_classifier(
             sample_data=sample_data3,
+            save_dir="tests/test_inputs/test_out"
+        )
+
+    with pytest.raises(
+        ValueError,
+        match="sample_data file should have columns x, y, pop, and sampleID"
+    ):
+        contour_classifier.contour_classifier(
+            sample_data=sample_data4,
             save_dir="tests/test_inputs/test_out"
         )
 

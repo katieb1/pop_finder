@@ -100,6 +100,10 @@ def hyper_tune(infile,
         save_allele_counts=False,
         kfcv=True,
     )
+    
+    # Train prop can't be greater than num samples
+    if len(dc) * (1-train_prop) < len(np.unique(samp_list['pops'])):
+        raise ValueError("train_prop is too high; not enough samples for test")
 
     # Create test set that will be used to assess model performance later
     X_train_0, X_test, y_train_0, y_test = train_test_split(
@@ -116,7 +120,7 @@ def hyper_tune(infile,
     # Split data into training and hold-out test set
     X_train, X_val, y_train, y_val = train_test_split(
         dc, samp_list, stratify=samp_list["pops"],
-        train_size=train_prop
+        train_size=train_prop, random_state=seed
     )
 
     # Make sure all classes represented in y_val
@@ -242,6 +246,8 @@ def kfcv(infile,
         save_allele_counts=save_allele_counts,
         kfcv=True,
     )
+    
+    popnames = np.unique(samp_list['pops'])
     
     # Check there are more samples in the smallest pop than n_splits
     if n_splits > samp_list.groupby(['pops']).agg(['count']).min().values[0]:
@@ -423,6 +429,7 @@ def pop_finder(
     X_test,
     y_test,
     unknowns=None,
+    ukgen=None,
     ensemble=False,
     try_stacking=False,
     nbags=10,
@@ -435,7 +442,8 @@ def pop_finder(
     batch_size=32,
     max_epochs=100,
     gpu_number="0",
-    plot_history=False):
+    plot_history=False,
+    seed=None):
     """
     Trains classifier neural network, calculates accuracy on
     test set, and makes predictions.
@@ -452,6 +460,9 @@ def pop_finder(
         Dataframe of test samples, including columns for samples and pops.
     unknowns: pd.DataFrame
         Dataframe of unknowns calculated from read_data (Default=None).
+    ukgen : np.array
+        Array of genetic data corresponding to unknown samples 
+        (Default=None).
     ensemble : boolean
         If set to true, will train an ensemble of models using
         bootstrap aggregating (Default=False).
@@ -485,6 +496,8 @@ def pop_finder(
         Not in use yet, coming soon (Default="0").
     plot_history : boolean
         Plot training / validation history (Default=False).
+    seed : int
+        Random seed for splitting data (Default=None).
         
     Returns
     -------
@@ -494,9 +507,6 @@ def pop_finder(
         Dataframe with test results from ensemble.
     """
     print(f"Output will be saved to: {save_dir}")
-    if os.path.exists(save_dir):
-        shutil.rmtree(save_dir)
-    os.makedirs(save_dir)
     
     # Check if data is in right format
     if isinstance(y_train, pd.DataFrame) is False:
@@ -540,6 +550,11 @@ def pop_finder(
     if isinstance(mod_path, str) is False and mod_path is not None:
         raise ValueError("mod_path should be a string or None")
     
+    # Create save directory
+    if os.path.exists(save_dir):
+        shutil.rmtree(save_dir)
+    os.makedirs(save_dir)
+    
     # If unknowns are not none
     if unknowns is not None:
 
@@ -548,9 +563,12 @@ def pop_finder(
             raise ValueError("unknowns is not pandas dataframe")
         if unknowns.empty:
             raise ValueError("unknowns exists, but is empty")
+        if isinstance(ukgen, np.ndarray) is False:
+            raise ValueError("ukgen is not a numpy array")  
+        if len(ukgen) == 0:
+            raise ValueError("ukgen exists, but is empty")
 
         unknown_inds = pd.array(unknowns["order"])
-        ukgen = dc[unknown_inds, :] - 1
         uksamples = unknowns["sampleID"].to_numpy()
     
     # Add info about test samples
@@ -694,7 +712,7 @@ def pop_finder(
                 )
                 ax1.set_xlabel("Epoch")
                 ax1.legend()
-                fig.savefig(save_dir + "/model"+ i "_history.pdf",
+                fig.savefig(save_dir + "/model"+ i + "_history.pdf",
                             bbox_inches="tight")
                 plt.close()
 
@@ -844,11 +862,21 @@ def pop_finder(
         return test_dict, tot_bag_df
 
     else:
+        
+        # Test if train_prop is too high
+        if len(X_train) * (1-train_prop) < 1:
+            raise ValueError("train_prop is too high; not enough values for test")
 
         # Split training data into training and validation
         X_train, X_val, y_train, y_val = train_test_split(
-            X_train, y_train, stratify=y_train['pops']
+            X_train, y_train, stratify=y_train['pops'],
+            random_state=seed
         )
+        
+        # Make sure all classes represented in y_val
+        if len(np.unique(y_train['pops'])) != len(np.unique(y_val['pops'])):
+            raise ValueError("Not all pops represented in validation set \
+                              choose smaller value for train_prop.")
 
         # One hot encoding
         enc = OneHotEncoder(handle_unknown="ignore")
@@ -1012,6 +1040,8 @@ def run_neural_net(
     sample_data,
     save_allele_counts=False,
     mod_path=None,
+    train_prop=0.8,
+    seed=None,
     **kwargs,
 ):
     """
@@ -1034,6 +1064,11 @@ def run_neural_net(
     mod_path : string
         Path to tuned model. If set to None, uses default model
         (Default=None).
+    train_prop : float
+        Proportion of data to be used in training the model 
+        (Default=0.8).
+    seed : int
+        Random seed for splitting data (Default=None).
     **kwargs
         Keyword arguments for pop_finder function.
     """
@@ -1047,6 +1082,8 @@ def run_neural_net(
         raise ValueError("save_allele_counts should be a boolean")
     if isinstance(mod_path, str) is False and mod_path is not None:
         raise ValueError("mod_path should either be a string or None")
+    if isinstance(train_prop, np.float) is False:
+        raise ValueError("train_prop should be a float")
     
     # Read data with unknowns so errors caught before training/tuning
     samp_list, dc, unknowns = read_data(
@@ -1055,16 +1092,29 @@ def run_neural_net(
         save_allele_counts=save_allele_counts,
         kfcv=False,
     )
+    
+    unknown_inds = pd.array(unknowns["order"])
+    ukgen = dc[unknown_inds, :] - 1
 
     if mod_path is None:
 
         dc_new = np.delete(dc, unknowns['order'].values, axis=0)
+        
+        # Check if train_prop too high
+        if len(dc_new) * (1-train_prop) < len(np.unique(samp_list['pops'])):
+            raise ValueError("train_prop is too high; not enough samples for test")
 
         # Split data into training and hold-out test set
         X_train, X_test, y_train, y_test = train_test_split(
             dc_new, samp_list, stratify=samp_list["pops"],
-            train_size=train_prop
+            train_size=train_prop, random_state=seed
         )
+        
+        # Make sure all classes represented in y_val
+        if len(np.unique(y_train['pops'])) != len(np.unique(y_test['pops'])):
+            raise ValueError("Not all pops represented in test set \
+                              choose smaller value for train_prop.")
+        
     else:
         
         if os.path.exists(mod_path) is False:
@@ -1081,6 +1131,7 @@ def run_neural_net(
         X_test,
         y_test,
         unknowns=unknowns,
+        ukgen=ukgen,
         predict=True,
         **kwargs
     )
@@ -1173,7 +1224,9 @@ def read_data(infile, sample_data, save_allele_counts=False, kfcv=False):
 
     locs = pd.read_csv(sample_data, sep="\t")
     
-    if locs_test.columns.isin(['x', 'pop', 'y', 'sampleID']).all() is False:
+    if pd.Series(
+        ['x', 'pop', 'y', 'sampleID']
+    ).isin(locs.columns).all() == False:
         raise ValueError("sample_data does not have correct columns")
 
     locs["id"] = locs["sampleID"]
@@ -1193,14 +1246,8 @@ def read_data(infile, sample_data, save_allele_counts=False, kfcv=False):
         locs = locs.dropna()
 
     # check that all sample names are present
-    if not all(
-        [
-            locs["sampleID"][x] == samples[x] for x in range(len(samples))
-        ]
-    ):
-
-        print("sample ordering failed! Check that sample IDs match the VCF.")
-        sys.exit()
+    if not all([locs["sampleID"][x] == samples[x] for x in range(len(samples))]):
+        raise ValueError("sample ordering failed! Check that sample IDs match VCF.")
 
     if kfcv:
 

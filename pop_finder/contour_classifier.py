@@ -278,6 +278,8 @@ def contour_classifier(
         if return_plots is True:
             plt.savefig(save_dir + "/contour_" + sample + ".png", format="png")
 
+        plt.close()
+
     class_df = pd.DataFrame(class_dat)
 
     if return_df is True:
@@ -464,5 +466,6 @@ def kfcv(
             )
         plt.tight_layout()
         plt.savefig(save_dir + "/cm.png")
+        plt.close()
 
     return pred_labels, true_labels, report
