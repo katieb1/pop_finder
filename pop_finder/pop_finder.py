@@ -11,7 +11,9 @@ import zarr
 import h5py
 from sklearn.model_selection import RepeatedStratifiedKFold, train_test_split
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score, log_loss
 import itertools
 from itertools import product
 import shutil
@@ -22,18 +24,20 @@ from matplotlib.colors import ListedColormap
 import seaborn as sn
 
 
-def hyper_tune(infile,
-               sample_data,
-               max_trials=10,
-               runs_per_trial=10,
-               max_epochs=100,
-               train_prop=0.8,
-               seed=None,
-               save_dir='out',
-               mod_name='hyper_tune'):
+def hyper_tune(
+    infile,
+    sample_data,
+    max_trials=10,
+    runs_per_trial=10,
+    max_epochs=100,
+    train_prop=0.8,
+    seed=None,
+    save_dir="out",
+    mod_name="hyper_tune",
+):
     """
     Tunes hyperparameters of keras model for population assignment.
-    
+
     Paramters
     ---------
     infile : string
@@ -49,7 +53,7 @@ def hyper_tune(infile,
         Number of epochs to train model (Default=100).
     train_prop : float
         Proportion of data to train on. Remaining data will be kept
-        as a test set and not used until final model is trained 
+        as a test set and not used until final model is trained
         (Default=0.8).
     seed : int
         Random seed (Default=None).
@@ -57,7 +61,7 @@ def hyper_tune(infile,
         Directory to save output to (Default='out').
     mod_name : string
         Name of model in save directory (Default='hyper_tune').
-        
+
     Returns
     -------
     best_mod : keras sequential model
@@ -85,8 +89,8 @@ def hyper_tune(infile,
     if isinstance(save_dir, str) is False:
         raise ValueError("save_dir should be string")
     if isinstance(mod_name, str) is False:
-        raise ValueError("mod_name should be string")        
-    
+        raise ValueError("mod_name should be string")
+
     # Create save_dir if doesn't already exist
     print(f"Output will be saved to: {save_dir}")
     if os.path.exists(save_dir):
@@ -100,42 +104,44 @@ def hyper_tune(infile,
         save_allele_counts=False,
         kfcv=True,
     )
-    
+
     # Train prop can't be greater than num samples
-    if len(dc) * (1-train_prop) < len(np.unique(samp_list['pops'])):
+    if len(dc) * (1 - train_prop) < len(np.unique(samp_list["pops"])):
         raise ValueError("train_prop is too high; not enough samples for test")
 
     # Create test set that will be used to assess model performance later
     X_train_0, X_test, y_train_0, y_test = train_test_split(
-        dc, samp_list, stratify=samp_list["pops"],
-        train_size=train_prop
+        dc, samp_list, stratify=samp_list["pops"], train_size=train_prop
     )
 
     # Save train and test set to save_dir
-    np.save(save_dir+"/X_train.npy", X_train_0)
-    y_train_0.to_csv(save_dir+"/y_train.csv", index=False)
-    np.save(save_dir+"/X_test.npy", X_test)
-    y_test.to_csv(save_dir+"/y_test.csv", index=False)
+    np.save(save_dir + "/X_train.npy", X_train_0)
+    y_train_0.to_csv(save_dir + "/y_train.csv", index=False)
+    np.save(save_dir + "/X_test.npy", X_test)
+    y_test.to_csv(save_dir + "/y_test.csv", index=False)
 
     # Split data into training and hold-out test set
     X_train, X_val, y_train, y_val = train_test_split(
-        dc, samp_list, stratify=samp_list["pops"],
-        train_size=train_prop, random_state=seed
+        dc,
+        samp_list,
+        stratify=samp_list["pops"],
+        train_size=train_prop,
+        random_state=seed,
     )
 
     # Make sure all classes represented in y_val
-    if len(np.unique(y_train['pops'])) != len(np.unique(y_val['pops'])):
-        raise ValueError("Not all pops represented in validation set \
-                          choose smaller value for train_prop.")
+    if len(np.unique(y_train["pops"])) != len(np.unique(y_val["pops"])):
+        raise ValueError(
+            "Not all pops represented in validation set \
+                          choose smaller value for train_prop."
+        )
 
     # One hot encoding
     enc = OneHotEncoder(handle_unknown="ignore")
     y_train_enc = enc.fit_transform(
-        y_train['pops'].values.reshape(-1, 1)
-    ).toarray()
+        y_train["pops"].values.reshape(-1, 1)).toarray()
     y_val_enc = enc.fit_transform(
-        y_val['pops'].values.reshape(-1, 1)
-    ).toarray()
+        y_val["pops"].values.reshape(-1, 1)).toarray()
     popnames = enc.categories_[0]
 
     hypermodel = classifierHyperModel(
@@ -149,7 +155,7 @@ def hyper_tune(infile,
 
     tuner = RandomSearch(
         hypermodel,
-        objective='val_loss',
+        objective="val_loss",
         seed=seed,
         max_trials=max_trials,
         executions_per_trial=runs_per_trial,
@@ -158,26 +164,30 @@ def hyper_tune(infile,
     )
 
     tuner.search(
-        X_train - 1, y_train_enc, epochs=max_epochs,
-        validation_data=(X_val - 1, y_val_enc)
+        X_train - 1,
+        y_train_enc,
+        epochs=max_epochs,
+        validation_data=(X_val - 1, y_val_enc),
     )
 
     best_mod = tuner.get_best_models(num_models=1)[0]
-    tuner.get_best_models(num_models=1)[0].save(save_dir+"/best_mod")
+    tuner.get_best_models(num_models=1)[0].save(save_dir + "/best_mod")
 
     return best_mod, y_train, y_val
 
 
-def kfcv(infile,
-         sample_data,
-         mod_path=None,
-         n_splits=5,
-         n_reps=5,
-         ensemble=False,
-         save_dir='kfcv_output',
-         return_plot=True,
-         save_allele_counts=False,
-         **kwargs):
+def kfcv(
+    infile,
+    sample_data,
+    mod_path=None,
+    n_splits=5,
+    n_reps=5,
+    ensemble=False,
+    save_dir="kfcv_output",
+    return_plot=True,
+    save_allele_counts=False,
+    **kwargs,
+):
     """
     Runs K-fold cross-validation to get an accuracy estimate of the model.
 
@@ -206,7 +216,7 @@ def kfcv(infile,
     save_allele counts : boolean
         Whether or not to store derived allele counts in hdf5
         file (Default=False).
-    **kwargs 
+    **kwargs
         Keyword arguments for pop_finder function.
 
     Returns
@@ -216,7 +226,7 @@ def kfcv(infile,
     ensemble_report : pd.DataFrame
         Classification report for ensemble of models.
     """
-    
+
     # Check inputs
     # Check is sample_data path exists
     if os.path.exists(sample_data) is False:
@@ -225,7 +235,7 @@ def kfcv(infile,
     # Make sure hdf5 file is not used as gen_dat
     if os.path.exists(infile) is False:
         raise ValueError("path to infile does not exist")
-    
+
     # Check data types
     if isinstance(n_splits, np.int) is False:
         raise ValueError("n_splits should be an integer")
@@ -235,7 +245,7 @@ def kfcv(infile,
         raise ValueError("ensemble should be a boolean")
     if isinstance(save_dir, str) is False:
         raise ValueError("save_dir should be a string")
-    
+
     # Check nsplits is > 1
     if n_splits <= 1:
         raise ValueError("n_splits must be greater than 1")
@@ -246,27 +256,29 @@ def kfcv(infile,
         save_allele_counts=save_allele_counts,
         kfcv=True,
     )
-    
-    popnames = np.unique(samp_list['pops'])
-    
+
+    popnames = np.unique(samp_list["pops"])
+
     # Check there are more samples in the smallest pop than n_splits
-    if n_splits > samp_list.groupby(['pops']).agg(['count']).min().values[0]:
-        raise ValueError("n_splits cannot be greater than number of samples in smallest pop")
-    
+    if n_splits > samp_list.groupby(["pops"]).agg(["count"]).min().values[0]:
+        raise ValueError(
+            "n_splits cannot be greater than number of samples in smallest pop"
+        )
+
     # Create stratified k-fold
     rskf = RepeatedStratifiedKFold(n_splits=n_splits, n_repeats=n_reps)
 
     pred_labels = []
     true_labels = []
-    
+
     pred_labels_ensemble = []
     true_labels_ensemble = []
-    
+
     ensemble_preds = pd.DataFrame()
     preds = pd.DataFrame()
-    
+
     fold_var = 1
-    
+
     for t, v in rskf.split(dc, samp_list["pops"]):
 
         # Subset train and validation data
@@ -274,9 +286,9 @@ def kfcv(infile,
         X_val = dc[v, :] - 1
         y_train = samp_list.iloc[t]
         y_val = samp_list.iloc[v]
-        
+
         if ensemble:
-            test_dict, tot_bag_df = pop_finder(    
+            test_dict, tot_bag_df = pop_finder(
                 X_train,
                 y_train,
                 X_val,
@@ -289,18 +301,20 @@ def kfcv(infile,
             # Unit tests for results from pop_finder
             if bool(test_dict) is False:
                 raise ValueError("Empty dictionary from pop_finder")
-                
+
             if tot_bag_df.empty:
                 raise ValueError("Empty dataframe from pop_finder")
-            
+
             if len(test_dict) == 1:
-                raise ValueError("pop_finder results consists of single dataframe\
-                                  however ensemble set to True")
-            
+                raise ValueError(
+                    "pop_finder results consists of single dataframe\
+                                  however ensemble set to True"
+                )
+
             ensemble_preds = ensemble_preds.append(tot_bag_df)
 
         else:
-            test_dict = pop_finder(    
+            test_dict = pop_finder(
                 X_train,
                 y_train,
                 X_val,
@@ -313,56 +327,63 @@ def kfcv(infile,
             if bool(test_dict) is False:
                 raise ValueError("Empty dictionary from pop_finder")
 
-            if len(test_dict['df']) != 1:
-                raise ValueError("pop_finder results contains ensemble of models\
-                                  should be a single dataframe")
+            if len(test_dict["df"]) != 1:
+                raise ValueError(
+                    "pop_finder results contains ensemble of models\
+                                  should be a single dataframe"
+                )
 
-            preds = preds.append(test_dict['df'][0])
+            preds = preds.append(test_dict["df"][0])
 
         tmp_pred_label = []
         tmp_true_label = []
-        for i in range(0, len(test_dict['df'])):
+        for i in range(0, len(test_dict["df"])):
             tmp_pred_label.append(
-                test_dict['df'][i].iloc[:, 0:len(popnames)].idxmax(axis=1).values
+                test_dict["df"][i].iloc[
+                    :, 0:len(popnames)
+                ].idxmax(axis=1).values
             )
-            tmp_true_label.append(test_dict['df'][i]['true_pops'].values)
+            tmp_true_label.append(test_dict["df"][i]["true_pops"].values)
 
         if ensemble:
             pred_labels_ensemble.append(
-                tot_bag_df.iloc[:, 0:len(popnames)].idxmax(axis=1).values)
+                tot_bag_df.iloc[:, 0:len(popnames)].idxmax(axis=1).values
+            )
             true_labels_ensemble.append(tmp_true_label[0])
-    
+
         pred_labels.append(np.concatenate(tmp_pred_label, axis=0))
         true_labels.append(np.concatenate(tmp_true_label, axis=0))
 
         fold_var += 1
 
-    #return pred_labels, true_labels    
+    # return pred_labels, true_labels
     pred_labels = np.concatenate(pred_labels)
     true_labels = np.concatenate(true_labels)
-    report = classification_report(true_labels,
-                                   pred_labels,
-                                   zero_division=1,
-                                   output_dict=True)
+    report = classification_report(
+        true_labels, pred_labels, zero_division=1, output_dict=True
+    )
     report = pd.DataFrame(report).transpose()
     report.to_csv(save_dir + "/classification_report.csv")
-    
+
     if ensemble:
         ensemble_preds.to_csv(save_dir + "/ensemble_preds.csv")
-        
+
         true_labels_ensemble = np.concatenate(true_labels_ensemble)
         pred_labels_ensemble = np.concatenate(pred_labels_ensemble)
-        ensemble_report = classification_report(true_labels_ensemble,
-                                                pred_labels_ensemble,
-                                                zero_division=1,
-                                                output_dict=True)
+        ensemble_report = classification_report(
+            true_labels_ensemble,
+            pred_labels_ensemble,
+            zero_division=1,
+            output_dict=True,
+        )
         ensemble_report = pd.DataFrame(ensemble_report).transpose()
-        ensemble_report.to_csv(save_dir + "/ensemble_classification_report.csv")
+        ensemble_report.to_csv(
+            save_dir + "/ensemble_classification_report.csv")
     else:
         preds.to_csv(save_dir + "/preds.csv")
 
     if return_plot is True:
-        
+
         cm = confusion_matrix(true_labels, pred_labels, normalize="true")
         cm = np.round(cm, 2)
         plt.style.use("default")
@@ -387,12 +408,12 @@ def kfcv(infile,
         plt.tight_layout()
         plt.savefig(save_dir + "/cm.png")
         plt.close()
-        
+
         if ensemble:
             # Plot second confusion matrix
-            cm = confusion_matrix(true_labels_ensemble,
-                                  pred_labels_ensemble,
-                                  normalize="true")
+            cm = confusion_matrix(
+                true_labels_ensemble, pred_labels_ensemble, normalize="true"
+            )
             cm = np.round(cm, 2)
             plt.style.use("default")
             plt.figure()
@@ -405,7 +426,9 @@ def kfcv(infile,
             plt.xticks(tick_marks, np.unique(true_labels))
             plt.yticks(tick_marks, np.unique(true_labels))
             thresh = cm.max() / 2.0
-            for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+            for i, j in itertools.product(
+                range(cm.shape[0]), range(cm.shape[1])
+            ):
                 plt.text(
                     j,
                     i,
@@ -416,7 +439,7 @@ def kfcv(infile,
             plt.tight_layout()
             plt.savefig(save_dir + "/ensemble_cm.png")
             plt.close()
-        
+
     if ensemble:
         return report, ensemble_report
     else:
@@ -443,11 +466,12 @@ def pop_finder(
     max_epochs=100,
     gpu_number="0",
     plot_history=False,
-    seed=None):
+    seed=None,
+):
     """
     Trains classifier neural network, calculates accuracy on
     test set, and makes predictions.
-    
+
     Parameters
     ----------
     X_train: np.array
@@ -461,7 +485,7 @@ def pop_finder(
     unknowns: pd.DataFrame
         Dataframe of unknowns calculated from read_data (Default=None).
     ukgen : np.array
-        Array of genetic data corresponding to unknown samples 
+        Array of genetic data corresponding to unknown samples
         (Default=None).
     ensemble : boolean
         If set to true, will train an ensemble of models using
@@ -484,7 +508,7 @@ def pop_finder(
     save_dir : string
         Directory to save results to (Default="out").
     save_weights : boolean
-        Save model weights for later use (Default=False).     
+        Save model weights for later use (Default=False).
     patience : int
         How many epochs to wait before early stopping if loss has not
         improved (Default=20).
@@ -498,7 +522,7 @@ def pop_finder(
         Plot training / validation history (Default=False).
     seed : int
         Random seed for splitting data (Default=None).
-        
+
     Returns
     -------
     test_dict : dict
@@ -507,7 +531,7 @@ def pop_finder(
         Dataframe with test results from ensemble.
     """
     print(f"Output will be saved to: {save_dir}")
-    
+
     # Check if data is in right format
     if isinstance(y_train, pd.DataFrame) is False:
         raise ValueError("y_train is not a pandas dataframe")
@@ -518,13 +542,13 @@ def pop_finder(
     if y_test.empty:
         raise ValueError("y_test exists, but is empty")
     if isinstance(X_train, np.ndarray) is False:
-        raise ValueError("X_train is not a numpy array")  
+        raise ValueError("X_train is not a numpy array")
     if len(X_train) == 0:
         raise ValueError("X_train exists, but is empty")
     if isinstance(X_test, np.ndarray) is False:
         raise ValueError("X_test is not a numpy array")
     if len(X_test) == 0:
-        raise ValueError("X_test exists, but is empty")  
+        raise ValueError("X_test exists, but is empty")
     if isinstance(ensemble, bool) is False:
         raise ValueError("ensemble should be a boolean")
     if isinstance(try_stacking, bool) is False:
@@ -549,12 +573,12 @@ def pop_finder(
         raise ValueError("plot_history should be a boolean")
     if isinstance(mod_path, str) is False and mod_path is not None:
         raise ValueError("mod_path should be a string or None")
-    
+
     # Create save directory
     if os.path.exists(save_dir):
         shutil.rmtree(save_dir)
     os.makedirs(save_dir)
-    
+
     # If unknowns are not none
     if unknowns is not None:
 
@@ -564,33 +588,31 @@ def pop_finder(
         if unknowns.empty:
             raise ValueError("unknowns exists, but is empty")
         if isinstance(ukgen, np.ndarray) is False:
-            raise ValueError("ukgen is not a numpy array")  
+            raise ValueError("ukgen is not a numpy array")
         if len(ukgen) == 0:
             raise ValueError("ukgen exists, but is empty")
 
-        unknown_inds = pd.array(unknowns["order"])
         uksamples = unknowns["sampleID"].to_numpy()
-    
+
     # Add info about test samples
     y_test_samples = y_test["samples"].to_numpy()
-    y_test_pops = y_test['pops'].to_numpy()
-    
+    y_test_pops = y_test["pops"].to_numpy()
+
     # One hot encode test values
     enc = OneHotEncoder(handle_unknown="ignore")
     y_test_enc = enc.fit_transform(
-        y_test["pops"].values.reshape(-1, 1)
-    ).toarray()
+        y_test["pops"].values.reshape(-1, 1)).toarray()
     popnames = enc.categories_[0]
-        
+
     # results storage
     TEST_LOSS = []
     TEST_ACCURACY = []
     TEST_95CI = []
     yhats = []
     ypreds = []
-    test_dict = {'count': [], 'df': []}
-    pred_dict = {'count': [], 'df': []}
-    top_pops = {'df': [], 'pops': []}
+    test_dict = {"count": [], "df": []}
+    pred_dict = {"count": [], "df": []}
+    top_pops = {"df": [], "pops": []}
 
     if ensemble:
         for i in range(nbags):
@@ -598,39 +620,38 @@ def pop_finder(
             good_bag = False
 
             while good_bag is False:
-                bag_X = np.zeros(shape = (n_prime, X_train.shape[1]))
-                bag_y = pd.DataFrame({'samples': [], 'pops': [], 'order': []})
+                bag_X = np.zeros(shape=(n_prime, X_train.shape[1]))
+                bag_y = pd.DataFrame({"samples": [], "pops": [], "order": []})
                 for j in range(0, n_prime):
                     ind = np.random.choice(len(X_train))
                     bag_X[j] = X_train[ind]
                     bag_y = bag_y.append(y_train.iloc[ind])
-                dup_pops_df = bag_y.groupby(['pops']).agg(['count'])
-                if (pd.Series(popnames).isin(bag_y['pops']).all() and
-                    (dup_pops_df[('samples', 'count')] > 1).all()):
+                dup_pops_df = bag_y.groupby(["pops"]).agg(["count"])
+                if (
+                    pd.Series(popnames).isin(bag_y["pops"]).all()
+                    and (dup_pops_df[("samples", "count")] > 1).all()
+                ):
                     # Create validation set from training set
                     bag_X, X_val, bag_y, y_val = train_test_split(
                         bag_X, bag_y, stratify=bag_y["pops"],
                         train_size=train_prop
                     )
-                    if (pd.Series(popnames).isin(bag_y['pops']).all() and
-                        pd.Series(popnames).isin(y_val['pops']).all()):
+                    if (
+                        pd.Series(popnames).isin(bag_y["pops"]).all()
+                        and pd.Series(popnames).isin(y_val["pops"]).all()
+                    ):
                         good_bag = True
 
             enc = OneHotEncoder(handle_unknown="ignore")
             bag_y_enc = enc.fit_transform(
-                bag_y["pops"].values.reshape(-1, 1)
-            ).toarray()
+                bag_y["pops"].values.reshape(-1, 1)).toarray()
             y_val_enc = enc.fit_transform(
-                y_val['pops'].values.reshape(-1, 1)
-            ).toarray()
+                y_val["pops"].values.reshape(-1, 1)).toarray()
 
             if mod_path is None:
                 model = tf.Sequential()
-                model.add(
-                    tf.layers.BatchNormalization(
-                        input_shape=(bag_X.shape[1],)
-                    )
-                )
+                model.add(tf.layers.BatchNormalization(
+                    input_shape=(bag_X.shape[1],)))
                 model.add(tf.layers.Dense(128, activation="elu"))
                 model.add(tf.layers.Dense(128, activation="elu"))
                 model.add(tf.layers.Dense(128, activation="elu"))
@@ -642,20 +663,21 @@ def pop_finder(
                 aopt = tf.optimizers.Adam(lr=0.0005)
                 model.compile(
                     loss="categorical_crossentropy",
-                    optimizer=aopt, metrics="accuracy"
+                    optimizer=aopt,
+                    metrics="accuracy"
                 )
 
             else:
-                model = tf.models.load_model(mod_path + '/best_mod')
+                model = tf.models.load_model(mod_path + "/best_mod")
 
             # Create callbacks
             checkpointer = tf.callbacks.ModelCheckpoint(
                 filepath=save_dir + "/checkpoint.h5",
                 verbose=1,
-                #save_best_only=True,
+                # save_best_only=True,
                 save_weights_only=True,
                 monitor="val_loss",
-                #monitor="loss",
+                # monitor="loss",
                 save_freq="epoch",
             )
             earlystop = tf.callbacks.EarlyStopping(
@@ -681,15 +703,15 @@ def pop_finder(
                 epochs=int(max_epochs),
                 callbacks=callback_list,
                 validation_data=(X_val - 1, y_val_enc),
-                verbose=0
+                verbose=0,
             )
-            
+
             # Load best model
             model.load_weights(save_dir + "/checkpoint.h5")
 
             if not save_weights:
                 os.remove(save_dir + "/checkpoint.h5")
-                
+
             # plot training history
             if plot_history:
                 plt.switch_backend("agg")
@@ -712,67 +734,72 @@ def pop_finder(
                 )
                 ax1.set_xlabel("Epoch")
                 ax1.legend()
-                fig.savefig(save_dir + "/model"+ i + "_history.pdf",
-                            bbox_inches="tight")
+                fig.savefig(
+                    save_dir + "/model" + i + "_history.pdf",
+                    bbox_inches="tight"
+                )
                 plt.close()
 
             test_loss, test_acc = model.evaluate(X_test - 1, y_test_enc)
-            
+
             yhats.append(model.predict(X_test - 1))
-            
+
             test_df = pd.DataFrame(model.predict(X_test - 1))
             test_df.columns = popnames
-            test_df['sampleID'] = y_test_samples
-            test_df['true_pops'] = y_test_pops
-            test_df['bag'] = i
-            test_dict['count'].append(i)
-            test_dict['df'].append(test_df)
+            test_df["sampleID"] = y_test_samples
+            test_df["true_pops"] = y_test_pops
+            test_df["bag"] = i
+            test_dict["count"].append(i)
+            test_dict["df"].append(test_df)
 
             # Fill test lists with information
             TEST_LOSS.append(test_loss)
             TEST_ACCURACY.append(test_acc)
-            
+
             if predict:
                 ypreds.append(model.predict(ukgen))
 
                 tmp_df = pd.DataFrame(model.predict(ukgen))
                 tmp_df.columns = popnames
-                tmp_df['sampleID'] = uksamples
-                tmp_df['bag'] = i
-                pred_dict['count'].append(i)
-                pred_dict['df'].append(tmp_df)
+                tmp_df["sampleID"] = uksamples
+                tmp_df["bag"] = i
+                pred_dict["count"].append(i)
+                pred_dict["df"].append(tmp_df)
 
                 # Find top populations for each sample
-                top_pops['df'].append(i)
-                top_pops['pops'].append(
-                    pred_dict['df'][i].iloc[:, 0:len(popnames)].idxmax(axis=1)
+                top_pops["df"].append(i)
+                top_pops["pops"].append(
+                    pred_dict["df"][i].iloc[
+                        :, 0:len(popnames)
+                    ].idxmax(axis=1)
                 )
-        
+
         # Collect yhats and ypreds for weighted ensemble
         yhats = np.array(yhats)
-        
+
         if predict:
             ypreds = np.array(ypreds)
-        print(f'yhats shape = {yhats.shape}')
-        
+
         # Get ensemble accuracy
-        tot_bag_df = test_dict['df'][0].iloc[:, 0:len(popnames)].copy()
-        for i in range(0, len(test_dict['df'])):
-            tot_bag_df += test_dict['df'][i].iloc[:, 0:len(popnames)] 
+        tot_bag_df = test_dict["df"][0].iloc[
+            :, 0:len(popnames)
+        ].copy()
+        for i in range(0, len(test_dict["df"])):
+            tot_bag_df += test_dict["df"][i].iloc[:, 0:len(popnames)]
         # Normalize values to be between 0 and 1
         tot_bag_df = tot_bag_df / nbags
-        tot_bag_df['top_samp'] = tot_bag_df.idxmax(axis=1)
-        tot_bag_df['sampleID'] =  test_dict['df'][0]['sampleID']
-        tot_bag_df['true_pops'] = test_dict['df'][0]['true_pops']
+        tot_bag_df["top_samp"] = tot_bag_df.idxmax(axis=1)
+        tot_bag_df["sampleID"] = test_dict["df"][0]["sampleID"]
+        tot_bag_df["true_pops"] = test_dict["df"][0]["true_pops"]
         ENSEMBLE_TEST_ACCURACY = np.sum(
-            tot_bag_df['top_samp'] == tot_bag_df['true_pops']
-        ) / len(tot_bag_df) 
+            tot_bag_df["top_samp"] == tot_bag_df["true_pops"]
+        ) / len(tot_bag_df)
         tot_bag_df.to_csv(save_dir + "/ensemble_test_results.csv")
-        
+
         if predict:
-            top_pops_df = pd.DataFrame(top_pops['pops'])
+            top_pops_df = pd.DataFrame(top_pops["pops"])
             top_pops_df.columns = uksamples
-            top_freqs = {'sample': [], 'freq': []}
+            top_freqs = {"sample": [], "freq": []}
 
             for samp in uksamples:
                 top_freqs["sample"].append(samp)
@@ -792,22 +819,24 @@ def pop_finder(
                 ],
                 axis=1,
             ).reset_index()
-            freq_df.columns = ["Assigned Pop", "Frequency", "Sample ID"]
-            freq_df.to_csv(save_dir + "/pop_assign_ensemble.csv", index=False)
-        
+            freq_df.columns = ["Assigned Pop",
+                               "Frequency",
+                               "Sample ID"]
+            freq_df.to_csv(save_dir + "/pop_assign_ensemble.csv",
+                           index=False)
+
         # Metrics
         AVG_TEST_LOSS = np.round(np.mean(TEST_LOSS), 2)
         AVG_TEST_ACCURACY = np.round(np.mean(TEST_ACCURACY), 2)
         test_err = 1 - AVG_TEST_ACCURACY
         TEST_95CI = 1.96 * np.sqrt(
-            (test_err * (1 - test_err)) / len(y_test_enc)
-        )
-        
+            (test_err * (1 - test_err)) / len(y_test_enc))
+
         best_score = "N/A"
         if try_stacking:
-            
+
             def stacked_preds(yhats, weights):
-                summed = np.tensordot(yhats, weights, axes=((0),(0)))
+                summed = np.tensordot(yhats, weights, axes=((0), (0)))
                 result = np.argmax(summed, axis=1)
                 return result
 
@@ -826,17 +855,17 @@ def pop_finder(
                 score = accuracy_score(y_test_max, yhats_max)
                 if score > best_score:
                     best_score, best_weights = score, weights
-                    print('>%s %.3f' % (best_weights, best_score))
+                    print(">%s %.3f" % (best_weights, best_score))
                 if best_score == 1.0:
                     break
-            
+
             # Predict on unknowns for weighted stacked model
             if predict:
                 ypreds_max = stacked_preds(ypreds, best_weights)
                 ypreds_df = pd.DataFrame(ypreds_max)
-                ypreds_df['sampleID'] = uksamples
-                ypreds_df['pops'] = popnames[ypreds_max]
-                ypreds_df.to_csv(save_dir+"/stacked_results.csv")
+                ypreds_df["sampleID"] = uksamples
+                ypreds_df["pops"] = popnames[ypreds_max]
+                ypreds_df.to_csv(save_dir + "/stacked_results.csv")
 
         # Print metrics to csv
         print("Creating outputs...")
@@ -862,30 +891,33 @@ def pop_finder(
         return test_dict, tot_bag_df
 
     else:
-        
+
         # Test if train_prop is too high
-        if len(X_train) * (1-train_prop) < 1:
-            raise ValueError("train_prop is too high; not enough values for test")
+        if len(X_train) * (1 - train_prop) < 1:
+            raise ValueError(
+                "train_prop is too high; not enough values for test")
 
         # Split training data into training and validation
         X_train, X_val, y_train, y_val = train_test_split(
-            X_train, y_train, stratify=y_train['pops'],
+            X_train, y_train, stratify=y_train["pops"],
             random_state=seed
         )
-        
+
         # Make sure all classes represented in y_val
-        if len(np.unique(y_train['pops'])) != len(np.unique(y_val['pops'])):
-            raise ValueError("Not all pops represented in validation set \
-                              choose smaller value for train_prop.")
+        if len(
+            np.unique(y_train["pops"])
+        ) != len(np.unique(y_val["pops"])):
+            raise ValueError(
+                "Not all pops represented in validation set \
+                 choose smaller value for train_prop."
+            )
 
         # One hot encoding
         enc = OneHotEncoder(handle_unknown="ignore")
         y_train_enc = enc.fit_transform(
-            y_train["pops"].values.reshape(-1, 1)
-        ).toarray()
+            y_train["pops"].values.reshape(-1, 1)).toarray()
         y_val_enc = enc.fit_transform(
-            y_val['pops'].values.reshape(-1, 1)
-        ).toarray()
+            y_val["pops"].values.reshape(-1, 1)).toarray()
         popnames = enc.categories_[0]
 
         # Use default model
@@ -893,9 +925,7 @@ def pop_finder(
             model = tf.Sequential()
             model.add(
                 tf.layers.BatchNormalization(
-                    input_shape=(X_train.shape[1],)
-                )
-            )
+                    input_shape=(X_train.shape[1],)))
             model.add(tf.layers.Dense(128, activation="elu"))
             model.add(tf.layers.Dense(128, activation="elu"))
             model.add(tf.layers.Dense(128, activation="elu"))
@@ -907,12 +937,13 @@ def pop_finder(
             aopt = tf.optimizers.Adam(lr=0.0005)
             model.compile(
                 loss="categorical_crossentropy",
-                optimizer=aopt, metrics="accuracy"
+                optimizer=aopt,
+                metrics="accuracy"
             )
 
         else:
             # Use pre-tuned model
-            model = tf.models.load_model(mod_path + '/best_mod')
+            model = tf.models.load_model(mod_path + "/best_mod")
 
         # Create callbacks
         checkpointer = tf.callbacks.ModelCheckpoint(
@@ -946,7 +977,7 @@ def pop_finder(
             epochs=int(max_epochs),
             callbacks=callback_list,
             validation_data=(X_val - 1, y_val_enc),
-            verbose=0
+            verbose=0,
         )
 
         # Load best model
@@ -984,18 +1015,17 @@ def pop_finder(
         tf.backend.clear_session()
 
         test_loss, test_acc = model.evaluate(X_test - 1, y_test_enc)
-        test_df = pd.DataFrame(model.predict(X_test -1))
+        test_df = pd.DataFrame(model.predict(X_test - 1))
         test_df.columns = popnames
-        test_df['sampleID'] = y_test_samples
-        test_df['true_pops'] = y_test_pops
-        test_dict['count'].append(1)
-        test_dict['df'].append(test_df)
+        test_df["sampleID"] = y_test_samples
+        test_df["true_pops"] = y_test_pops
+        test_dict["count"].append(1)
+        test_dict["df"].append(test_df)
 
         # Find confidence interval of best model
         test_err = 1 - test_acc
         test_95CI = 1.96 * np.sqrt(
-            (test_err * (1 - test_err)) / len(y_test_enc)
-        )
+            (test_err * (1 - test_err)) / len(y_test_enc))
 
         # Fill test lists with information
         TEST_LOSS.append(test_loss)
@@ -1006,7 +1036,7 @@ def pop_finder(
             f"Accuracy of model is {np.round(test_acc, 2)}\
             +/- {np.round(test_95CI,2)}"
         )
-        
+
         if predict:
             tmp_df = pd.DataFrame(model.predict(ukgen))
             tmp_df.columns = popnames
@@ -1032,10 +1062,11 @@ def pop_finder(
 
         metrics.to_csv(save_dir + "/metrics.csv", index=False)
         return test_dict
-        
+
     print("Process complete")
 
-def run_neural_net(    
+
+def run_neural_net(
     infile,
     sample_data,
     save_allele_counts=False,
@@ -1065,7 +1096,7 @@ def run_neural_net(
         Path to tuned model. If set to None, uses default model
         (Default=None).
     train_prop : float
-        Proportion of data to be used in training the model 
+        Proportion of data to be used in training the model
         (Default=0.8).
     seed : int
         Random seed for splitting data (Default=None).
@@ -1084,47 +1115,58 @@ def run_neural_net(
         raise ValueError("mod_path should either be a string or None")
     if isinstance(train_prop, np.float) is False:
         raise ValueError("train_prop should be a float")
-    
-    # Read data with unknowns so errors caught before training/tuning
+
+    # Read data w unknowns so errors caught before training/tuning
     samp_list, dc, unknowns = read_data(
         infile=infile,
         sample_data=sample_data,
         save_allele_counts=save_allele_counts,
         kfcv=False,
     )
-    
+
     unknown_inds = pd.array(unknowns["order"])
     ukgen = dc[unknown_inds, :] - 1
 
     if mod_path is None:
 
-        dc_new = np.delete(dc, unknowns['order'].values, axis=0)
-        
+        dc_new = np.delete(dc, unknowns["order"].values, axis=0)
+
         # Check if train_prop too high
-        if len(dc_new) * (1-train_prop) < len(np.unique(samp_list['pops'])):
-            raise ValueError("train_prop is too high; not enough samples for test")
+        if len(dc_new) * (1 - train_prop) < len(
+            np.unique(samp_list["pops"])
+        ):
+            raise ValueError(
+                "train_prop is too high; not enough samples for test"
+            )
 
         # Split data into training and hold-out test set
         X_train, X_test, y_train, y_test = train_test_split(
-            dc_new, samp_list, stratify=samp_list["pops"],
-            train_size=train_prop, random_state=seed
+            dc_new,
+            samp_list,
+            stratify=samp_list["pops"],
+            train_size=train_prop,
+            random_state=seed,
         )
-        
+
         # Make sure all classes represented in y_val
-        if len(np.unique(y_train['pops'])) != len(np.unique(y_test['pops'])):
-            raise ValueError("Not all pops represented in test set \
-                              choose smaller value for train_prop.")
-        
+        if len(
+            np.unique(y_train["pops"])
+        ) != len(np.unique(y_test["pops"])):
+            raise ValueError(
+                "Not all pops represented in test set \
+                 choose smaller value for train_prop."
+            )
+
     else:
-        
+
         if os.path.exists(mod_path) is False:
             raise ValueError("Path to mod_path does not exist")
-        
-        X_train = np.load(mod_path+"/X_train.npy")
-        y_train = pd.read_csv(mod_path+"/y_train.csv")
-        X_test = np.load(mod_path+"/X_test.npy")
-        y_test = pd.read_csv(mod_path+"/y_test.csv")
-        
+
+        X_train = np.load(mod_path + "/X_train.npy")
+        y_train = pd.read_csv(mod_path + "/y_train.csv")
+        X_test = np.load(mod_path + "/X_test.npy")
+        y_test = pd.read_csv(mod_path + "/y_test.csv")
+
     pop_finder(
         X_train,
         y_train,
@@ -1133,8 +1175,9 @@ def run_neural_net(
         unknowns=unknowns,
         ukgen=ukgen,
         predict=True,
-        **kwargs
+        **kwargs,
     )
+
 
 def read_data(infile, sample_data, save_allele_counts=False, kfcv=False):
     """
@@ -1171,7 +1214,7 @@ def read_data(infile, sample_data, save_allele_counts=False, kfcv=False):
     # Check formats of datatypes
     if os.path.exists(infile) is False:
         raise ValueError("Path to infile does not exist")
-    
+
     # Load genotypes
     print("loading genotypes")
     if infile.endswith(".zarr"):
@@ -1193,12 +1236,12 @@ def read_data(infile, sample_data, save_allele_counts=False, kfcv=False):
         dc = np.array(h5["derived_counts"])
         samples = np.array(h5["samples"])
         h5.close()
-        
+
     else:
         raise ValueError("Infile must have extension 'zarr', 'vcf', or 'hdf5'")
 
     # count derived alleles for biallelic sites
-    if not infile.endswith(".locator.hdf5"):
+    if infile.endswith(".locator.hdf5") is False:
 
         print("counting alleles")
         ac = gen.to_allele_counts()
@@ -1206,14 +1249,14 @@ def read_data(infile, sample_data, save_allele_counts=False, kfcv=False):
         dc = np.array(ac[biallel, :, 1], dtype="int_")
         dc = np.transpose(dc)
 
-        if save_allele_counts and not infile.endswith(".locator.hdf5"):
+        if (save_allele_counts and
+                not infile.endswith(".locator.hdf5")):
 
             print("saving derived counts for reanalysis")
             outfile = h5py.File(infile + ".locator.hdf5", "w")
             outfile.create_dataset("derived_counts", data=dc)
-            outfile.create_dataset(
-                "samples", data=samples, dtype=h5py.string_dtype()
-            )
+            outfile.create_dataset("samples", data=samples,
+                                   dtype=h5py.string_dtype())
             outfile.close()
 
     # Load data and organize for output
@@ -1223,10 +1266,11 @@ def read_data(infile, sample_data, save_allele_counts=False, kfcv=False):
         raise ValueError("Path to sample_data does not exist")
 
     locs = pd.read_csv(sample_data, sep="\t")
-    
-    if pd.Series(
-        ['x', 'pop', 'y', 'sampleID']
-    ).isin(locs.columns).all() == False:
+
+    if not pd.Series(["x",
+                      "pop",
+                      "y",
+                      "sampleID"]).isin(locs.columns).all():
         raise ValueError("sample_data does not have correct columns")
 
     locs["id"] = locs["sampleID"]
@@ -1236,18 +1280,21 @@ def read_data(infile, sample_data, save_allele_counts=False, kfcv=False):
     locs = locs.reindex(np.array(samples))
 
     # Create order column for indexing
-    locs['order'] = np.arange(0, len(locs))
+    locs["order"] = np.arange(0, len(locs))
 
     # If kfcv, cannot have any NAs
     if kfcv is True:
-        uk_remove = locs[locs['x'].isnull()]['order'].values
+        uk_remove = locs[locs["x"].isnull()]["order"].values
         dc = np.delete(dc, uk_remove, axis=0)
         samples = np.delete(samples, uk_remove)
         locs = locs.dropna()
 
     # check that all sample names are present
-    if not all([locs["sampleID"][x] == samples[x] for x in range(len(samples))]):
-        raise ValueError("sample ordering failed! Check that sample IDs match VCF.")
+    if not all(
+        [locs["sampleID"][x] == samples[x] for x in range(len(samples))]
+    ):
+        raise ValueError(
+            "sample ordering failed! Check that sample IDs match VCF.")
 
     if kfcv:
 
@@ -1305,11 +1352,8 @@ class classifierHyperModel(HyperModel):
             Model with all the layers and specified hyperparameters.
         """
         model = tf.Sequential()
-        model.add(
-            tf.layers.BatchNormalization(
-                input_shape=(self.input_shape,)
-            )
-        )
+        model.add(tf.layers.BatchNormalization(
+            input_shape=(self.input_shape,)))
         model.add(
             tf.layers.Dense(
                 units=hp.Int(
@@ -1364,8 +1408,7 @@ class classifierHyperModel(HyperModel):
         model.add(
             tf.layers.Dropout(
                 rate=hp.Float(
-                    "dropout",
-                    min_value=0.0,
+                    "dropout", min_value=0.0,
                     max_value=0.5,
                     default=0.25,
                     step=0.05
@@ -1423,7 +1466,8 @@ class classifierHyperModel(HyperModel):
                 ),
             )
         )
-        model.add(tf.layers.Dense(self.num_classes, activation="softmax"))
+        model.add(tf.layers.Dense(self.num_classes,
+                                  activation="softmax"))
 
         model.compile(
             optimizer=tf.optimizers.Adam(
@@ -1473,23 +1517,23 @@ def assign_plot(save_dir, ensemble=False, col_scheme="Spectral"):
         raise ValueError("ensemble should be boolean")
     if isinstance(col_scheme, str) is False:
         raise ValueError("col_scheme should be string")
-    
+
     # Load data
     if ensemble:
-        
+
         # Check if right directory exists
-        if os.path.exists(save_dir+"/pop_assign_freqs.csv") is False:
-            raise ValueError("pop_assign_freqs.csv does not exist in save_dir")
-        
+        if os.path.exists(save_dir + "/pop_assign_freqs.csv") is False:
+            raise ValueError(
+                "pop_assign_freqs.csv does not exist in save_dir")
+
         e_preds = pd.read_csv(save_dir + "/pop_assign_freqs.csv")
-        e_preds.rename(columns={ e_preds.columns[0]: "sampleID" },
-                       inplace = True)
+        e_preds.rename(columns={e_preds.columns[0]: "sampleID"}, inplace=True)
     else:
 
         # Check if right directory exists
-        if os.path.exists(save_dir+"/pop_assign.csv") is False:
+        if os.path.exists(save_dir + "/pop_assign.csv") is False:
             raise ValueError("pop_assign.csv does not exist in save_dir")
-        
+
         e_preds = pd.read_csv(save_dir + "/pop_assign.csv")
 
     e_preds.set_index("sampleID", inplace=True)
@@ -1606,10 +1650,11 @@ def structure_plot(save_dir, ensemble=False, col_scheme="Spectral"):
     plt.savefig(save_dir + "/structure_plot.png", bbox_inches="tight")
 
 
-def snp_rank(infile, sample_data, mod_path=None):
+def snp_rank(infile, sample_data, mod_path=None,
+             save_dir="snp_rank_results"):
     """
     Finds the most important SNPs in determining a model's performance.
-    
+
     Parameters
     ----------
     infile : string
@@ -1620,12 +1665,14 @@ def snp_rank(infile, sample_data, mod_path=None):
     mod_path : string
         Path to tuned model. If set to None, just uses default model
         (Default=None).
-    
+    save_dir : string
+        Path to output directory (Default="snp_rank_results").
+
     Returns
     -------
     ranking : pd.DataFrame
         DataFrame containing relative importance of each SNP, where SNPs
-        are labelled from 1 to number of SNPs in order of appearance in 
+        are labelled from 1 to number of SNPs in order of appearance in
         the VCF file.
     """
     # Check inputs
@@ -1635,28 +1682,25 @@ def snp_rank(infile, sample_data, mod_path=None):
         raise ValueError("Path to sample_data does not exist")
     if isinstance(mod_path, str) is False and mod_path is not None:
         raise ValueError("mod_path should be string or None")
-    
+
     samp_list, dc, = read_data(
         infile,
         sample_data,
         save_allele_counts=False,
         kfcv=True,
     )
-    
+
     X = dc
-    Y = samp_list['pops']
-    enc = OneHotEncoder(handle_unknown='ignore')
+    Y = samp_list["pops"]
+    enc = OneHotEncoder(handle_unknown="ignore")
     Y_enc = enc.fit_transform(Y.values.reshape(-1, 1)).toarray()
-    
-    snp_names = np.arange(1, X.shape[1]+1)
-    
+
+    snp_names = np.arange(1, X.shape[1] + 1)
+
     if mod_path is None:
         model = tf.Sequential()
-        model.add(
-            tf.layers.BatchNormalization(
-                input_shape=(X_train.shape[1],)
-            )
-        )
+        model.add(tf.layers.BatchNormalization(
+            input_shape=(X.shape[1],)))
         model.add(tf.layers.Dense(128, activation="elu"))
         model.add(tf.layers.Dense(128, activation="elu"))
         model.add(tf.layers.Dense(128, activation="elu"))
@@ -1664,36 +1708,36 @@ def snp_rank(infile, sample_data, mod_path=None):
         model.add(tf.layers.Dense(128, activation="elu"))
         model.add(tf.layers.Dense(128, activation="elu"))
         model.add(tf.layers.Dense(128, activation="elu"))
-        model.add(tf.layers.Dense(len(popnames), activation="softmax"))
+        model.add(tf.layers.Dense(len(np.unique(samp_list['pops'])),
+                                  activation="softmax"))
         aopt = tf.optimizers.Adam(lr=0.0005)
         model.compile(
             loss="categorical_crossentropy",
-            optimizer=aopt, metrics="accuracy"
+            optimizer=aopt,
+            metrics="accuracy"
         )
     else:
         model = tf.models.load_model(mod_path + "/best_mod")
-    
+
     errors = []
 
     for i in range(X.shape[1]):
         og_X = np.array(X[:, i])
         np.random.shuffle(X[:, i])
-        
+
         pred = model.predict(X)
-        error = metrics.log_loss(Y_enc, pred)
-            
+        error = log_loss(Y_enc, pred)
+
         errors.append(error)
         X[:, i] = og_X
-        
+
     max_error = np.max(errors)
     importance = [e / max_error for e in errors]
 
-    data = {'snp':snp_names,
-            'error':errors,
-            'importance':importance}
-    ranking = pd.DataFrame(data, columns = ['snp', 'error', 'importance'])
-    ranking.sort_values(by=['importance'], ascending=[0], inplace=True)
+    data = {"snp": snp_names, "error": errors, "importance": importance}
+    ranking = pd.DataFrame(data, columns=["snp", "error", "importance"])
+    ranking.sort_values(by=["importance"], ascending=[0], inplace=True)
     ranking.reset_index(inplace=True, drop=True)
     ranking.to_csv(save_dir + "/perturbation_rank_results.csv")
-    
+
     return ranking
