@@ -12,9 +12,11 @@ import pytest
 # Path to helper data
 infile_all = "tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5"
 infile_all_vcf = "tests/test_inputs/onlyAtl_500.recode.vcf"
+infile_kfcv = "tests/test_inputs/onlyAtl_500_kfcv.recode.vcf"
 sample_data1 = "tests/test_inputs/onlyAtl_truelocs.txt"
 sample_data2 = "tests/test_inputs/onlyAtl_truelocs_NAs.txt"
 sample_data3 = "tests/test_inputs/onlyAtl_truelocs_extracol.txt"
+sample_data4 = "tests/test_inputs/onlyAtl_truelocs_3col.txt"
 pred_path = "tests/test_inputs/test_out/loc_boot0_predlocs.txt"
 X_train = np.load("tests/test_inputs/X_train.npy")
 X_train_empty = np.zeros(shape=0)
@@ -32,12 +34,11 @@ def test_version():
     assert __version__ == "0.1.22"
 
 
-def test_read():
+def test_read_data():
 
     # Read data w/o kfcv
     x = pop_finder.read_data(infile_all,
-                             sample_data2,
-                             save_allele_counts=False)
+                             sample_data2)
     assert isinstance(x, tuple)
     assert isinstance(x[0], pd.core.frame.DataFrame)
     assert isinstance(x[1], np.ndarray)
@@ -47,12 +48,34 @@ def test_read():
     # Read data w/ kfcv
     y = pop_finder.read_data(infile_all,
                              sample_data1,
-                             save_allele_counts=False,
                              kfcv=True)
     assert isinstance(y, tuple)
     assert isinstance(y[0], pd.core.frame.DataFrame)
     assert isinstance(y[1], np.ndarray)
     assert len(y) == 2
+    
+    # Test inputs
+    with pytest.raises(ValueError,
+                       match="Path to infile does not exist"):
+        pop_finder.read_data(infile="hello",
+                             sample_data2)
+    with pytest.raises(
+        ValueError,
+        match="Infile must have extension 'zarr', 'vcf', or 'hdf5'"):
+        pop_finder.read_data(infile=sample_data1,
+                             sample_data2)
+    with pytest.raises(ValueError,
+                       match="Path to sample_data does not exist"):
+        pop_finder.read_data(infile_all,
+                             sample_data="hello")
+    with pytest.raises(ValueError,
+                       match="sample_data does not have correct columns"):
+        pop_finder.read_data(infile_all,
+                             sample_data=sample_data4)        
+    with pytest.raises(ValueError,
+                       match="sample ordering failed! Check that sample IDs match the VCF."):
+        pop_finder.read_data(infile_kfcv,
+                             sample_data2)
 
 
 def test_hp_tuning():
@@ -660,45 +683,114 @@ def test_run_neural_net():
     pop_finder.run_neural_net(
         infile_all,
         sample_data2,
-        save_allele_counts=False,
-        save_weights=False,
         patience=10,
-        batch_size=32,
         max_epochs=2,
-        seed=1,
-        train_prop=0.8,
-        gpu_number="0",
-        ensemble=False,
-        save_best_mod=False,
         save_dir=save_path,
-        plot_history=False,
     )
+    # Check correct files are created
     assert os.path.isfile(save_path + "/metrics.csv")
-    if os.path.isfile(save_path + "/metrics.csv"):
-        os.remove(save_path + "/metrics.csv")
     assert os.path.isfile(save_path + "/pop_assign.csv")
-    if os.path.isfile(save_path + "/pop_assign.csv"):
-        os.remove(save_path + "/pop_assign.csv")
-    os.rmdir(save_path)
+    shutil.rmtree(save_path)
+    
+    pop_finder.run_neural_net(
+        infile_all,
+        sample_data2,
+        patience=10,
+        max_epochs=2,
+        ensemble=True,
+        nbags=2,
+        try_stacking=True,
+        save_dir=save_path,
+    )
+    # Check correct files are created
+    assert os.path.isfile(save_path + "/ensemble_test_results.csv")
+    assert os.path.isfile(save_path + "/pop_assign_ensemble.csv")
+    assert os.path.isfile(save_path + "/metrics.csv")
+    assert os.path.isfile(save_path + "/pop_assign_freqs.csv")
+    shutil.rmtree(save_path)
 
-    # train_prop too high
-    with pytest.raises(ValueError):
+    # Check inputs
+    with pytest.raises(ValueError, match="Path to infile does not exist"):
+        pop_finder.run_neural_net(
+            infile="hello",
+            sample_data2,
+            patience=10,
+            max_epochs=2,
+            save_dir=save_path,
+        )
+    with pytest.raises(ValueError, match="Path to sample_data does not exist"):
+        pop_finder.run_neural_net(
+            infile_all,
+            sample_data="hello",
+            patience=10,
+            max_epochs=2,
+            save_dir=save_path,
+        )     
+    with pytest.raises(ValueError,
+                       match="save_allele_counts should be a boolean"):
         pop_finder.run_neural_net(
             infile_all,
             sample_data2,
-            save_allele_counts=False,
-            save_weights=False,
+            save_allele_counts="True",
             patience=10,
-            batch_size=32,
             max_epochs=2,
-            seed=1,
-            train_prop=0.95,
-            gpu_number="0",
-            ensemble=False,
-            save_best_mod=False,
             save_dir=save_path,
-            plot_history=False,
+        )     
+    with pytest.raises(ValueError,
+                       match="mod_path should either be a string or None"):
+        pop_finder.run_neural_net(
+            infile_all,
+            sample_data2,
+            mod_path=2,
+            patience=10,
+            max_epochs=2,
+            save_dir=save_path,
         )
+    with pytest.raises(ValueError,
+                       match="Path to mod_path does not exist"):
+        pop_finder.run_neural_net(
+            infile_all,
+            sample_data2,
+            mod_path="hello",
+            patience=10,
+            max_epochs=2,
+            save_dir=save_path,
+        ) 
+        
+def test_assign_plot():
+
+    # Check inputs
+    with pytest.raises(ValueError, match="save_dir should be string"):
+        pop_finder.assign_plot(
+            save_dir=2
+        )
+    with pytest.raises(ValueError, match="ensemble should be boolean"):
+        pop_finder.assign_plot(
+            save_dir="hello",
+            ensemble="True"
+        )
+    with pytest.raises(ValueError, match="col_scheme should be string"):
+        pop_finder.assign_plot(
+            save_dir="hello",
+            ensemble=False,
+            col_scheme=1
+        )
+    with pytest.raises(ValueError, match="pop_assign_freqs.csv does not exist in save_dir"):
+        pop_finder.assign_plot(
+            save_dir="hello",
+            ensemble=True
+        )
+    with pytest.raises(ValueError, match="pop_assign.csv does not exist in save_dir"):
+        pop_finder.assign_plot(
+            save_dir="hello",
+            ensemble=False
+        )
+        
+        
+def test_structure_plot():
+    
+    # Check inputs
+    
 
 
 def test_contour_classifier():

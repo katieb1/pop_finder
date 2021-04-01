@@ -566,8 +566,6 @@ def pop_finder(
     if ensemble:
         for i in range(nbags):
             n_prime = np.int(np.ceil(len(X_train) * 0.8))
-            print(f'n_prime: {n_prime}')
-            print(f'X_train shape: {X_train.shape}')
             good_bag = False
 
             while good_bag is False:
@@ -588,11 +586,6 @@ def pop_finder(
                     if (pd.Series(popnames).isin(bag_y['pops']).all() and
                         pd.Series(popnames).isin(y_val['pops']).all()):
                         good_bag = True
-                    
-            print(f'bag_X shape = {bag_X.shape}')
-            print(f'bag_y shape = {bag_y.shape}')
-            print(f'X_val shape = {X_val.shape}')
-            print(f'y_val shape = {y_val.shape}')
 
             enc = OneHotEncoder(handle_unknown="ignore")
             bag_y_enc = enc.fit_transform(
@@ -601,9 +594,6 @@ def pop_finder(
             y_val_enc = enc.fit_transform(
                 y_val['pops'].values.reshape(-1, 1)
             ).toarray()
-            
-            print(f'bag_y_enc shape = {bag_y_enc.shape}')
-            print(f'y_val_enc shape = {y_val_enc.shape}')
 
             if mod_path is None:
                 model = tf.Sequential()
@@ -1404,7 +1394,8 @@ def assign_plot(save_dir, ensemble=False, col_scheme="Spectral"):
         Path to output file where "preds.csv" lives and
         also where the resulting plot will be saved.
     ensemble : boolean
-        Set to True if multiple models used to generate assignments.
+        Set to True if multiple models used to generate assignments
+        (Default=False).
     col_scheme : string
         Colour scheme of confusion matrix. See
         matplotlib.org/stable/tutorials/colors/colormaps.html
@@ -1416,7 +1407,14 @@ def assign_plot(save_dir, ensemble=False, col_scheme="Spectral"):
         PNG formatted assignment plot located in the
         save_dir folder.
     """
-
+    # Check inputs
+    if isinstance(save_dir, str) is False:
+        raise ValueError("save_dir should be string")
+    if isinstance(ensemble, bool) is False:
+        raise ValueError("ensemble should be boolean")
+    if isinstance(col_scheme, str) is False:
+        raise ValueError("col_scheme should be string")
+    
     # Load data
     if ensemble:
         
