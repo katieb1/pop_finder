@@ -256,6 +256,9 @@ def kfcv(infile,
     pred_labels_ensemble = []
     true_labels_ensemble = []
     
+    ensemble_preds = pd.DataFrame()
+    preds = pd.DataFrame()
+    
     fold_var = 1
     
     for t, v in rskf.split(dc, samp_list["pops"]):
@@ -287,6 +290,8 @@ def kfcv(infile,
             if len(test_dict) == 1:
                 raise ValueError("pop_finder results consists of single dataframe\
                                   however ensemble set to True")
+            
+            ensemble_preds = ensemble_preds.append(tot_bag_df)
 
         else:
             test_dict = pop_finder(    
@@ -302,9 +307,11 @@ def kfcv(infile,
             if bool(test_dict) is False:
                 raise ValueError("Empty dictionary from pop_finder")
 
-            if len(test_dict) != 1:
+            if len(test_dict['df']) != 1:
                 raise ValueError("pop_finder results contains ensemble of models\
                                   should be a single dataframe")
+
+            preds = preds.append(test_dict['df'][0])
 
         tmp_pred_label = []
         tmp_true_label = []
@@ -324,7 +331,7 @@ def kfcv(infile,
 
         fold_var += 1
 
-    #return pred_labels, true_labels
+    #return pred_labels, true_labels    
     pred_labels = np.concatenate(pred_labels)
     true_labels = np.concatenate(true_labels)
     report = classification_report(true_labels,
@@ -335,6 +342,8 @@ def kfcv(infile,
     report.to_csv(save_dir + "/classification_report.csv")
     
     if ensemble:
+        ensemble_preds.to_csv(save_dir + "/ensemble_preds.csv")
+        
         true_labels_ensemble = np.concatenate(true_labels_ensemble)
         pred_labels_ensemble = np.concatenate(pred_labels_ensemble)
         ensemble_report = classification_report(true_labels_ensemble,
@@ -343,6 +352,8 @@ def kfcv(infile,
                                                 output_dict=True)
         ensemble_report = pd.DataFrame(ensemble_report).transpose()
         ensemble_report.to_csv(save_dir + "/ensemble_classification_report.csv")
+    else:
+        preds.to_csv(save_dir + "/preds.csv")
 
     if return_plot is True:
         
@@ -948,6 +959,7 @@ def pop_finder(
         test_df = pd.DataFrame(model.predict(X_test -1))
         test_df.columns = popnames
         test_df['sampleID'] = y_test_samples
+        test_df['true_pops'] = y_test_pops
         test_dict['count'].append(1)
         test_dict['df'].append(test_df)
 
@@ -1464,7 +1476,7 @@ def assign_plot(save_dir, ensemble=False, col_scheme="Spectral"):
     plt.savefig(save_dir + "/assign_plot.png", bbox_inches="tight")
 
 
-def structure_plot(save_dir, col_scheme="Spectral"):
+def structure_plot(save_dir, ensemble=False, col_scheme="Spectral"):
     """
     Takes results from running the neural network with
     K-fold cross-validation and creates a structure plot
@@ -1474,8 +1486,11 @@ def structure_plot(save_dir, col_scheme="Spectral"):
     Parameters
     ----------
     save_dir : string
-        Path to output file where "preds.csv" lives and
-        also where the resulting plot will be saved.
+        Path to output file where "ensemble_preds.csv" or "preds.csv"
+        lives and also where the resulting plot will be saved.
+    ensemble : boolean
+        Whether ensemble of models was used to generate results or not
+        (Default=False).
     col_scheme : string
         Colour scheme of confusion matrix. See
         matplotlib.org/stable/tutorials/colors/colormaps.html
@@ -1487,16 +1502,23 @@ def structure_plot(save_dir, col_scheme="Spectral"):
         PNG formatted structure plot located in the
         save_dir folder.
     """
-    # Check inputs
-    if os.path.exists(save_dir + "/preds.csv") is False:
-        raise ValueError("Path to preds file does not exist")
+    # Check inputs and load data
+    if ensemble is True:
+        if os.path.exists(save_dir + "/ensemble_preds.csv") is False:
+            raise ValueError("Path to ensemble_preds does not exist")
+        preds = pd.read_csv(save_dir + "/ensemble_preds.csv")
+    else:
+        # Load data
+        if os.path.exists(save_dir + "/preds.csv") is False:
+            raise ValueError("Path to preds does not exist")
+        preds = pd.read_csv(save_dir + "/preds.csv")
     if isinstance(col_scheme, str) is False:
         raise ValueError("col_scheme should be a string")
-    
-    # Load data
-    preds = pd.read_csv(save_dir + "/preds.csv")
-    npreds = preds.groupby(["pops"]).agg("mean")
-    npreds = npreds.sort_values("pops", ascending=True)
+
+    preds = preds.drop(preds.columns[0], axis=1)
+    npreds = preds.groupby(["true_pops"]).agg("mean")
+    npreds = npreds.sort_values("true_pops", ascending=True)
+    npreds = npreds / np.sum(npreds, axis=1)
 
     # Make sure values are correct
     if not np.round(np.sum(npreds, axis=1), 2).eq(1).all():

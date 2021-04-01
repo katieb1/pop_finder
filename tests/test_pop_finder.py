@@ -561,7 +561,7 @@ def test_pop_finder():
             y_train=y_train,
             X_test=X_test,
             y_test=y_test,
-            unknowns=unknowns,,
+            unknowns=unknowns,
             save_dir=2,
             max_epochs=10
         )
@@ -788,9 +788,57 @@ def test_assign_plot():
         
         
 def test_structure_plot():
+
+    # Check outputs
+    pop_finder.structure_plot(
+        save_dir="tests/test_inputs/kfcv_test_output"
+    )
+    assert os.path.exists(
+        "tests/test_inputs/kfcv_test_output/structure_plot.png"
+    )
+    if os.path.exists(
+        "tests/test_inputs/kfcv_test_output/structure_plot.png"
+    ):
+        os.remove(
+            "tests/test_inputs/kfcv_test_output/structure_plot.png"
+        )
+
+    pop_finder.structure_plot(
+        save_dir="tests/test_inputs/kfcv_ensemble_test_output",
+        ensemble=True
+    )
+    assert os.path.exists(
+        "tests/test_inputs/kfcv_ensemble_test_output/structure_plot.png"
+    )
+    if os.path.exists(
+        "tests/test_inputs/kfcv_ensemble_test_output/structure_plot.png"
+    ):
+        os.remove(
+            "tests/test_inputs/kfcv_ensemble_test_output/structure_plot.png"
+        )
     
     # Check inputs
-    
+    with pytest.raises(ValueError,
+                       match="Path to ensemble_preds does not exist"):
+        pop_finder.structure_plot(
+            save_dir="incorrect",
+            ensemble=True
+        )
+        
+    with pytest.raises(ValueError,
+                       match="Path to preds does not exist"):
+        pop_finder.structure_plot(
+            save_dir="incorrect",
+            ensemble=False
+        )
+
+    with pytest.raises(ValueError,
+                       match="col_scheme should be a string"):
+        pop_finder.structure_plot(
+            save_dir="tests/test_inputs/kfcv_test_output",
+            ensemble=False,
+            col_scheme=2
+        )
 
 
 def test_contour_classifier():

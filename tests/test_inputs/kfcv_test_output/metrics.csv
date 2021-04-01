@@ -1,0 +1,4 @@
+metric,value
+Test accuracy,[0.4]
+Test 95% CI,[0.3]
+Test loss,[2.08]
