@@ -36,64 +36,6 @@
 <div class="section" id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-pop_finder.assign_plot">
-<span id="pop-finder-assign-plot-module"></span><h2>pop_finder.assign_plot module<a class="headerlink" href="#module-pop_finder.assign_plot" title="Permalink to this headline">¶</a></h2>
-<dl class="py function">
-<dt id="pop_finder.assign_plot.assign_plot">
-<code class="sig-prename descclassname"><span class="pre">pop_finder.assign_plot.</span></code><code class="sig-name descname"><span class="pre">assign_plot</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_scheme</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Spectral'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/assign_plot.html#assign_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.assign_plot.assign_plot" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plots the frequency of assignment of individuals
-from unknown populations to different populations
-included in the training data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>save_dir</strong> (<em>string</em>) – Path to output file where “preds.csv” lives and
-also where the resulting plot will be saved.</p></li>
-<li><p><strong>col_scheme</strong> (<em>string</em>) – Colour scheme of confusion matrix. See
-matplotlib.org/stable/tutorials/colors/colormaps.html
-for available colour palettes (Default=”Spectral”).</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>assign_plot.png</strong> – PNG formatted assignment plot located in the
-save_dir folder.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>PNG file</p>
-</dd>
-</dl>
-</dd></dl>
-
-</div>
-<div class="section" id="module-pop_finder.conf_matrix">
-<span id="pop-finder-conf-matrix-module"></span><h2>pop_finder.conf_matrix module<a class="headerlink" href="#module-pop_finder.conf_matrix" title="Permalink to this headline">¶</a></h2>
-<dl class="py function">
-<dt id="pop_finder.conf_matrix.conf_matrix">
-<code class="sig-prename descclassname"><span class="pre">pop_finder.conf_matrix.</span></code><code class="sig-name descname"><span class="pre">conf_matrix</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_scheme</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Purples'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/conf_matrix.html#conf_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.conf_matrix.conf_matrix" title="Permalink to this definition">¶</a></dt>
-<dd><p>Takes results from running the neural network with
-K-fold cross-validation and creates a confusion
-matrix.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>save_dir</strong> (<em>string</em>) – Path to output file where “preds.csv” lives and
-also where the resulting plot will be saved.</p></li>
-<li><p><strong>col_scheme</strong> (<em>string</em>) – Colour scheme of confusion matrix. See
-matplotlib.org/stable/tutorials/colors/colormaps.html
-for available colour palettes (Default=”Purples”).</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>conf_mat.png</strong> – PNG formatted confusion matrix plot located in the
-save_dir folder.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>PNG file</p>
-</dd>
-</dl>
-</dd></dl>
-
-</div>
 <div class="section" id="module-pop_finder.contour_classifier">
 <span id="pop-finder-contour-classifier-module"></span><h2>pop_finder.contour_classifier module<a class="headerlink" href="#module-pop_finder.contour_classifier" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
@@ -185,33 +127,6 @@ and accuracy for the model.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-pop_finder.hp_tuning">
-<span id="pop-finder-hp-tuning-module"></span><h2>pop_finder.hp_tuning module<a class="headerlink" href="#module-pop_finder.hp_tuning" title="Permalink to this headline">¶</a></h2>
-<dl class="py class">
-<dt id="pop_finder.hp_tuning.classifierHyperModel">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">pop_finder.hp_tuning.</span></code><code class="sig-name descname"><span class="pre">classifierHyperModel</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/hp_tuning.html#classifierHyperModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.hp_tuning.classifierHyperModel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">kerastuner.engine.hypermodel.HyperModel</span></code></p>
-<dl class="py method">
-<dt id="pop_finder.hp_tuning.classifierHyperModel.build">
-<code class="sig-name descname"><span class="pre">build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/hp_tuning.html#classifierHyperModel.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.hp_tuning.classifierHyperModel.build" title="Permalink to this definition">¶</a></dt>
-<dd><p>Builds a model with the specified hyperparameters.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>hp</strong> (<em>keras.tuners class</em>) – Class that defines how to sample hyperparameters (e.g.
-RandomSearch()).</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>model</strong> – Model with all the layers and specified hyperparameters.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Keras sequential model</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-</div>
 <div class="section" id="module-pop_finder.locator_mod">
 <span id="pop-finder-locator-mod-module"></span><h2>pop_finder.locator_mod module<a class="headerlink" href="#module-pop_finder.locator_mod" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
@@ -265,14 +180,15 @@ and reducing learning rate.</p>
 
 <dl class="py function">
 <dt id="pop_finder.locator_mod.load_genotypes">
-<code class="sig-prename descclassname"><span class="pre">pop_finder.locator_mod.</span></code><code class="sig-name descname"><span class="pre">load_genotypes</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gen_dat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vcf'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/locator_mod.html#load_genotypes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.locator_mod.load_genotypes" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">pop_finder.locator_mod.</span></code><code class="sig-name descname"><span class="pre">load_genotypes</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gen_dat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_format</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/locator_mod.html#load_genotypes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.locator_mod.load_genotypes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads genetic data and parses into relevant genotype
 and sample data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>gen_dat</strong> – </p></li>
-<li><p><strong>data_format</strong> – </p></li>
+<li><p><strong>gen_dat</strong> (<em>string</em>) – Path to genetic data.</p></li>
+<li><p><strong>data_format</strong> (<em>string</em>) – File format of SNPs for all samples. Options include
+‘vcf’, ‘zarr’, and ‘matrix’.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -303,7 +219,7 @@ and sample data.</p>
 
 <dl class="py function">
 <dt id="pop_finder.locator_mod.locator">
-<code class="sig-prename descclassname"><span class="pre">pop_finder.locator_mod.</span></code><code class="sig-name descname"><span class="pre">locator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_dat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vcf'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">windows</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_stop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacknife</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacknife_prop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nboots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_mac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_SNPs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">impute_missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_prop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nlayers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'out'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_history</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keras_verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/locator_mod.html#locator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.locator_mod.locator" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">pop_finder.locator_mod.</span></code><code class="sig-name descname"><span class="pre">locator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_dat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">windows</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_stop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacknife</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacknife_prop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nboots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_mac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_SNPs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">impute_missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_prop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nlayers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'out'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_history</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keras_verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/locator_mod.html#locator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.locator_mod.locator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Estimates sample locations from genotype matrices. Code
 modified from Battey et al. 2020:
 <a class="reference external" href="https://github.com/kr-colab/locator">https://github.com/kr-colab/locator</a></p>
@@ -311,9 +227,6 @@ modified from Battey et al. 2020:
 <dt>sample_data<span class="classifier">string</span></dt><dd><p>Tab-delimited text file with columns ‘sampleID’, ‘x’,
 and ‘y’. SampleIDs must exactly match those of the
 VCF. Samples without known locations should be NA.</p>
-</dd>
-<dt>data_format<span class="classifier">string</span></dt><dd><p>File format of SNPs for all samples. Options include
-‘vcf’, ‘zarr’, and ‘matrix’ (Default=’vcf’).</p>
 </dd>
 <dt>train_split<span class="classifier">float</span></dt><dd><p>Proportion of samples to be used for training, ranges
 from 0-1 (Default=0.9).</p>
@@ -555,78 +468,182 @@ distribution with parameter mean_allele_frequency.</p>
 <div class="section" id="module-pop_finder.pop_finder">
 <span id="pop-finder-pop-finder-module"></span><h2>pop_finder.pop_finder module<a class="headerlink" href="#module-pop_finder.pop_finder" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
-<dt id="pop_finder.pop_finder.get_model_name">
-<code class="sig-prename descclassname"><span class="pre">pop_finder.pop_finder.</span></code><code class="sig-name descname"><span class="pre">get_model_name</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/pop_finder.html#get_model_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.pop_finder.get_model_name" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a string model name.</p>
+<dt id="pop_finder.pop_finder.assign_plot">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.pop_finder.</span></code><code class="sig-name descname"><span class="pre">assign_plot</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensemble</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_scheme</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Spectral'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/pop_finder.html#assign_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.pop_finder.assign_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots the frequency of assignment of individuals
+from unknown populations to different populations
+included in the training data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>k</strong> (<em>int</em>) – Model number.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>save_dir</strong> (<em>string</em>) – Path to output file where “preds.csv” lives and
+also where the resulting plot will be saved.</p></li>
+<li><p><strong>ensemble</strong> (<em>boolean</em>) – Set to True if multiple models used to generate assignments
+(Default=False).</p></li>
+<li><p><strong>col_scheme</strong> (<em>string</em>) – Colour scheme of confusion matrix. See
+matplotlib.org/stable/tutorials/colors/colormaps.html
+for available colour palettes (Default=”Spectral”).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>assign_plot.png</strong> – PNG formatted assignment plot located in the
+save_dir folder.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>PNG file</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py function">
-<dt id="pop_finder.pop_finder.run_neural_net">
-<code class="sig-prename descclassname"><span class="pre">pop_finder.pop_finder.</span></code><code class="sig-name descname"><span class="pre">run_neural_net</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile_kfcv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infile_all</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_allele_counts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_prop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tune_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_reps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_best_mod</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'out'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_history</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/pop_finder.html#run_neural_net"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.pop_finder.run_neural_net" title="Permalink to this definition">¶</a></dt>
-<dd><p>Uses input arguments from the command line to tune, train,
-evaluate an ensemble of neural networks, then predicts the
-population of origin for samples of unknown origin.</p>
+<dl class="py class">
+<dt id="pop_finder.pop_finder.classifierHyperModel">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">pop_finder.pop_finder.</span></code><code class="sig-name descname"><span class="pre">classifierHyperModel</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/pop_finder.html#classifierHyperModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.pop_finder.classifierHyperModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">kerastuner.engine.hypermodel.HyperModel</span></code></p>
+<dl class="py method">
+<dt id="pop_finder.pop_finder.classifierHyperModel.build">
+<code class="sig-name descname"><span class="pre">build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/pop_finder.html#classifierHyperModel.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.pop_finder.classifierHyperModel.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds a model with the specified hyperparameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>infile_kfcv</strong> (<em>string</em>) – Path to VCF or hdf5 file with genetic information for
-only samples of known origin. No samples of unknown
-origin should be in this file.</p></li>
-<li><p><strong>infile_all</strong> (<em>string</em>) – Path to VCF or hdf5 file with genetic information
-for all samples (including samples of unknown origin).</p></li>
-<li><p><strong>sample_data</strong> (<em>string</em>) – Path to input file with all samples present (including
-samples of unknown origin), which is a tab-delimited
-text file with columns x, y, pop, and sampleID.</p></li>
-<li><p><strong>counts</strong> (<em>save_allele</em>) – Whether or not to store derived allele counts in hdf5
-file (Default=False).</p></li>
-<li><p><strong>save_weights</strong> (<em>boolean</em>) – Save model weights so you don’t have to retrain again
-later (Default=False).</p></li>
-<li><p><strong>patience</strong> (<em>int</em>) – Hyperparameter for leniency on early-stopping
-(Default=10).</p></li>
-<li><p><strong>batch_size</strong> (<em>int</em>) – Number of samples to use in training for each batch
-(Default=32).</p></li>
-<li><p><strong>max_epochs</strong> (<em>int</em>) – Number of epochs to train over (Default=10.</p></li>
-<li><p><strong>seed</strong> (<em>int</em>) – Random seed (Default=None).</p></li>
-<li><p><strong>train_prop</strong> (<em>float</em>) – Proportion of samples used in training (Default=0.5).</p></li>
-<li><p><strong>gpu_number</strong> (<em>string</em>) – Whether to use GPUs (Default=’0’).</p></li>
-<li><p><strong>tune_model</strong> (<em>boolean</em>) – Whether to tune model or just use default
-(Default=False).</p></li>
-<li><p><strong>n_splits</strong> (<em>int</em>) – Number of folds in k-fold cross-validation
-(Default=5).</p></li>
-<li><p><strong>n_reps</strong> (<em>int</em>) – Number of times to repeat k-fold cross-validation,
-creating the number of models in the ensemble
-(Default=5).</p></li>
-<li><p><strong>save_best_mod</strong> (<em>boolean</em>) – Whether to save the model with the highest accuracy
-(Default=False).</p></li>
-<li><p><strong>save_dir</strong> (<em>string</em>) – Directory where results will be stored (Default=’out’).</p></li>
-<li><p><strong>plot_history</strong> (<em>boolean</em>) – Whether or not to plot the training vs validation loss
-over time (Default=False).</p></li>
-</ul>
+<dd class="field-odd"><p><strong>hp</strong> (<em>keras.tuners class</em>) – Class that defines how to sample hyperparameters (e.g.
+RandomSearch()).</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p><em>A dataframe in csv format called ‘metrics.csv’ that gives</em> – details on accuracy and performance of the best model
-and overall accuracy and performance of the ensemble.</p></li>
-<li><p><em>A dataframe in csv format called ‘pop_assign_freqs.csv’</em> – outlining the frequency of assignment of an individual
-to each population.</p></li>
-<li><p><em>A dataframe in csv format called ‘pop_assign_ensemble.csv’</em> – that specifies that top population for each individual</p></li>
+<dd class="field-even"><p><strong>model</strong> – Model with all the layers and specified hyperparameters.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Keras sequential model</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="pop_finder.pop_finder.hyper_tune">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.pop_finder.</span></code><code class="sig-name descname"><span class="pre">hyper_tune</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_trials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runs_per_trial</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_prop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'out'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mod_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hyper_tune'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/pop_finder.html#hyper_tune"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.pop_finder.hyper_tune" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tunes hyperparameters of keras model for population assignment.</p>
+<dl class="simple">
+<dt>infile<span class="classifier">string</span></dt><dd><p>Path to VCF file containing genetic data.</p>
+</dd>
+<dt>sample_data<span class="classifier">string</span></dt><dd><p>Path to tab-delimited file containing columns x, y,
+pop, and sampleID.</p>
+</dd>
+<dt>max_trials<span class="classifier">int</span></dt><dd><p>Number of trials to run for RandomSearch (Default=10).</p>
+</dd>
+<dt>runs_per_trial<span class="classifier">int</span></dt><dd><p>Number of runs per trial for RandomSearch (Default=10).</p>
+</dd>
+<dt>max_epochs<span class="classifier">int</span></dt><dd><p>Number of epochs to train model (Default=100).</p>
+</dd>
+<dt>train_prop<span class="classifier">float</span></dt><dd><p>Proportion of data to train on. Remaining data will be kept
+as a test set and not used until final model is trained
+(Default=0.8).</p>
+</dd>
+<dt>seed<span class="classifier">int</span></dt><dd><p>Random seed (Default=None).</p>
+</dd>
+<dt>save_dir<span class="classifier">string</span></dt><dd><p>Directory to save output to (Default=’out’).</p>
+</dd>
+<dt>mod_name<span class="classifier">string</span></dt><dd><p>Name of model in save directory (Default=’hyper_tune’).</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>best_mod</strong> (<em>keras sequential model</em>) – Best model from hyperparameter tuning</p></li>
+<li><p><strong>y_train</strong> (<em>pd.DataFrame</em>) – training labels</p></li>
+<li><p><strong>y_val</strong> (<em>pd.DataFrame</em>) – Validation labels</p></li>
 </ul>
 </p>
 </dd>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-pop_finder.read">
-<span id="pop-finder-read-module"></span><h2>pop_finder.read module<a class="headerlink" href="#module-pop_finder.read" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
-<dt id="pop_finder.read.read_data">
-<code class="sig-prename descclassname"><span class="pre">pop_finder.read.</span></code><code class="sig-name descname"><span class="pre">read_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_allele_counts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kfcv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/read.html#read_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.read.read_data" title="Permalink to this definition">¶</a></dt>
+<dt id="pop_finder.pop_finder.kfcv">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.pop_finder.</span></code><code class="sig-name descname"><span class="pre">kfcv</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mod_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_reps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensemble</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'kfcv_output'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_allele_counts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/pop_finder.html#kfcv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.pop_finder.kfcv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs K-fold cross-validation to get an accuracy estimate of the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>infile</strong> (<em>string</em>) – Path to VCF or hdf5 file with genetic information
+for all samples (including samples of unknown origin).</p></li>
+<li><p><strong>sample_data</strong> (<em>string</em>) – Path to input file with all samples present (including
+samples of unknown origin), which is a tab-delimited
+text file with columns x, y, pop, and sampleID.</p></li>
+<li><p><strong>n_splits</strong> (<em>int</em>) – Number of folds in k-fold cross-validation
+(Default=5).</p></li>
+<li><p><strong>n_reps</strong> (<em>int</em>) – Number of times to repeat k-fold cross-validation,
+creating the number of models in the ensemble
+(Default=5).</p></li>
+<li><p><strong>ensemble</strong> (<em>bool</em>) – Whether to use ensemble of models of single model (Default=False).</p></li>
+<li><p><strong>save_dir</strong> (<em>string</em>) – Directory where results will be stored (Default=’kfcv_output’).</p></li>
+<li><p><strong>return_plot</strong> (<em>boolean</em>) – Returns a confusion matrix of correct assignments (Default=True).</p></li>
+<li><p><strong>counts</strong> (<em>save_allele</em>) – Whether or not to store derived allele counts in hdf5
+file (Default=False).</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments for pop_finder function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>report</strong> (<em>pd.DataFrame</em>) – Classification report for all models.</p></li>
+<li><p><strong>ensemble_report</strong> (<em>pd.DataFrame</em>) – Classification report for ensemble of models.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pop_finder.pop_finder.pop_finder">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.pop_finder.</span></code><code class="sig-name descname"><span class="pre">pop_finder</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unknowns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ukgen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensemble</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">try_stacking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nbags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_prop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mod_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'out'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_history</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/pop_finder.html#pop_finder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.pop_finder.pop_finder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trains classifier neural network, calculates accuracy on
+test set, and makes predictions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X_train</strong> (<em>np.array</em>) – Array of genetic data corresponding to train samples.</p></li>
+<li><p><strong>y_train</strong> (<em>pd.DataFrame</em>) – Dataframe of train samples, including columns for samples and pops.</p></li>
+<li><p><strong>X_test</strong> (<em>np.array</em>) – Array of genetic data corresponding to test samples.</p></li>
+<li><p><strong>y_test</strong> (<em>pd.DataFrame</em>) – Dataframe of test samples, including columns for samples and pops.</p></li>
+<li><p><strong>unknowns</strong> (<em>pd.DataFrame</em>) – Dataframe of unknowns calculated from read_data (Default=None).</p></li>
+<li><p><strong>ukgen</strong> (<em>np.array</em>) – Array of genetic data corresponding to unknown samples
+(Default=None).</p></li>
+<li><p><strong>ensemble</strong> (<em>boolean</em>) – If set to true, will train an ensemble of models using
+bootstrap aggregating (Default=False).</p></li>
+<li><p><strong>try_stacking</strong> (<em>boolean</em>) – Use weights to influence ensemble model decisions. Must have
+ensemble set to True to use. Use caution: with low test set sizes,
+can be highly inaccurate and overfit (Default=False).</p></li>
+<li><p><strong>nbags</strong> (<em>int</em>) – Number of “bags” (models) to create for the bootstrap
+aggregating algorithm. This option only needs to be set if
+ensemble is set to True (Default=20).</p></li>
+<li><p><strong>train_prop</strong> (<em>float</em>) – Proportion of samples used in training (Default=0.8).</p></li>
+<li><p><strong>mod_path</strong> (<em>string</em>) – Default=None</p></li>
+<li><p><strong>predict</strong> (<em>boolean</em>) – Predict on unknown data. Must have unknowns in sample_data to use
+this feature (Default=False).</p></li>
+<li><p><strong>save_dir</strong> (<em>string</em>) – Directory to save results to (Default=”out”).</p></li>
+<li><p><strong>save_weights</strong> (<em>boolean</em>) – Save model weights for later use (Default=False).</p></li>
+<li><p><strong>patience</strong> (<em>int</em>) – How many epochs to wait before early stopping if loss has not
+improved (Default=20).</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em>) – Default=32,</p></li>
+<li><p><strong>max_epochs</strong> (<em>int</em>) – Default=100</p></li>
+<li><p><strong>gpu_number</strong> (<em>string</em>) – Not in use yet, coming soon (Default=”0”).</p></li>
+<li><p><strong>plot_history</strong> (<em>boolean</em>) – Plot training / validation history (Default=False).</p></li>
+<li><p><strong>seed</strong> (<em>int</em>) – Random seed for splitting data (Default=None).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>test_dict</strong> (<em>dict</em>) – Dictionary with test results.</p></li>
+<li><p><strong>tot_bag_df</strong> (<em>pd.DataFrame</em>) – Dataframe with test results from ensemble.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pop_finder.pop_finder.read_data">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.pop_finder.</span></code><code class="sig-name descname"><span class="pre">read_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_allele_counts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kfcv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/pop_finder.html#read_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.pop_finder.read_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reads a .zarr, .vcf, or h5py file containing genetic data and
 creates subsettable data for a classifier neural network.</p>
 <dl class="field-list simple">
@@ -655,12 +672,62 @@ of unknown origin.</p></li>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-pop_finder.structure_plot">
-<span id="pop-finder-structure-plot-module"></span><h2>pop_finder.structure_plot module<a class="headerlink" href="#module-pop_finder.structure_plot" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
-<dt id="pop_finder.structure_plot.structure_plot">
-<code class="sig-prename descclassname"><span class="pre">pop_finder.structure_plot.</span></code><code class="sig-name descname"><span class="pre">structure_plot</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_scheme</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Spectral'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/structure_plot.html#structure_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.structure_plot.structure_plot" title="Permalink to this definition">¶</a></dt>
+<dt id="pop_finder.pop_finder.run_neural_net">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.pop_finder.</span></code><code class="sig-name descname"><span class="pre">run_neural_net</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_allele_counts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mod_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_prop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/pop_finder.html#run_neural_net"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.pop_finder.run_neural_net" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses input arguments from the command line to tune, train,
+evaluate an ensemble of neural networks, then predicts the
+population of origin for samples of unknown origin.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>infile</strong> (<em>string</em>) – Path to VCF or hdf5 file with genetic information
+for all samples (including samples of unknown origin).</p></li>
+<li><p><strong>sample_data</strong> (<em>string</em>) – Path to input file with all samples present (including
+samples of unknown origin), which is a tab-delimited
+text file with columns x, y, pop, and sampleID.</p></li>
+<li><p><strong>counts</strong> (<em>save_allele</em>) – Whether or not to store derived allele counts in hdf5
+file (Default=False).</p></li>
+<li><p><strong>mod_path</strong> (<em>string</em>) – Path to tuned model. If set to None, uses default model
+(Default=None).</p></li>
+<li><p><strong>train_prop</strong> (<em>float</em>) – Proportion of data to be used in training the model
+(Default=0.8).</p></li>
+<li><p><strong>seed</strong> (<em>int</em>) – Random seed for splitting data (Default=None).</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments for pop_finder function.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pop_finder.pop_finder.snp_rank">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.pop_finder.</span></code><code class="sig-name descname"><span class="pre">snp_rank</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mod_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'snp_rank_results'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/pop_finder.html#snp_rank"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.pop_finder.snp_rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the most important SNPs in determining a model’s performance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>infile</strong> (<em>string</em>) – Path to VCF file containing genetic data.</p></li>
+<li><p><strong>sample_data</strong> (<em>string</em>) – Path to tab-delimited file containing columns x, y, pop, and
+sampleID.</p></li>
+<li><p><strong>mod_path</strong> (<em>string</em>) – Path to tuned model. If set to None, just uses default model
+(Default=None).</p></li>
+<li><p><strong>save_dir</strong> (<em>string</em>) – Path to output directory (Default=”snp_rank_results”).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>ranking</strong> – DataFrame containing relative importance of each SNP, where SNPs
+are labelled from 1 to number of SNPs in order of appearance in
+the VCF file.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pop_finder.pop_finder.structure_plot">
+<code class="sig-prename descclassname"><span class="pre">pop_finder.pop_finder.</span></code><code class="sig-name descname"><span class="pre">structure_plot</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensemble</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_scheme</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Spectral'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pop_finder/pop_finder.html#structure_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pop_finder.pop_finder.structure_plot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Takes results from running the neural network with
 K-fold cross-validation and creates a structure plot
 showing proportion of assignment of individuals from
@@ -668,8 +735,10 @@ known populations to predicted populations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>save_dir</strong> (<em>string</em>) – Path to output file where “preds.csv” lives and
-also where the resulting plot will be saved.</p></li>
+<li><p><strong>save_dir</strong> (<em>string</em>) – Path to output file where “ensemble_preds.csv” or “preds.csv”
+lives and also where the resulting plot will be saved.</p></li>
+<li><p><strong>ensemble</strong> (<em>boolean</em>) – Whether ensemble of models was used to generate results or not
+(Default=False).</p></li>
 <li><p><strong>col_scheme</strong> (<em>string</em>) – Colour scheme of confusion matrix. See
 matplotlib.org/stable/tutorials/colors/colormaps.html
 for available colour palettes (Default=”Spectral”).</p></li>
@@ -713,7 +782,6 @@ save_dir folder.</p>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../conduct.html">Code of Conduct</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">pop_finder</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">pop_finder package</a></li>
 </ul>
