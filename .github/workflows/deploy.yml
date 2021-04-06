@@ -8,13 +8,17 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: [3.7, 3.8]
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.7
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
-        python-version: 3.7
+        python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
         pip install poetry
@@ -33,6 +37,14 @@ jobs:
         fail_ci_if_error: true
     - name: checkout
       uses: actions/checkout@master
+  deploy:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version" [3.7, 3.8]
+    needs: build
+    steps:
     - name: Bump version and tagging and publish
       run: |
         git config --local user.email "action@github.com"
@@ -58,7 +70,7 @@ jobs:
         tag_name: ${{ steps.release.outputs.release_tag }}
         release_name: ${{ steps.release.outputs.release_tag }}
         draft: false
-        prerelease: false
+        prerelease: true
     - name: Build package and publish to PyPI
       env:
         PYPI_USERNAME: __token__ 
