@@ -58,7 +58,7 @@ jobs:
         tag_name: ${{ steps.release.outputs.release_tag }}
         release_name: ${{ steps.release.outputs.release_tag }}
         draft: false
-        prerelease: true
+        prerelease: false
     - name: Build package and publish to PyPI
       env:
         PYPI_USERNAME: __token__ 

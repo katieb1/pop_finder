@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pop_finder"
-version = "0.1.36"
+version = "1.0.0"
 description = "\"Python package that uses neural networks for population assignment\""
 authors = ["Katie Birchard <birchardkatie@gmail.com>"]
 license = "MIT"
@@ -34,6 +34,10 @@ wheel = "^0.36.2"
 
 [tool.poetry.extras]
 tf = ["tensorflow"]
+
+[tool.poetry.scripts]
+pop_finder_classifier = "pop_finder.cli_classifier:main"
+pop_finder_regressor = "pop_finder.cli_regressor:main"
 
 [tool.semantic_release]
 version_variable = "pop_finder/__init__.py:__version__"
