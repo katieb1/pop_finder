@@ -33,7 +33,7 @@ ukgen_empty = np.zeros(shape=0)
 
 
 def test_version():
-    assert __version__ == "0.1.25"
+    assert __version__ == "0.1.26"
 
 
 def test_read_data():
