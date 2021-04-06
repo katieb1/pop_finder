@@ -1,4 +1,4 @@
-name: build + deploy
+name: build_deploy
 
 on:
   # Trigger the workflow on push or pull request to main
@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  build + deploy:
+  build_deploy:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
