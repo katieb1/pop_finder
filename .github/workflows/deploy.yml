@@ -6,12 +6,15 @@ on:
     branches:
       - main
 
+env:
+  POETRY_CACHE_DIR: ${{ github.workspace }}/.poetry_cache
+
 jobs:
   build_deploy:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
         python-version: [3.7, 3.8]
     steps:
     - uses: actions/checkout@v2
