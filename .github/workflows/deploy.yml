@@ -6,9 +6,6 @@ on:
     branches:
       - main
 
-env:
-  POETRY_CACHE_DIR: ${{ github.workspace }}/.poetry_cache
-
 jobs:
   build_deploy:
     runs-on: ${{ matrix.os }}
