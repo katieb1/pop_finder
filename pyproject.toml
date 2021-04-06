@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pop_finder"
-version = "0.1.30"
+version = "0.1.31"
 description = "\"Python package that uses neural networks for population assignment\""
 authors = ["Katie Birchard <birchardkatie@gmail.com>"]
 license = "MIT"
