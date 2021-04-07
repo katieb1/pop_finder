@@ -90,10 +90,29 @@ This package includes two main modules, `pop_finder` and `contour_classifier`, t
 
 ### Module 2: `contour_classifier`
 
-2. `pop_finder.contour_classifier.contour_classifier()`: runs a regression neural network many times, then uses the combined output to create contour plots for population assignment.
+1. `pop_finder.contour_classifier.contour_classifier()`: runs a regression neural network many times, then uses the combined output to create contour plots for population assignment.
 
+    Outputs:
+
+    * `results.csv`: table with containing predicted locations of unknown samples, as well as the contour line the population for each sample was found in.
+
+    * contour plots: `*.png` files of the contour plots for each sample of unknown origin.
+
+    ![](figures/contour_LESP_39324.png)
+
+2. `pop_finder.contour_classifier.kfcv()`: runs K-Fold Cross-Validation on the regression neural network + contour function for the given data.
+
+    Outputs:
+
+    * `classification_report.csv`: scikit-learn's classification report containing information on accuracy, precision, recall, and F1 score for each population and the overall model.
+
+    * `cm.png`: confusion matrix comparing true and predicted labels.
 
 **Package Data**: A small set of data including example VCF, HDF5, and tab-delimited input files are included for testing the functions. Some usage examples with this data are included below.
+
+The genetic data corresponds to Atlantic Leach's storm-petrels (*Hydrobates* spp.) from the following colonies:
+
+![](figures/lesp_colonies.png)
 
 ## Dependencies
 
@@ -118,39 +137,282 @@ The following `python` packages are required to run `pop_finder`:
 
 ### Python IDE
 
-Load the `pop_finder` library:
+Load the packages from the `pop_finder` library:
 
 ```
-from pop_finder import pop_finder
+# Module 1 packages
+from pop_finder.pop_finder import hyper_tune
+from pop_finder.pop_finder import kfcv as mod1_kfcv
+from pop_finder.pop_finder import structure_plot
+from pop_finder.pop_finder import run_neural_net
+from pop_finder.pop_finder import assign_plot
+from pop_finder.pop_finder import snp_rank
+
+# Module 2 packages
+from pop_finder.contour_classifier import contour_classifier
+from pop_finder.contour_classifier import kfcv as mod2_kfcv
 ```
 
-Run the ensemble of neural networks on the sample data found in [this folder](https://github.com/katieb1/pop_finder/tree/main/tests/test_inputs).
+Run the modules on the sample data found in [this folder](https://github.com/katieb1/pop_finder/tree/main/tests/test_inputs).
 
-The genetic data corresponds to Atlantic Leach's storm-petrels (*Hydrobates* spp.) from the following colonies:
+**Module 1**
 
-![](figures/lesp_colonies.png)
+*Step 1*: Set paths to helper data and output directories
+
+* `infile_all` contains genetic information for all samples, including ones of unknown origin
+* `sample_data` is the tab-delimited input file with columns sampleID, x, y, and pop
+* `mod_path` will be the path to the model with tuned hyperparameters
+* `kfcv_save_path` will be where all the outputs are stored from K-fold cross-validation
+* `nn_save_path` will be where all the outputs are stored from running the neural network to generate predictions
 
 ```
-# Path to helper data
+# Paths to helper data
 infile_all = "tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5"
+sample_data = "tests/test_inputs/onlyAtl_truelocs_NAs.txt" 
+
+# Path to module 1 output
+mod_path = "tuned_model"
+kfcv_save_path = "mod1_kfcv_out"
+nn_save_path = "mod1_nn_out"
+```
+
+*Step 2*: tune model hyperparameters using `hyper_tune` function
+```
+hyper_tune(    
+    infile=infile_all,
+    sample_data=sample_data,
+    max_trials=10,
+    runs_per_trial=10,
+    max_epochs=100,
+    train_prop=0.8,
+    seed=None,
+    save_dir=mod_path,
+    )
+```
+
+*Step 3*: run K-Fold cross-validation on the data + tuned model
+```
+mod1_kfcv(
+    infile=infile_all,
+    sample_data=sample_data,
+    mod_path=mod_path,
+    n_splits=5,
+    n_reps=5,
+    ensemble=False,
+    save_dir=kfcv_save_path,
+    return_plot=True,
+    save_allele_counts=False,
+    # Below are all keyword arguments for running neural network
+    # For options, see documentation on pop_finder function
+    patience=100,
+    batch_size=32,
+    max_epochs=100
+)
+
+# Create structure plot by pointing function to results folder
+structure_plot(
+    save_dir=kfcv_save_path,
+    ensemble=False,
+)
+
+# Check output folder for confusion matrix plot and model performance metrics
+```
+
+*Step 4*: run neural network to get predictions
+```
+run_neural_net(
+    infile=infile_all,
+    sample_data=sample_data,
+    save_allele_counts=False,
+    mod_path=mod_path,
+    train_prop=0.8,
+    seed=2,
+    # Keyword arguments below here
+    # See documentation for options
+    ensemble=False,
+    try_stacking=False,
+    predict=True,
+    save_dir=nn_save_path,
+    save_weights=False,
+    patience=100,
+    batch_size=32,
+    max_epochs=100,
+    plot_history=True
+    )
+
+# Generate assignment plot of model confidence for each population
+# Point assign_plot function to results folder from nn run
+assign_plot(
+    save_dir=nn_save_path,
+    ensemble=False
+)
+
+# For table of predictions and model performance metrics,
+# see output folder
+```
+
+*Step 6*: Find relative importance of each SNP in model performance
+```
+snp_rank(
+    infile=infile_all,
+    sample_data=sample_data,
+    mod_path=mod_path,
+    save_dir=nn_save_path
+)
+
+# Check output for ranking results
+```
+
+**Module 2**
+
+*Step 1*: Set paths to helper data and output directories
+
+* `infile_all` contains genetic information for all samples, including ones of unknown origin
+* `infile_kfcv` contains genetic information for only samples of known origin (this is only needed for the `contour_classifier` function)
+* `sample_data` is the tab-delimited input file with columns sampleID, x, y, and pop
+* `kfcv_save_path` will be where all the outputs are stored from K-fold cross-validation
+* `nn_save_path` will be where all the outputs are stored from running the neural network to generate predictions
+
+```
+# Paths to helper data
+infile_all_vcf = "tests/test_inputs/onlyAtl_500.recode.vcf"
 infile_kfcv = "tests/test_inputs/onlyAtl_500_kfcv.recode.vcf"
-sample_data1 = "tests/test_inputs/onlyAtl_truelocs.txt"
-sample_data2 = "tests/test_inputs/onlyAtl_truelocs_NAs.txt" 
+sample_data = "tests/test_inputs/onlyAtl_truelocs_NAs.txt" 
 
-# Path to output
-save_path = "outputs"
+# Path to module 1 output
+kfcv_save_path = "mod2_kfcv_out"
+nn_save_path = "mod2_nn_out"
+```
 
-# Run the function
-pop_finder.run_neural_net(infile_kfcv, infile_all, sample_data2,
-                          save_allele_counts=False, save_weights=False,
-                          patience=10, batch_size=32, max_epochs=2,
-                          seed=1, train_prop=0.8, gpu_number='0',
-                          tune_model=False, n_splits=5, n_reps=5,
-                          save_best_mod=False, save_dir=save_path,
-                          plot_history=False)
+*Step 2*: Run K-Fold Cross-Validation on data
+```
+mod2_kfcv(
+    sample_data=sample_data,
+    gen_dat=infile_kfcv,
+    n_splits=5,
+    n_runs=5,
+    return_plot=True,
+    save_dir=kfcv_save_path,
+    # Keyword arguments below, see documentation on 
+    # locator_mod and contour_classifier for options
+    num_contours=15,
+    nboots=20,
+    batch_size=32,
+    max_epochs=100,
+    patience=100
+    min_mac=2,
+    impute_missing=True,
+    plot_history=True,
+    keep_weights=False,
+)
+
+# See output folder for model performance and 
+# confusion matrix plot
+```
+
+*Step 3*: run neural network + contour function for population assignment of samples of unknown origin
+```
+contour_classifier(
+    sample_data=sample_data,
+    num_contours=15,
+    run_locator=True,
+    gen_dat=infile_all_vcf,
+    nboots=20,
+    return_plots=True,
+    return_df=True,
+    save_dir=nn_save_path,
+    multi_iter=5,
+    # Key word arguments below
+    train_split=0.8,
+    batch_size=32,
+    max_epochs=100,
+    patience=100,
+    min_mac=2,
+    impute_missing=True,
+    plot_history=True,
+    keep_weights=False,
+)
+
+# Check output folder for contour plots and results table
 ```
 
 ### Command Line
+
+In addition to running within a Python IDE, you can also run `pop_finder` and `contour_classifier` on the command line!
+
+General guidelines:
+
+* The first two values MUST be the paths to the genetic data file (`infile`) followed by the sample data file (`sample_data`)
+* You can also set all the same arguments as above using flags followed by a value
+* Boolean values will be their default values unless specified by a flag (e.g. the `ensemble` parameter is `False` by default and will remain so if left out of the command line argument, but adding the `--ensemble` flag with no value following will set this value to `True`)
+
+**Module 1**
+
+The command line function for Module 1 is called `cli_classifier`.
+
+*Step 1*: Run model hyperparameter tuner using the `--hyper_tune` flag
+
+```
+cli_classifier tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5 \
+    tests/test_inputs/onlyAtl_truelocs_NAs.txt --hyper_tune \
+    --max_trials 10 --runs_per_trial 10 --max_epochs 100 \
+    --train_prop 0.8 --save_dir tuned_model
+```
+
+*Step 2*: Run K-Fold Cross-Validation using the `--kfcv` flag
+
+* A structure plot is automatically generated and added to the output directory with the command line function
+```
+cli_classifier tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5 \
+    tests/test_inputs/onlyAtl_truelocs_NAs.txt --kfcv \
+    --mod_path tuned_model --n_splits 5 --n_reps 5 \
+    --save_dir mod1_kfcv_out --patience 100 --batch_size 32 \
+    --max_epochs 100
+```
+
+*Step 3*: Run classification neural network with the `--run_neural_net flag`
+
+* An assign plot is automatically generated and added to the output directory with the command line function
+```
+cli_classifier tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5 \
+    tests/test_inputs/onlyAtl_truelocs_NAs.txt --run_neural_net \
+    --mod_path tuned_model --train_prop 0.8 --seed 2 --predict \
+    --save_dir mod1_nn_out --patience 100 --batch_size 32 \
+    --max_epochs 100 --plot_history
+```
+
+*Step 4*: Run snp_rank function with the `--snp_rank flag`
+```
+cli_classifier tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5 \
+    tests/test_inputs/onlyAtl_truelocs_NAs.txt --mod_path tuned_model \
+    save_dir mod1_nn_out
+```
+
+**Module 2**
+
+The command line function for Module 1 is called `cli_regressor`.
+
+* The path to the sample data file (`sample_data`) is a non-optional argument and must be first in the command line function
+
+*Step 1*: run K-Fold Cross-Validation by setting the `--kfcv` flag
+```
+cli_regressor tests/test_inputs/onlyAtl_truelocs_NAs.txt \
+    --gen_dat tests/test_inputs/onlyAtl_500.recode.vcf \
+    --kfcv --n_splits 5 --n_runs 5 --return_plot \
+    --save_dir mod2_kfcv_out --num_contours 15 --nboots 20 \
+    --batch_size 32 --max_epochs 100 --patience 100 --min_mac 2 \
+    --impute_missing --plot_history
+```
+
+*Step 2*: run neural networks and contour classifier by setting the `--contour_classifier` flag
+```
+cli_regressor tests/test_inputs/onlyAtl_truelocs_NAs.txt \
+    --gen_dat tests/test_inputs/onlyAtl_500.recode.vcf \
+    --contour_classifier --num_contours 15 --run_locator \
+    --nboots 20 --save_dir mod2_nn_out --multi_iter 3 \
+    --train_split 0.8 --batch_size 32 --max_epochs 100 \
+    --patience 100 --min_mac 2 --impute_missing --plot_history
+```
 
 ## Documentation
 

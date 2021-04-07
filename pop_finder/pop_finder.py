@@ -1684,6 +1684,10 @@ def snp_rank(infile, sample_data, mod_path=None,
     if isinstance(mod_path, str) is False and mod_path is not None:
         raise ValueError("mod_path should be string or None")
 
+    # Make save_dir if it does not exist already
+    if os.path.isdir(save_dir) is False:
+        os.mkdirs(save_dir)
+
     samp_list, dc, = read_data(
         infile,
         sample_data,
