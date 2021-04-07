@@ -1021,6 +1021,7 @@ def pop_finder(
         test_df["true_pops"] = y_test_pops
         test_dict["count"].append(1)
         test_dict["df"].append(test_df)
+        test_df.to_csv(save_dir+"/test_results.csv")
 
         # Find confidence interval of best model
         test_err = 1 - test_acc

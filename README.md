@@ -12,19 +12,83 @@ $ pip install pop-finder
 
 ## Features
 
-This package includes two main functions that use genetic data to assign individuals of unknown origin to source populations. Each of these functions both have K-Fold Cross-Validation functions for estimating the uncertainty of model predictions. 
+This package includes two main modules, `pop_finder` and `contour_classifier`, that use genetic data to assign individuals of unknown origin to source populations. Each of these modules have a K-Fold Cross-Validation function for estimating the uncertainty of model predictions. The `pop_finder` module also has a `hyper_tune` option, which allows you to tune the hyperparameters of the neural network before getting an accuracy estimate and predicting on unknowns.
 
-1a. `pop_finder.pop_finder.run_neural_net()`: runs a classification neural network for population assignment. 
+### Module 1: `pop_finder`
 
-    A) `metrics.csv`: statistics relating to the model accuracy / precision / recall / F1 score.
+1. `pop_finder.pop_finder.run_neural_net()`: runs a classification neural network for population assignment. 
 
-    B) `pop_assign_freqs.csv`: the number of times an individual was assigned to each population across the entire ensemble of models.
+    Outputs:
 
-    C) `pop_assign_ensemble.csv`: the top population of assignment for each individual of unknown origin, along with the frequency of assignment to that population across the entire ensemble of models.
+    * `metrics.csv`: statistics relating to the model accuracy / precision / recall / F1 score.
+    
+    Outputs if ensemble=True:
 
-    D) `preds.csv`: All data across all models.
+    * `pop_assign_freqs.csv`: the number of times an individual was assigned to each population across the entire ensemble of models.
 
-1b. `pop_finder.pop_finder.kfcv()`: runs K-Fold Cross-Validation on models
+    * `pop_assign_ensemble.csv`: the top population of assignment for each individual of unknown origin, along with the frequency of assignment to that population across the entire ensemble of models.
+
+    * `ensemble_test_results.csv`: proportion of times an individual in the test set was assigned to each population across the entire ensemble of models. Used for assessing accuracy.
+
+    Outputs if ensemble=False:
+
+    * `pop_assign.csv`: populations assignments for individuals of unknown origin.  
+
+    * `test_results.csv`: prediction values for each individual from the test set.
+
+2. `pop_finder.pop_finder.hyper_tune()`: tunes the model hyperparameters for a given dataset to maximize accuracy and minimize loss.
+
+    Outputs:
+
+    * `best_mod`: the `save_dir` from running this function can later be used as the `mod_path` when running `run_neural_net` or `kfcv`, allowing you to use a model with tuned hyperparameters rather than the default model.
+
+3. `pop_finder.pop_finder.kfcv()`: runs K-Fold Cross-Validation on model(s) and outputs metrics of model performance (accuracy, precision, recall, F1 score) and confusion matrix plots.
+
+    Outputs:
+
+    * `classification_report.csv`: scikit-learn's classification report containing information on accuracy, precision, recall, and F1 score for each population and the overall model.
+
+    * `cm.png`: confusion matrix for single model predictions. If an ensemble is used, this is each individual model's predictions summed rather than the performance of the ensemble.
+
+    ![](figures/cm.png)
+
+    * `metrics.csv`: includes accuracy scores for the test set using single models, using the ensemble model, and using a weighted ensemble model. Also includes the 95% confidence interval and loss of the test values using the single model(s).
+
+    Outputs if ensemble=True:
+
+    * `ensemble_classification_report.csv`: classification report for the ensemble of models. Can be used to compare model performance between using an ensemble vs using a single model.
+
+    ![](figures/ensemble_cm.png)
+
+    * `ensemble_cm.png`: confusion matrix for ensemble model predictions.
+
+    * `ensemble_test_results.csv`: proportion of times an individual in the test set was assigned to each population across the entire ensemble of models. Used for assessing accuracy.
+
+    * `ensemble_preds.csv`: predictions across all models used in the ensemble.
+
+4. `pop_finder.pop_finder.snp_rank()`: finds relative importance of SNPs on accuracy of model. Can be used to create SNP chips for future population assignment tasks.
+
+    Output:
+
+    * `perturbation_rank_results.csv`: table of SNPs and corresponding relative importance. SNP ID relates to the order in which the SNP was found in the VCF file.
+
+5. `pop_finder.pop_finder.assign_plot()`: can be run with the output from `run_neural_net` to create a structure plot of model confidence in predictions for each population. This function uses the model prediction values for each sample, so takes into account how confident the model was in each prediction rather than if the model predicted correctly vs incorrectly.
+
+    Output:
+
+    * `assign_plot.png`
+
+
+
+6. `pop_finder.pop_finder.structure_plot()`: can be run with the output from `kfcv` to create a structure plot of correct assignment of test sets to see general accuracy of model predictions. This function only uses whether the model predicted correctly vs. incorrectly, and thus does not indicate true model confidence.
+
+    Output:
+
+    * `structure_plot.png`
+
+    ![](figures/structure_plot.png)
+
+### Module 2: `contour_classifier`
 
 2. `pop_finder.contour_classifier.contour_classifier()`: runs a regression neural network many times, then uses the combined output to create contour plots for population assignment.
 
@@ -52,13 +116,19 @@ The following `python` packages are required to run `pop_finder`:
 
 ## Usage
 
+### Python IDE
+
 Load the `pop_finder` library:
 
 ```
 from pop_finder import pop_finder
 ```
 
-Run the ensemble of neural networks on the sample data found in [this folder](https://github.com/katieb1/pop_finder/tree/main/tests/test_inputs):
+Run the ensemble of neural networks on the sample data found in [this folder](https://github.com/katieb1/pop_finder/tree/main/tests/test_inputs).
+
+The genetic data corresponds to Atlantic Leach's storm-petrels (*Hydrobates* spp.) from the following colonies:
+
+![](figures/lesp_colonies.png)
 
 ```
 # Path to helper data
@@ -79,6 +149,8 @@ pop_finder.run_neural_net(infile_kfcv, infile_all, sample_data2,
                           save_best_mod=False, save_dir=save_path,
                           plot_history=False)
 ```
+
+### Command Line
 
 ## Documentation
 
