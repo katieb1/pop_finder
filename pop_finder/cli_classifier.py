@@ -94,7 +94,7 @@ def main():
             mod_name=args.mod_name,
         )
 
-    if args.kfcv:
+    elif args.kfcv:
         print("Running K-Fold Cross-Validation")
         kfcv(
             infile=args.infile,
@@ -124,7 +124,7 @@ def main():
             col_scheme=args.col_scheme
         )
 
-    if args.run_neural_net:
+    elif args.run_neural_net:
         print("Training neural network and generating predictions")
         run_neural_net(
             infile=args.infile,
@@ -151,7 +151,7 @@ def main():
             col_scheme=args.col_scheme
         )
 
-    if args.snp_rank:
+    elif args.snp_rank:
         print("Finding most important SNPs")
         snp_rank(
             infile=args.infile,

@@ -7,16 +7,16 @@ Python package that uses neural networks for population assignment
 ## Installation
 
 ```bash
-$ pip install -i https://test.pypi.org/simple/ pop_finder
+$ pip install pop-finder
 ```
 
 ## Features
 
-This package includes one main function that runs an ensemble of neural networks that are trained using genetic data and individuals of known origin to assign individuals of unknown origin to populations.
+This package includes two main functions that use genetic data to assign individuals of unknown origin to source populations. Each of these functions both have K-Fold Cross-Validation functions for estimating the uncertainty of model predictions. 
 
-1. `pop_finder.run_neural_net()`: produces multiple results files, including:
+1a. `pop_finder.pop_finder.run_neural_net()`: runs a classification neural network for population assignment. 
 
-    A) `metrics.csv`: statistics relating to the model accuracy and uncertainty.
+    A) `metrics.csv`: statistics relating to the model accuracy / precision / recall / F1 score.
 
     B) `pop_assign_freqs.csv`: the number of times an individual was assigned to each population across the entire ensemble of models.
 
@@ -24,23 +24,31 @@ This package includes one main function that runs an ensemble of neural networks
 
     D) `preds.csv`: All data across all models.
 
+1b. `pop_finder.pop_finder.kfcv()`: runs K-Fold Cross-Validation on models
+
+2. `pop_finder.contour_classifier.contour_classifier()`: runs a regression neural network many times, then uses the combined output to create contour plots for population assignment.
+
+
 **Package Data**: A small set of data including example VCF, HDF5, and tab-delimited input files are included for testing the functions. Some usage examples with this data are included below.
 
 ## Dependencies
 
 The following `python` packages are required to run `pop_finder`:
 
-* python = ">=3.7.1, <4.0"
-* numpy = "1.18.4"
+* python = ">=3.7.1, <3.10"
+* numpy = "1.19.4"
 * pandas = "^1.2.3"
 * h5py = "2.10.0"
-* argparse = "^1.4.0"
 * sklearn = "^0.0"
-* tensorflow = "2.3.0"
 * keras-tuner = "1.0.2"
 * matplotlib = "3.3.2"
-* scikit-allel = "1.3.2"
 * zarr = "^2.6.1"
+* seaborn = "^0.11.1"
+* wheel = "^0.36.2"
+* scikit-allel = "1.3.3"
+* scipy = ">=1.6.0, <2.0.0"
+* tqdm = "^4.59.0"
+* tensorflow-cpu = "2.4.1"
 
 ## Usage
 

@@ -2,6 +2,7 @@
 
 # Load packages
 import tensorflow.keras as tf
+import tensorflow as T
 from kerastuner.tuners import RandomSearch
 from kerastuner import HyperModel
 import numpy as np
@@ -1471,12 +1472,14 @@ class classifierHyperModel(HyperModel):
 
         model.compile(
             optimizer=tf.optimizers.Adam(
-                hp.Float(
-                    "learning_rate",
-                    min_value=1e-4,
-                    max_value=1e-2,
-                    sampling="LOG",
-                    default=5e-4,
+                T.variable(
+                    hp.Float(
+                        "learning_rate",
+                        min_value=1e-4,
+                        max_value=1e-2,
+                        sampling="LOG",
+                        default=5e-4,
+                    )
                 )
             ),
             loss="categorical_crossentropy",
