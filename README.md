@@ -143,7 +143,7 @@ The genetic data corresponds to Atlantic Leach's storm-petrels (*Hydrobates* spp
 The following `python` packages are required to run `pop_finder`:
 
 * python = ">=3.7.1, <3.10"
-* numpy = "1.19.4"
+* numpy = "1.19.5"
 * pandas = "^1.2.3"
 * h5py = "2.10.0"
 * sklearn = "^0.0"
@@ -449,3 +449,5 @@ We welcome and recognize all contributions. You can see a list of current contri
 ### Credits
 
 This package was created with Cookiecutter and the UBC-MDS/cookiecutter-ubc-mds project template, modified from the [pyOpenSci/cookiecutter-pyopensci](https://github.com/pyOpenSci/cookiecutter-pyopensci) project template and the [audreyr/cookiecutter-pypackage](https://github.com/audreyr/cookiecutter-pypackage).
+
+The original `locator` code for this package was created by [Battey et al. 2020](https://elifesciences.org/articles/54507) and can be found in this [GitHub repository](https://github.com/kr-colab/locator).
