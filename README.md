@@ -372,12 +372,12 @@ General guidelines:
 
 **Module 1**
 
-The command line function for Module 1 is called `cli_classifier`.
+The command line function for Module 1 is called `pop_finder_classifier`.
 
 *Step 1*: Run model hyperparameter tuner using the `--hyper_tune` flag
 
 ```
-cli_classifier tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5 \
+pop_finder_classifier tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5 \
     tests/test_inputs/onlyAtl_truelocs_NAs.txt --hyper_tune \
     --max_trials 10 --runs_per_trial 10 --max_epochs 100 \
     --train_prop 0.8 --save_dir tuned_model
@@ -387,7 +387,7 @@ cli_classifier tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5 \
 
 * A structure plot is automatically generated and added to the output directory with the command line function
 ```
-cli_classifier tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5 \
+pop_finder_classifier tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5 \
     tests/test_inputs/onlyAtl_truelocs_NAs.txt --kfcv \
     --mod_path tuned_model --n_splits 5 --n_reps 5 \
     --save_dir mod1_kfcv_out --patience 100 --batch_size 32 \
@@ -398,7 +398,7 @@ cli_classifier tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5 \
 
 * An assign plot is automatically generated and added to the output directory with the command line function
 ```
-cli_classifier tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5 \
+pop_finder_classifier tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5 \
     tests/test_inputs/onlyAtl_truelocs_NAs.txt --run_neural_net \
     --mod_path tuned_model --train_prop 0.8 --seed 2 --predict \
     --save_dir mod1_nn_out --patience 100 --batch_size 32 \
@@ -407,20 +407,20 @@ cli_classifier tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5 \
 
 *Step 4*: Run snp_rank function with the `--snp_rank flag`
 ```
-cli_classifier tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5 \
+pop_finder_classifier tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5 \
     tests/test_inputs/onlyAtl_truelocs_NAs.txt --mod_path tuned_model \
     save_dir mod1_nn_out
 ```
 
 **Module 2**
 
-The command line function for Module 1 is called `cli_regressor`.
+The command line function for Module 1 is called `pop_finder_regressor`.
 
 * The path to the sample data file (`sample_data`) is a non-optional argument and must be first in the command line function
 
 *Step 1*: run K-Fold Cross-Validation by setting the `--kfcv` flag
 ```
-cli_regressor tests/test_inputs/onlyAtl_truelocs_NAs.txt \
+pop_finder_regressor tests/test_inputs/onlyAtl_truelocs_NAs.txt \
     --gen_dat tests/test_inputs/onlyAtl_500.recode.vcf \
     --kfcv --n_splits 5 --n_runs 5 --return_plot \
     --save_dir mod2_kfcv_out --num_contours 15 --nboots 20 \
@@ -430,7 +430,7 @@ cli_regressor tests/test_inputs/onlyAtl_truelocs_NAs.txt \
 
 *Step 2*: run neural networks and contour classifier by setting the `--contour_classifier` flag
 ```
-cli_regressor tests/test_inputs/onlyAtl_truelocs_NAs.txt \
+pop_finder_regressor tests/test_inputs/onlyAtl_truelocs_NAs.txt \
     --gen_dat tests/test_inputs/onlyAtl_500.recode.vcf \
     --contour_classifier --num_contours 15 --run_locator \
     --nboots 20 --save_dir mod2_nn_out --multi_iter 3 \
