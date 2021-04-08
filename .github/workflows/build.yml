@@ -50,7 +50,7 @@ jobs:
       with:
         node-version: '14'
     - name: install windows-build-tools
-      run: npm install windows-build-tools
+      run: npm install --global windows-build-tools@4.0.0
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
