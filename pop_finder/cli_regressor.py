@@ -117,7 +117,7 @@ def main():
             keras_verbose=args.keras_verbose,
         )
 
-    if args.kfcv:
+    elif args.kfcv:
         print("Running K-Fold Cross-Validation")
         kfcv(
             sample_data=args.sample_data,
