@@ -4,7 +4,27 @@
 
 Python package that uses neural networks for population assignment
 
-**General Schematic**
+## Table of Contents
+[General Schematic](#general-schematic)
+
+[Installation](#installation)
+
+[Features](#features)
+
+[Dependencies](#dependencies)
+
+[Usage](#usage)
+
+* [Python IDE](#python-IDE)
+
+* [Command Line](#command-line)
+
+[Documentation](#documentation)
+
+[Contributors](#contributors)
+
+
+## General Schematic
 
 ![](figures/pop-finder_workflow.png)
 
