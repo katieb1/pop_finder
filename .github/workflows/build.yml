@@ -41,9 +41,6 @@ jobs:
         fail_ci_if_error: true
   build_windows:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        python-version: [3.7, 3.8]
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-node@v2
@@ -51,10 +48,10 @@ jobs:
         node-version: '14'
     - name: install windows-build-tools
       run: npm install --global windows-build-tools@4.0.0
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python 3.7
       uses: actions/setup-python@v1
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: 3.7
     - name: Install dependencies
       run: |
         pip install poetry
