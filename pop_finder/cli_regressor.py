@@ -35,7 +35,7 @@ def main():
                         help="Return plots of results")
     parser.add_argument('--return_df', action="store_false",
                         help="Return dataframe of results")
-    parser.add_argument('--multi-iter', type=int, default=1,
+    parser.add_argument('--multi_iter', type=int, default=1,
                         help="Number of iterations to run")
 
     # kfcv arguments

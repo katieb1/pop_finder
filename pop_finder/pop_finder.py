@@ -729,7 +729,7 @@ def pop_finder(
                 ax1.set_xlabel("Epoch")
                 ax1.legend()
                 fig.savefig(
-                    save_dir + "/model" + i + "_history.pdf",
+                    save_dir + "/model" + str(i) + "_history.pdf",
                     bbox_inches="tight"
                 )
                 plt.close()
