@@ -13,9 +13,8 @@ from sklearn.model_selection import RepeatedStratifiedKFold, train_test_split
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
-from sklearn.metrics import accuracy_score, log_loss
+from sklearn.metrics import log_loss
 import itertools
-from itertools import product
 import shutil
 import sys
 import os
@@ -829,7 +828,7 @@ def pop_finder(
 
         best_score = "N/A"
         if try_stacking:
-            
+
             print("Stacking method coming soon...")
 
 #             def stacked_preds(yhats, weights):
@@ -1683,7 +1682,7 @@ def snp_rank(infile, sample_data, mod_path=None,
 
     # Make save_dir if it does not exist already
     if os.path.isdir(save_dir) is False:
-        os.mkdirs(save_dir)
+        os.mkdir(save_dir)
 
     samp_list, dc, = read_data(
         infile,
