@@ -101,6 +101,10 @@ def test_hyper_tune():
     # Make sure correct files are output
     assert os.path.exists("tests/hyper_tune_test_out")
     assert os.path.exists("tests/hyper_tune_test_out/best_mod")
+    assert os.path.exists("tests/hyper_tune_test_out/X_train.npy")
+    assert os.path.exists("tests/hyper_tune_test_out/X_test.npy")
+    assert os.path.exists("tests/hyper_tune_test_out/y_train.csv")
+    assert os.path.exists("tests/hyper_tune_test_out/y_test.csv")
 
     # Remove files for next run
     if os.path.exists("tests/hyper_tune_test_out/best_mod"):
