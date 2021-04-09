@@ -257,8 +257,8 @@ def contour_classifier(
 
         cset.levels = -np.sort(-cset.levels)
 
-        if len(cset.levels) != num_contours + 1:
-            raise ValueError("Number of contours not equal to num_contours")
+#         if len(cset.levels) != num_contours + 1:
+#             raise ValueError("Number of contours not equal to num_contours")
 
         for pop in true_dat["pop"].values:
             x = true_dat[true_dat["pop"] == pop]["x"].values[0]

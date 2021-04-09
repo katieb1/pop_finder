@@ -121,7 +121,7 @@ def main():
         print("Running K-Fold Cross-Validation")
         kfcv(
             sample_data=args.sample_data,
-            gen_dat=args.gen_data,
+            gen_dat=args.gen_dat,
             n_splits=args.n_splits,
             n_runs=args.n_runs,
             return_plot=args.return_plot,

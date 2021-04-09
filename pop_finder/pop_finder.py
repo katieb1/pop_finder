@@ -13,9 +13,8 @@ from sklearn.model_selection import RepeatedStratifiedKFold, train_test_split
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
-from sklearn.metrics import accuracy_score, log_loss
+from sklearn.metrics import log_loss
 import itertools
-from itertools import product
 import shutil
 import sys
 import os
@@ -147,11 +146,6 @@ def hyper_tune(
     hypermodel = classifierHyperModel(
         input_shape=X_train.shape[1], num_classes=len(popnames)
     )
-
-    # Overwrite contents of save_dir
-    if os.path.exists(save_dir):
-        shutil.rmtree(save_dir)
-    os.mkdir(save_dir)
 
     tuner = RandomSearch(
         hypermodel,
@@ -835,37 +829,39 @@ def pop_finder(
         best_score = "N/A"
         if try_stacking:
 
-            def stacked_preds(yhats, weights):
-                summed = np.tensordot(yhats, weights, axes=((0), (0)))
-                result = np.argmax(summed, axis=1)
-                return result
+            print("Stacking method coming soon...")
 
-            # Get accuracy of weighted stacked model
-            y_test_max = np.argmax(y_test_enc, axis=1)
-            w = np.linspace(1, 10, 3)
-            best_score, best_weights = 0.0, None
-            for weights in product(w, repeat=nbags):
-                if len(set(weights)) == 1:
-                    continue
-                result = np.linalg.norm(weights, 1)
-                if result == 0.0:
-                    weights = weights
-                weights = weights / result
-                yhats_max = stacked_preds(yhats, weights)
-                score = accuracy_score(y_test_max, yhats_max)
-                if score > best_score:
-                    best_score, best_weights = score, weights
-                    print(">%s %.3f" % (best_weights, best_score))
-                if best_score == 1.0:
-                    break
+#             def stacked_preds(yhats, weights):
+#                 summed = np.tensordot(yhats, weights, axes=((0), (0)))
+#                 result = np.argmax(summed, axis=1)
+#                 return result
 
-            # Predict on unknowns for weighted stacked model
-            if predict:
-                ypreds_max = stacked_preds(ypreds, best_weights)
-                ypreds_df = pd.DataFrame(ypreds_max)
-                ypreds_df["sampleID"] = uksamples
-                ypreds_df["pops"] = popnames[ypreds_max]
-                ypreds_df.to_csv(save_dir + "/stacked_results.csv")
+#             # Get accuracy of weighted stacked model
+#             y_test_max = np.argmax(y_test_enc, axis=1)
+#             w = np.linspace(1, 10, 3)
+#             best_score, best_weights = 0.0, None
+#             for weights in product(w, repeat=nbags):
+#                 if len(set(weights)) == 1:
+#                     continue
+#                 result = np.linalg.norm(weights, 1)
+#                 if result == 0.0:
+#                     weights = weights
+#                 weights = weights / result
+#                 yhats_max = stacked_preds(yhats, weights)
+#                 score = accuracy_score(y_test_max, yhats_max)
+#                 if score > best_score:
+#                     best_score, best_weights = score, weights
+#                     print(">%s %.3f" % (best_weights, best_score))
+#                 if best_score == 1.0:
+#                     break
+
+#             # Predict on unknowns for weighted stacked model
+#             if predict:
+#                 ypreds_max = stacked_preds(ypreds, best_weights)
+#                 ypreds_df = pd.DataFrame(ypreds_max)
+#                 ypreds_df["sampleID"] = uksamples
+#                 ypreds_df["pops"] = popnames[ypreds_max]
+#                 ypreds_df.to_csv(save_dir + "/stacked_results.csv")
 
         # Print metrics to csv
         print("Creating outputs...")
@@ -1686,7 +1682,7 @@ def snp_rank(infile, sample_data, mod_path=None,
 
     # Make save_dir if it does not exist already
     if os.path.isdir(save_dir) is False:
-        os.mkdirs(save_dir)
+        os.mkdir(save_dir)
 
     samp_list, dc, = read_data(
         infile,
