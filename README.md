@@ -303,7 +303,7 @@ infile_all_vcf = "tests/test_inputs/onlyAtl_500.recode.vcf"
 infile_kfcv = "tests/test_inputs/onlyAtl_500_kfcv.recode.vcf"
 sample_data = "tests/test_inputs/onlyAtl_truelocs_NAs.txt" 
 
-# Path to module 1 output
+# Path to module 2 output
 kfcv_save_path = "mod2_kfcv_out"
 nn_save_path = "mod2_nn_out"
 ```
@@ -323,7 +323,7 @@ mod2_kfcv(
     nboots=20,
     batch_size=32,
     max_epochs=100,
-    patience=100
+    patience=100,
     min_mac=2,
     impute_missing=True,
     plot_history=True,
