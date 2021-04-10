@@ -136,7 +136,6 @@ def main():
             ensemble=args.ensemble,
             try_stacking=args.try_stacking,
             nbags=args.nbags,
-            predict=args.predict,
             save_dir=args.save_dir,
             save_weights=args.save_weights,
             patience=args.patience,

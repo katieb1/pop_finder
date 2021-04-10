@@ -255,7 +255,6 @@ run_neural_net(
     # See documentation for options
     ensemble=False,
     try_stacking=False,
-    predict=True,
     save_dir=nn_save_path,
     save_weights=False,
     patience=100,
@@ -400,7 +399,7 @@ pop_finder_classifier tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5 \
 ```
 pop_finder_classifier tests/test_inputs/onlyAtl_500.recode.vcf.locator.hdf5 \
     tests/test_inputs/onlyAtl_truelocs_NAs.txt --run_neural_net \
-    --mod_path tuned_model --train_prop 0.8 --seed 2 --predict \
+    --mod_path tuned_model --train_prop 0.8 --seed 2 \
     --save_dir mod1_nn_out --patience 100 --batch_size 32 \
     --max_epochs 100 --plot_history
 ```
