@@ -209,34 +209,13 @@ The confusion matrix has the true population of origin along the Y-axis and the 
 
 ![](./figures/kfcv_metrics.png)
 
-The metrics table returns information about precision, recall, f1-score, and accuracy.  
+The metrics table returns information about precision, recall, f1-score, and accuracy. See below for definitions of these metrics:  
 
-$$
-Precision = \frac{True \, Positive}{True \, Positive + False \, Positive}
-$$
-$$
-Recall = \frac{True \, Positive}{True \, Positive + False \, Negative}
-$$
-$$
-F_1 = \frac{2 \times Precision \times Recall}{Precision + Recall}
-$$
-$$
-accuracy = \frac{True \, Positive + True \, Negative}{False \, Positive + False \, Negative}
-$$
-$$
-macro \, avg = \frac{1}{n} \times score_{class_0} + \frac{1}{n} \times score_{class_1} ... + \frac{1}{n} \times score_{class_n}
-$$
-$$
-weighted \, avg = \frac{s_0}{s_t} \times score_{class_0} + \frac{s_1}{s_t} \times score_{class_1} ... + \frac{s_n}{s_t} \times score_{class_n}
-$$
-where: 
-* $n$ = number of classes in the dataset
-* $s_i$ = number of samples (support) in class $i$
-* $s_t$ = number of total samples (total support)
+![](./figures/metrics_equations.png)
 
 The support is the number of samples in each class, which can be increased by using multiple iterations of K-fold cross-validation and the ensemble method (implements bootstrap aggregating).
 
-The results from K-fold cross-validation can be run through a `structure_plot` function in the `pop_finder` module as well. The structure plot displays the frequency of assignment to each predicted population for samples from each actual population.
+Finally, the results from K-fold cross-validation can be run through a `structure_plot` function in the `pop_finder` module as well. The structure plot displays the frequency of assignment to each predicted population for samples from each actual population.
 ```
 # Create structure plot by pointing function to results folder
 structure_plot(
