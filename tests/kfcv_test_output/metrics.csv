@@ -1,6 +1,6 @@
 metric,value
-Ensemble accuracy,0.5882352941176471
+Ensemble accuracy,0.29411764705882354
 Weighted ensemble accuracy,N/A
-Test accuracy,0.41
-Test 95% CI,0.23380271220688204
-Test loss,1.96
+Test accuracy,0.26
+Test 95% CI,0.20851348383540205
+Test loss,1.74

@@ -1,0 +1,12 @@
+Metadata-Version: 2.1
+Name: pop-finder
+Version: 1.0.5
+Summary: "Python package that uses neural networks for population assignment"
+Home-page: UNKNOWN
+Author: Katie Birchard
+Author-email: birchardkatie@gmail.com
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
+Requires-Python: >=3.7.1,<3.10
+Provides-Extra: tf

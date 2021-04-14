@@ -1,0 +1,4 @@
+[console_scripts]
+pop_finder_classifier = pop_finder.cli_classifier:main
+pop_finder_regressor = pop_finder.cli_regressor:main
+
