@@ -99,15 +99,15 @@ The following `python` packages are required to run `pop_finder`:
 
 * python = ">=3.7.1, <3.10"
 * numpy = "1.19.5"
-* pandas = "^1.2.3"
+* pandas = "1.1.5"
 * h5py = "2.10.0"
-* sklearn = "^0.0"
 * keras-tuner = "1.0.2"
 * matplotlib = "3.3.2"
 * zarr = "^2.6.1"
 * seaborn = "^0.11.1"
 * wheel = "^0.36.2"
-* scikit-allel = "1.3.3"
+* scikit-allel = "1.3.0"
+* scikit-learn = "0.23"
 * scipy = ">=1.6.0, <2.0.0"
 * tqdm = "^4.59.0"
 * tensorflow-cpu = "2.4.1"
@@ -599,7 +599,7 @@ Other parameters:
 *Step 1*: run K-Fold Cross-Validation by setting the `--kfcv` flag
 ```
 pop_finder_regressor tests/test_inputs/onlyAtl_truelocs_NAs.txt \
-    --gen_dat tests/test_inputs/onlyAtl_500.recode.vcf \
+    --gen_dat tests/test_inputs/onlyAtl_500_kfcv.recode.vcf \
     --kfcv --n_splits 5 --n_runs 5 --return_plot \
     --save_dir mod2_kfcv_out --num_contours 15 --nboots 20 \
     --batch_size 32 --max_epochs 100 --patience 100 --min_mac 2 \
