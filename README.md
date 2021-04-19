@@ -489,15 +489,13 @@ Parameters available for module 1 `--kfcv`:
 * `--save_dir`
 * `--return_plot`
 * `--save_allele_counts`
-* `--try_stacking`
+* `--try_stacking` (coming soon)
 * `--nbags`
 * `--train_prop`
-* `--predict`
 * `--save_weights`
 * `--patience`
 * `--batch_size`
 * `--max_epochs`
-* `--gpu_number`
 * `--plot_history`
 * `--seed`
 * `--col_scheme`

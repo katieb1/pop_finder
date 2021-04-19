@@ -31,7 +31,7 @@ entry_points = \
 
 setup_kwargs = {
     'name': 'pop-finder',
-    'version': '1.0.5',
+    'version': '1.0.8',
     'description': '"Python package that uses neural networks for population assignment"',
     'long_description': None,
     'author': 'Katie Birchard',
