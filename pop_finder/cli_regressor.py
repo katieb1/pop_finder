@@ -74,7 +74,7 @@ def main():
                         help="Random seed for locator")
     parser.add_argument('--gpu_number', type=str, default=None,
                         help="GPU number (coming soon...)")
-    parser.add_argument('--plot_history', action="store_false",
+    parser.add_argument('--plot_history', action="store_true",
                         help="Plot training / validation history")
     parser.add_argument('--keep_weights', action="store_true",
                         help="Save weights for future")
