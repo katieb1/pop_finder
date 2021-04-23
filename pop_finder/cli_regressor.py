@@ -31,9 +31,9 @@ def main():
                         help="Run instead of using results in save_dir")
     parser.add_argument('--nboots', type=int, default=50,
                         help="Number of bootstrap iterations")
-    parser.add_argument('--return_plots', action="store_false",
+    parser.add_argument('--return_plots', action="store_true",
                         help="Return plots of results")
-    parser.add_argument('--return_df', action="store_false",
+    parser.add_argument('--return_df', action="store_true",
                         help="Return dataframe of results")
     parser.add_argument('--multi_iter', type=int, default=1,
                         help="Number of iterations to run")
@@ -43,7 +43,7 @@ def main():
                         help="Number of splits for K-Fold CV")
     parser.add_argument('--n_runs', type=int, default=5,
                         help="Number of repetitions for K-Fold CV")
-    parser.add_argument('--return_plot', action="store_false")
+    parser.add_argument('--return_plot', action="store_true")
 
     # locator_mod args - **kwargs
     parser.add_argument('--train_split', type=float, default=0.9,
