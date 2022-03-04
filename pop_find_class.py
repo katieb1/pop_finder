@@ -147,6 +147,13 @@ class pop_find_class:
 				y_train = self.samp_list.iloc[t]
 				y_holdout = self.samp_list.iloc[v]
 				break
+			X_train, X_val, y_train, y_val = train_test_split(
+				X_train,
+				y_train,
+				stratify=y_train["pops"],
+				train_size=self.train_prop,
+				random_state=self.seed,
+			)
 		else:
 			# Split data into train/test
 			X_train, X_val, y_train, y_val = train_test_split(
@@ -178,7 +185,7 @@ class pop_find_class:
 			seed=self.seed,
 			max_trials=max_trials,
 			executions_per_trial=runs_per_trial,
-			directory=save_dir,
+			directory=self.save_dir,
 			project_name=mod_name,
 		)
 		tuner.search(
@@ -188,7 +195,7 @@ class pop_find_class:
 			validation_data=(X_val - 1, y_val_enc),
 		)
 		self.hyp_mod = tuner.get_best_models(num_models=1)[0]
-		tuner.get_best_models(num_models=1)[0].save(save_dir + "/hyper_tune_mod")
+		tuner.get_best_models(num_models=1)[0].save(self.save_dir + "/hyper_tune_mod")
 
 	def class_train(self, 
 	plot_hist=True,
@@ -276,6 +283,12 @@ class pop_find_class:
 					y_train = self.samp_list.iloc[t]
 					y_holdout = self.samp_list.iloc[v]
 
+					enc = OneHotEncoder(handle_unknown="ignore")
+					y_train_enc = enc.fit_transform(
+						y_train["pops"].values.reshape(-1, 1)).toarray()
+					y_val_enc = enc.fit_transform(
+						y_holdout["pops"].values.reshape(-1, 1)).toarray()
+					self.popnames = enc.categories_[0]
 					# Run ensemble
 					fold_mods, test_dict, tot_bag_df = run_ensemble(X_train=X_train, 
 						X_fold=X_holdout, 
@@ -287,7 +300,7 @@ class pop_find_class:
 						save_dir=fold_dir,
 								patience=patience)
 
-					self.model_list.append(fold_mods)
+					self.model_list.extend(fold_mods)
 					ensemble_preds = ensemble_preds.append(tot_bag_df)
 					fold = fold + 1
 
@@ -296,13 +309,13 @@ class pop_find_class:
 					for i in range(0, len(test_dict["df"])):
 						tmp_pred_label.append(
 							test_dict["df"][i].iloc[
-							:, 0:len(popnames)
+							:, 0:len(self.popnames)
 							].idxmax(axis=1).values
 						)
 						tmp_true_label.append(test_dict["df"][i]["true_pops"].values)
 
 					pred_labels_ensemble.append(
-						tot_bag_df.iloc[:, 0:len(popnames)].idxmax(axis=1).values
+						tot_bag_df.iloc[:, 0:len(self.popnames)].idxmax(axis=1).values
 					)
 					
 					true_labels_ensemble.append(tmp_true_label[0])
@@ -355,7 +368,7 @@ class pop_find_class:
 						save_dir = fold_dir,
 						model=model)
 
-					self.model_list.append(fold_mods)
+					self.model_list.extend(fold_mods)
 					fold = fold + 1
 					preds = preds.append(test_dict["df"][0])
 
@@ -365,7 +378,7 @@ class pop_find_class:
 					for i in range(0, len(test_dict["df"])):
 						tmp_pred_label.append(
 							test_dict["df"][i].iloc[
-							:, 0:len(popnames)
+							:, 0:len(self.popnames)
 							].idxmax(axis=1).values
 						)
 						tmp_true_label.append(test_dict["df"][i]["true_pops"].values)
@@ -386,6 +399,15 @@ class pop_find_class:
 			if self.ensemble:
 				os.makedirs(save_dir + "/ensemble_weights")
 				temp_dir = save_dir + "/ensemble_weights"
+				
+				# Get popnames from encoder? Easier way of doing this??
+				enc = OneHotEncoder(handle_unknown="ignore")
+				y_train_enc = enc.fit_transform(
+					self.y_train_0["pops"].values.reshape(-1, 1)).toarray()
+				y_test_enc = enc.fit_transform(
+					self.y_holdout["pops"].values.reshape(-1, 1)).toarray()
+				self.popnames = enc.categories_[0]
+				
 				fold_mods, test_dict, tot_bag_df  = run_ensemble(X_train=self.X_train_0, 
 						X_fold=self.X_holdout, 
 						y_train=self.y_train_0, 
@@ -421,6 +443,9 @@ class pop_find_class:
 						save_dir = save_dir)
 				self.model_list = fold_mods
 		self.hyp_mod = model
+		mod_dict = {"model":self.model_list}
+		df = pd.DataFrame(mod_dict)  
+		df.to_csv(self.save_dir + "/model_list.csv")
 
 	def predict(self):
 		save_dir = self.save_dir + "/predict_output"
@@ -439,7 +464,7 @@ class pop_find_class:
 			pred_dict = {"count": [], "df": []}
 			top_pops = {"df": [], "pops": []}
 			for checkpoint in self.model_list:
-				model.load_weights(checkpoint[0])
+				model.load_weights(checkpoint)
 				tmp_df = pd.DataFrame(model.predict(ukgen))
 				tmp_df.columns = popnames
 				tmp_df["sampleID"] = uksamples
@@ -477,14 +502,14 @@ class pop_find_class:
 			freq_df.columns = ["Assigned Pop",
 								"Frequency",
 								"Sample ID"]
-			freq_df.to_csv(self.save_dir + "/pop_assign_ensemble.csv",
+			freq_df.to_csv(save_dir + "/pop_assign_ensemble.csv",
 							index=False)
 		else:
 			model.load_weights(self.model_list[0])
 			tmp_df = pd.DataFrame(model.predict(ukgen))
 			tmp_df.columns = popnames
 			tmp_df["sampleID"] = uksamples
-			tmp_df.to_csv(self.save_dir + "/pop_assign.csv", index=False)
+			tmp_df.to_csv(save_dir + "/pop_assign.csv", index=False)
 	def kfold_valid(self, 
 		n_splits=5,
 		n_reps=5,
@@ -856,11 +881,11 @@ def run_ensemble(X_train, X_fold, y_train, y_fold, nbags, model, train_prop, sav
 					bag_X, bag_y, stratify=bag_y["pops"],
 					train_size=train_prop
 				)
-			if (
-				pd.Series(popnames).isin(bag_y["pops"]).all()
-				and pd.Series(popnames).isin(y_val["pops"]).all()
-			):
-				good_bag = True
+				if (
+					pd.Series(popnames).isin(bag_y["pops"]).all()
+					and pd.Series(popnames).isin(y_val["pops"]).all()
+				):
+					good_bag = True
 
 		# Hot encode train and valuation sets
 		enc = OneHotEncoder(handle_unknown="ignore")
