@@ -62,6 +62,8 @@ class pop_find_class:
 		self.save_dir = save_dir
 		self.kfold = kfold
 		self.ensemble = ensemble
+		self.model_list = []
+		self.hyp_list = []
 
 		# input checks
 		if os.path.exists(self.infile) is False:
@@ -119,84 +121,6 @@ class pop_find_class:
 			np.save(save_dir + "/X_holdout.npy", self.X_holdout)
 			self.y_holdout.to_csv(save_dir + "/y_holdout.csv", index=False)
 
-	def hyper_tune(self,max_trials=10,runs_per_trial=10,max_epochs=100,train_prop=0.8,mod_name="hyper_tune"):
-		
-		# Do some checks on variables that are passed to hyper_tune
-		if isinstance(max_trials, np.int) is False:
-			raise ValueError("max_trials should be integer")
-		if isinstance(runs_per_trial, np.int) is False:
-			raise ValueError("runs_per_trial should be integer")
-		if isinstance(max_epochs, np.int) is False:
-			raise ValueError("max_epochs should be integer")
-		if isinstance(train_prop, np.float) is False:
-			raise ValueError("train_prop should be float")
-		if isinstance(self.seed, np.int) is False and self.seed is not None:
-			raise ValueError("seed should be integer or None")
-		if isinstance(self.save_dir, str) is False:
-			raise ValueError("save_dir should be string")
-		if isinstance(mod_name, str) is False:
-			raise ValueError("mod_name should be string")
-		
-		#K-fold vs. hold-out split
-		if self.kfold:
-			# use a single fold
-			for t, v in self.rskf.split(self.dc, self.samp_list["pops"]):
-				# Get train, test folds from rskf
-				X_train = self.dc[t, :] - 1
-				X_holdout = self.dc[v, :] - 1
-				y_train = self.samp_list.iloc[t]
-				y_holdout = self.samp_list.iloc[v]
-				break
-			X_train, X_val, y_train, y_val = train_test_split(
-				X_train,
-				y_train,
-				stratify=y_train["pops"],
-				train_size=self.train_prop,
-				random_state=self.seed,
-			)
-		else:
-			# Split data into train/test
-			X_train, X_val, y_train, y_val = train_test_split(
-				self.X_train_0,
-				self.y_train_0,
-				stratify=self.y_train_0["pops"],
-				train_size=self.train_prop,
-				random_state=self.seed,
-			)
-			if len(np.unique(y_train["pops"])) != len(np.unique(y_val["pops"])):
-				raise ValueError(
-				"Not all pops represented in validation set \
-				choose smaller value for train_prop."
-				)
-		# One hot encoding
-		enc = OneHotEncoder(handle_unknown="ignore")
-		y_train_enc = enc.fit_transform(
-			y_train["pops"].values.reshape(-1, 1)).toarray()
-		y_val_enc = enc.fit_transform(
-			y_val["pops"].values.reshape(-1, 1)).toarray()
-		popnames = enc.categories_[0]
-		hypermodel = classifierHyperModel(
-			input_shape=X_train.shape[1], num_classes=len(popnames)
-		)
-
-		tuner = RandomSearch(
-			hypermodel,
-			objective="val_loss",
-			seed=self.seed,
-			max_trials=max_trials,
-			executions_per_trial=runs_per_trial,
-			directory=self.save_dir,
-			project_name=mod_name,
-		)
-		tuner.search(
-			X_train - 1,
-			y_train_enc,
-			epochs=max_epochs,
-			validation_data=(X_val - 1, y_val_enc),
-		)
-		self.hyp_mod = tuner.get_best_models(num_models=1)[0]
-		tuner.get_best_models(num_models=1)[0].save(self.save_dir + "/hyper_tune_mod")
-
 	def class_train(self, 
 	plot_hist=True,
 	nbags=10,
@@ -213,53 +137,54 @@ class pop_find_class:
 
 		# Initialize model list
 		self.model_list = []
+		self.hyp_list = []
 
 		# Check to see if a model exists, create a basic one if not
 		# Consider enforcing hypertuning?
-		if hasattr(self, 'hyp_mod'):
-			model = self.hyp_mod
-		else:
-			if self.kfold:
-				for t, v in self.rskf.split(self.dc, self.samp_list["pops"]):
-					# Subset train and validation data
-					X_train = self.dc[t, :] - 1
-					X_val = self.dc[v, :] - 1
-					y_train = self.samp_list.iloc[t]
-					y_val = self.samp_list.iloc[v]
-					break
-				X_train, X_val, y_train, y_val = train_test_split(
-					X_train,
-					y_train,
-					stratify=y_train["pops"],
-					train_size=self.train_prop,
-					random_state=self.seed,
-				)
-				# One hot encoding
-				enc = OneHotEncoder(handle_unknown="ignore")
-				y_train_enc = enc.fit_transform(
-					y_train["pops"].values.reshape(-1, 1)).toarray()
-				y_val_enc = enc.fit_transform(
-					y_val["pops"].values.reshape(-1, 1)).toarray()
-				popnames = enc.categories_[0]
-				model = basic_model(X_train,popnames)
-				self.hyp_model = model
-			else:
-				X_train, X_val, y_train, y_val = train_test_split(
-					self.X_train_0,
-					self.y_train_0,
-					stratify=self.y_train_0["pops"],
-					train_size=self.train_prop,
-					random_state=self.seed,
-				)
-				# One hot encoding
-				enc = OneHotEncoder(handle_unknown="ignore")
-				y_train_enc = enc.fit_transform(
-					y_train["pops"].values.reshape(-1, 1)).toarray()
-				y_val_enc = enc.fit_transform(
-					y_val["pops"].values.reshape(-1, 1)).toarray()
-				popnames = enc.categories_[0]
-				model = basic_model(X_train,popnames)
-				self.hyp_mod = model
+		# if hasattr(self, 'hyp_mod'):
+			# model = self.hyp_mod
+		# else:
+			# if self.kfold:
+				# for t, v in self.rskf.split(self.dc, self.samp_list["pops"]):
+					# # Subset train and validation data
+					# X_train = self.dc[t, :] - 1
+					# X_val = self.dc[v, :] - 1
+					# y_train = self.samp_list.iloc[t]
+					# y_val = self.samp_list.iloc[v]
+					# break
+				# X_train, X_val, y_train, y_val = train_test_split(
+					# X_train,
+					# y_train,
+					# stratify=y_train["pops"],
+					# train_size=self.train_prop,
+					# random_state=self.seed,
+				# )
+				# # One hot encoding
+				# enc = OneHotEncoder(handle_unknown="ignore")
+				# y_train_enc = enc.fit_transform(
+					# y_train["pops"].values.reshape(-1, 1)).toarray()
+				# y_val_enc = enc.fit_transform(
+					# y_val["pops"].values.reshape(-1, 1)).toarray()
+				# popnames = enc.categories_[0]
+				# model = basic_model(X_train,popnames)
+				# # self.hyp_model = model
+			# else:
+				# X_train, X_val, y_train, y_val = train_test_split(
+					# self.X_train_0,
+					# self.y_train_0,
+					# stratify=self.y_train_0["pops"],
+					# train_size=self.train_prop,
+					# random_state=self.seed,
+				# )
+				# # One hot encoding
+				# enc = OneHotEncoder(handle_unknown="ignore")
+				# y_train_enc = enc.fit_transform(
+					# y_train["pops"].values.reshape(-1, 1)).toarray()
+				# y_val_enc = enc.fit_transform(
+					# y_val["pops"].values.reshape(-1, 1)).toarray()
+				# popnames = enc.categories_[0]
+				# model = basic_model(X_train,popnames)
+				# self.hyp_mod = model
 
 		print(f"Output will be saved to: {save_dir}")
 
@@ -290,17 +215,17 @@ class pop_find_class:
 						y_holdout["pops"].values.reshape(-1, 1)).toarray()
 					self.popnames = enc.categories_[0]
 					# Run ensemble
-					fold_mods, test_dict, tot_bag_df = run_ensemble(X_train=X_train, 
+					fold_mods, test_dict, tot_bag_df, hyp_fl = run_ensemble(X_train=X_train, 
 						X_fold=X_holdout, 
 						y_train=y_train, 
 						y_fold=y_holdout, 
-						nbags=nbags, 
-						model=model,
+						nbags=nbags,
 						train_prop=self.train_prop,
 						save_dir=fold_dir,
 								patience=patience)
 
 					self.model_list.extend(fold_mods)
+					self.hyp_list.extend(hyp_fl)
 					ensemble_preds = ensemble_preds.append(tot_bag_df)
 					fold = fold + 1
 
@@ -359,18 +284,17 @@ class pop_find_class:
 						X_train, y_train, stratify=y_train["pops"],
 						random_state=self.seed
 					)
-					fold_mods, test_dict = reg_train(X_train = X_train, 
+					fold_mods, test_dict, hyp_fl = reg_train(X_train = X_train, 
 						X_val = X_val, 
 						X_holdout = X_holdout, 
 						y_train = y_train, 
 						y_val = y_val, 
 						y_holdout = y_holdout, 
-						save_dir = fold_dir,
-						model=model)
-
+						save_dir = fold_dir)
 					self.model_list.extend(fold_mods)
 					fold = fold + 1
 					preds = preds.append(test_dict["df"][0])
+					self.hyp_list.extend(hyp_fl)
 
 					# Assemble labels
 					tmp_pred_label = []
@@ -408,16 +332,16 @@ class pop_find_class:
 					self.y_holdout["pops"].values.reshape(-1, 1)).toarray()
 				self.popnames = enc.categories_[0]
 				
-				fold_mods, test_dict, tot_bag_df  = run_ensemble(X_train=self.X_train_0, 
+				fold_mods, test_dict, tot_bag_df,hyp_fl = run_ensemble(X_train=self.X_train_0, 
 						X_fold=self.X_holdout, 
 						y_train=self.y_train_0, 
 						y_fold=self.y_holdout, 
-						nbags=nbags, 
-						model=model,
+						nbags=nbags,
 						train_prop=self.train_prop,
 						save_dir=temp_dir,
 								patience=patience)
 				self.model_list = fold_mods
+				self.hyp_list = hyp_fl
 			else:
 				# Run regular neural training, with hold out
 				X_train, X_val, y_train, y_val = train_test_split(
@@ -433,19 +357,22 @@ class pop_find_class:
 					self.y_holdout["pops"].values.reshape(-1, 1)).toarray()
 				self.popnames = enc.categories_[0]
 
-				fold_mods, test_dict = reg_train(X_train = X_train, 
+				fold_mods, test_dict, hyp_fl = reg_train(X_train = X_train, 
 						X_val = X_val, 
 						X_holdout = self.X_holdout, 
 						y_train = y_train, 
 						y_val = y_val, 
 						y_holdout = self.y_holdout, 
-						model=model,
 						save_dir = save_dir)
 				self.model_list = fold_mods
-		self.hyp_mod = model
+				self.hyp_list = hyp_fl
+		# self.hyp_mod = model
 		mod_dict = {"model":self.model_list}
 		df = pd.DataFrame(mod_dict)  
 		df.to_csv(self.save_dir + "/model_list.csv")
+		mod_hyp = {"model":self.hyp_list}
+		df = pd.DataFrame(mod_hyp)  
+		df.to_csv(self.save_dir + "/hyp_list.csv")
 
 	def predict(self):
 		save_dir = self.save_dir + "/predict_output"
@@ -527,6 +454,261 @@ class pop_find_class:
 		if n_splits <= 1:
 			raise ValueError("n_splits must be greater than 1")
 		samp_list = self.y_train_0
+
+	def snp_rank(self, sample_data, mod_path=None,
+		 save_dir="snp_rank_results"):
+		"""
+		Finds the most important SNPs in determining a model's performance.
+		Parameters
+		----------
+		infile : string
+			Path to VCF file containing genetic data.
+		sample_data : string
+			Path to tab-delimited file containing columns x, y, pop, and
+			sampleID.
+		mod_path : string
+			Path to tuned model. If set to None, just uses default model
+			(Default=None).
+		save_dir : string
+			Path to output directory (Default="snp_rank_results").
+		Returns
+		-------
+		ranking : pd.DataFrame
+			DataFrame containing relative importance of each SNP, where SNPs
+			are labelled from 1 to number of SNPs in order of appearance in
+			the VCF file
+		"""
+		infile = self.infile
+		# Check inputs
+		if os.path.exists(infile) is False:
+			raise ValueError("Path to infile does not exist")
+		if os.path.exists(sample_data) is False:
+			raise ValueError("Path to sample_data does not exist")
+		if isinstance(mod_path, str) is False and mod_path is not None:
+			raise ValueError("mod_path should be string or None")
+
+		# Make save_dir if it does not exist already
+		if os.path.isdir(save_dir) is False:
+			os.mkdir(save_dir)
+
+		samp_list, dc, = read_data(
+			infile,
+			sample_data,
+			save_allele_counts=False,
+			kfcv=True,
+		)
+
+		X = dc
+		Y = samp_list["pops"]
+		enc = OneHotEncoder(handle_unknown="ignore")
+		Y_enc = enc.fit_transform(Y.values.reshape(-1, 1)).toarray()
+
+		snp_names = np.arange(1, X.shape[1] + 1)
+
+		if mod_path is None:
+			model = tf.Sequential()
+			model.add(tf.layers.BatchNormalization(
+				input_shape=(X.shape[1],)))
+			model.add(tf.layers.Dense(128, activation="elu"))
+			model.add(tf.layers.Dense(128, activation="elu"))
+			model.add(tf.layers.Dense(128, activation="elu"))
+			model.add(tf.layers.Dropout(0.25))
+			model.add(tf.layers.Dense(128, activation="elu"))
+			model.add(tf.layers.Dense(128, activation="elu"))
+			model.add(tf.layers.Dense(128, activation="elu"))
+			model.add(tf.layers.Dense(len(np.unique(samp_list['pops'])),
+									  activation="softmax"))
+			aopt = tf.optimizers.Adam(lr=0.0005)
+			model.compile(
+				loss="categorical_crossentropy",
+				optimizer=aopt,
+				metrics="accuracy"
+			)
+		else:
+			model = tf.models.load_model(mod_path + "/best_mod")
+
+		errors = []
+
+		for i in range(X.shape[1]):
+			og_X = np.array(X[:, i])
+			np.random.shuffle(X[:, i])
+
+			pred = model.predict(X)
+			error = log_loss(Y_enc, pred)
+
+			errors.append(error)
+			X[:, i] = og_X
+
+		max_error = np.max(errors)
+		importance = [e / max_error for e in errors]
+
+		data = {"snp": snp_names, "error": errors, "importance": importance}
+		ranking = pd.DataFrame(data, columns=["snp", "error", "importance"])
+		ranking.sort_values(by=["importance"], ascending=[0], inplace=True)
+		ranking.reset_index(inplace=True, drop=True)
+		ranking.to_csv(save_dir + "/perturbation_rank_results.csv")
+		return ranking
+
+	def assign_plot(save_dir, ensemble=False, col_scheme="Spectral"):
+		"""
+		Plots the frequency of assignment of individuals
+		from unknown populations to different populations
+		included in the training data.
+		Parameters
+		----------
+		save_dir : string
+			Path to output file where "preds.csv" lives and
+			also where the resulting plot will be saved.
+		ensemble : boolean
+			Set to True if multiple models used to generate assignments
+			(Default=False).
+		col_scheme : string
+			Colour scheme of confusion matrix. See
+			matplotlib.org/stable/tutorials/colors/colormaps.html
+			for available colour palettes (Default="Spectral").
+		Returns
+		-------
+		assign_plot.png : PNG file
+			PNG formatted assignment plot located in the
+			save_dir folder.
+		"""
+		# Check inputs
+		if isinstance(save_dir, str) is False:
+			raise ValueError("save_dir should be string")
+		if isinstance(ensemble, bool) is False:
+			raise ValueError("ensemble should be boolean")
+		if isinstance(col_scheme, str) is False:
+			raise ValueError("col_scheme should be string")
+
+		# Load data
+		if ensemble:
+
+			# Check if right directory exists
+			if os.path.exists(save_dir + "/pop_assign_freqs.csv") is False:
+				raise ValueError(
+					"pop_assign_freqs.csv does not exist in save_dir")
+
+			e_preds = pd.read_csv(save_dir + "/pop_assign_freqs.csv")
+			e_preds.rename(columns={e_preds.columns[0]: "sampleID"}, inplace=True)
+		else:
+
+			# Check if right directory exists
+			if os.path.exists(save_dir + "/pop_assign.csv") is False:
+				raise ValueError("pop_assign.csv does not exist in save_dir")
+
+			e_preds = pd.read_csv(save_dir + "/pop_assign.csv")
+
+		e_preds.set_index("sampleID", inplace=True)
+
+		# Set number of classes
+		num_classes = len(e_preds.columns)
+
+		# Create plot
+		sn.set()
+		sn.set_style("ticks")
+		e_preds.plot(
+			kind="bar",
+			stacked=True,
+			colormap=ListedColormap(sn.color_palette(col_scheme, num_classes)),
+			figsize=(12, 6),
+			grid=None,
+		)
+		legend = plt.legend(
+			loc="center right",
+			bbox_to_anchor=(1.2, 0.5),
+			prop={"size": 15},
+			title="Predicted Pop",
+		)
+		plt.setp(legend.get_title(), fontsize="x-large")
+		plt.xlabel("Sample ID", fontsize=20)
+		plt.ylabel("Frequency of Assignment", fontsize=20)
+		plt.xticks(fontsize=14)
+		plt.yticks(fontsize=14)
+
+		# Save plot to output directory
+		plt.savefig(save_dir + "/assign_plot.png", bbox_inches="tight")
+
+def structure_plot(save_dir, ensemble=False, col_scheme="Spectral"):
+	"""
+	Takes results from running the neural network with
+	K-fold cross-validation and creates a structure plot
+	showing proportion of assignment of individuals from
+	known populations to predicted populations.
+
+	Parameters
+	----------
+	save_dir : string
+		Path to output file where "ensemble_preds.csv" or "preds.csv"
+		lives and also where the resulting plot will be saved.
+	ensemble : boolean
+		Whether ensemble of models was used to generate results or not
+		(Default=False).
+	col_scheme : string
+		Colour scheme of confusion matrix. See
+		matplotlib.org/stable/tutorials/colors/colormaps.html
+		for available colour palettes (Default="Spectral").
+
+	Returns
+	-------
+	structure_plot.png : PNG file
+		PNG formatted structure plot located in the
+		save_dir folder.
+	"""
+	# Check inputs and load data
+	if ensemble is True:
+		if os.path.exists(save_dir + "/ensemble_preds.csv") is False:
+			raise ValueError("Path to ensemble_preds does not exist")
+		preds = pd.read_csv(save_dir + "/ensemble_preds.csv")
+	else:
+		# Load data
+		if os.path.exists(save_dir + "/preds.csv") is False:
+			raise ValueError("Path to preds does not exist")
+		preds = pd.read_csv(save_dir + "/preds.csv")
+	if isinstance(col_scheme, str) is False:
+		raise ValueError("col_scheme should be a string")
+
+	preds = preds.drop(preds.columns[0], axis=1)
+	npreds = preds.groupby(["true_pops"]).agg("mean")
+	npreds = npreds.sort_values("true_pops", ascending=True)
+	npreds = npreds / np.sum(npreds, axis=1)
+
+	# Make sure values are correct
+	if not np.round(np.sum(npreds, axis=1), 2).eq(1).all():
+		raise ValueError("Incorrect input values")
+
+	# Find number of unique classes
+	num_classes = len(npreds.index)
+
+	if not len(npreds.index) == len(npreds.columns):
+		raise ValueError(
+			"Number of pops does not \
+			 match number of predicted pops"
+		)
+
+	# Create plot
+	sn.set()
+	sn.set_style("ticks")
+	npreds.plot(
+		kind="bar",
+		stacked=True,
+		colormap=ListedColormap(sn.color_palette(col_scheme, num_classes)),
+		figsize=(12, 6),
+		grid=None,
+	)
+	legend = plt.legend(
+		loc="center right",
+		bbox_to_anchor=(1.2, 0.5),
+		prop={"size": 15},
+		title="Predicted Pop",
+	)
+	plt.setp(legend.get_title(), fontsize="x-large")
+	plt.xlabel("Actual Pop", fontsize=20)
+	plt.ylabel("Frequency of Assignment", fontsize=20)
+	plt.xticks(fontsize=14)
+	plt.yticks(fontsize=14)
+
+	# Save plot to output directory
+	plt.savefig(save_dir + "/structure_plot.png", bbox_inches="tight")
 
 def read_data(infile, sample_data, save_allele_counts=False):
 	"""
@@ -840,12 +1022,12 @@ def plot_history(history, i=None, ensemble=False, save_dir="out"):
 			)
 		plt.close()
 
-def run_ensemble(X_train, X_fold, y_train, y_fold, nbags, model, train_prop, save_dir, plot_hist=True, patience=20, batch_size=32, max_epochs=100):
+def run_ensemble(X_train, X_fold, y_train, y_fold, nbags, train_prop, save_dir, plot_hist=True, patience=20, batch_size=32, max_epochs=100):
 	n_prime = np.int(np.ceil(len(X_train) * train_prop))
-	
+
 	# create list of models trained
 	ensembl_fl = []
-	
+	hyp_fl = []
 	# Add info about test samples
 	y_test_samples = y_fold["samples"].to_numpy()
 	y_test_pops = y_fold["pops"].to_numpy()
@@ -894,6 +1076,9 @@ def run_ensemble(X_train, X_fold, y_train, y_fold, nbags, model, train_prop, sav
 		y_val_enc = enc.fit_transform(
 			y_val["pops"].values.reshape(-1, 1)).toarray()
 
+			# add hypermodel call here; also have hyper_tune return list of model locations, to be added to class?
+		model,hyp_path = hyper_tune(mod_name="hypermod_" + str(i), msave_dir=save_dir + "/default_mod_weights",y_train=bag_y,y_val=y_val, X_train=bag_X, X_val=X_val)
+		hyp_fl.append(hyp_path)
 		# Create callbacks
 		temp_str = "/checkpoint_" + str(i)+ ".h5"
 		ensembl_fl.append(save_dir + temp_str)
@@ -997,10 +1182,11 @@ def run_ensemble(X_train, X_fold, y_train, y_fold, nbags, model, train_prop, sav
 	)
 	metrics.to_csv(save_dir + "/metrics.csv", index=False)
 	print("Ensemble training complete")
-	return ensembl_fl, test_dict, tot_bag_df
+	return ensembl_fl, test_dict, tot_bag_df, hyp_fl
 
-def reg_train(X_train, X_val, X_holdout, y_train, y_val, y_holdout, model, save_dir, plot_hist=True, batch_size=32, max_epochs=100, patience=20):
+def reg_train(X_train, X_val, X_holdout, y_train, y_val, y_holdout, save_dir, plot_hist=True, batch_size=32, max_epochs=100, patience=20):
 	ensembl_fl = []
+	hyp_fl = []
 	# Make sure all classes represented in y_val
 	if len(
 		np.unique(y_train["pops"])
@@ -1034,6 +1220,9 @@ def reg_train(X_train, X_val, X_holdout, y_train, y_val, y_holdout, model, save_
 	os.makedirs(save_dir + "/default_mod_weights")
 	
 	ensembl_fl.append(save_dir + "/default_mod_weights/checkpoint.h5")
+	
+	model, hyp_path = hyper_tune(msave_dir=save_dir + "/default_mod_weights",y_train=y_train,y_val=y_val, X_train=X_train, X_val=X_val)
+	hyp_fl.append(hyp_path)
 	
 	checkpointer = tf.callbacks.ModelCheckpoint(
 	filepath=save_dir + "/default_mod_weights/checkpoint.h5",
@@ -1115,4 +1304,86 @@ def reg_train(X_train, X_val, X_holdout, y_train, y_val, y_holdout, model, save_
 	)
 	metrics.to_csv(save_dir + "/metrics.csv", index=False)
 	print("Non-ensemble training complete")
-	return ensembl_fl, test_dict
+	return ensembl_fl, test_dict, hyp_fl
+
+def hyper_tune(msave_dir,y_train,y_val, X_train, X_val,max_trials=10,runs_per_trial=10,max_epochs=100,
+	train_prop=0.8,mod_name="hyper_tune",seed=None):
+	# Convert to internal function only?
+	# Do some checks on variables that are passed to hyper_tune
+	if isinstance(max_trials, np.int) is False:
+		raise ValueError("max_trials should be integer")
+	if isinstance(runs_per_trial, np.int) is False:
+		raise ValueError("runs_per_trial should be integer")
+	if isinstance(max_epochs, np.int) is False:
+		raise ValueError("max_epochs should be integer")
+	if isinstance(train_prop, np.float) is False:
+		raise ValueError("train_prop should be float")
+	if isinstance(seed, np.int) is False and seed is not None:
+		raise ValueError("seed should be integer or None")
+	if isinstance(msave_dir, str) is False:
+		raise ValueError("save_dir should be string")
+	if isinstance(mod_name, str) is False:
+		raise ValueError("mod_name should be string")
+	
+	#K-fold vs. hold-out split
+	# if self.kfold:
+		#use a single fold
+		# for t, v in self.rskf.split(self.dc, self.samp_list["pops"]):
+			#Get train, test folds from rskf
+			# X_train = self.dc[t, :] - 1
+			# X_holdout = self.dc[v, :] - 1
+			# y_train = self.samp_list.iloc[t]
+			# y_holdout = self.samp_list.iloc[v]
+			# break
+		# X_train, X_val, y_train, y_val = train_test_split(
+			# X_train,
+			# y_train,
+			# stratify=y_train["pops"],
+			# train_size=self.train_prop,
+			# random_state=self.seed,
+		# )
+	# else:
+		#Split data into train/test
+		# X_train, X_val, y_train, y_val = train_test_split(
+			# self.X_train_0,
+			# self.y_train_0,
+			# stratify=self.y_train_0["pops"],
+			# train_size=self.train_prop,
+			# random_state=self.seed,
+		# )
+		# if len(np.unique(y_train["pops"])) != len(np.unique(y_val["pops"])):
+			# raise ValueError(
+			# "Not all pops represented in validation set \
+			# choose smaller value for train_prop."
+			# )
+	# One hot encoding
+	# Take y_train, X_train, X_val, y_val passed in
+	enc = OneHotEncoder(handle_unknown="ignore")
+	y_train_enc = enc.fit_transform(
+		y_train["pops"].values.reshape(-1, 1)).toarray()
+	y_val_enc = enc.fit_transform(
+		y_val["pops"].values.reshape(-1, 1)).toarray()
+	popnames = enc.categories_[0]
+	hypermodel = classifierHyperModel(
+		input_shape=X_train.shape[1], num_classes=len(popnames)
+	)
+
+	tuner = RandomSearch(
+		hypermodel,
+		objective="val_loss",
+		seed=seed,
+		max_trials=max_trials,
+		executions_per_trial=runs_per_trial,
+		directory=msave_dir,
+		project_name=mod_name,
+	)
+	tuner.search(
+		X_train - 1,
+		y_train_enc,
+		epochs=max_epochs,
+		validation_data=(X_val - 1, y_val_enc),
+	)
+	hyp_mod = tuner.get_best_models(num_models=1)[0]
+	tuner.get_best_models(num_models=1)[0].save(msave_dir + "/best_hyp_mod_" + mod_name)
+	hyp_path = msave_dir + "/best_hyp_mod_" + mod_name
+	return hyp_mod, hyp_path
