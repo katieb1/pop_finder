@@ -164,6 +164,8 @@ rskf = RepeatedStratifiedKFold(n_splits=n_splits, n_repeats=n_reps, random_state
 ############################
 ## grid search cv approach##
 ############################
+PIPELINE = Pipeline([('scaler', None), ('estimator', MLPClassifier())])
+
 GRID = [
     {#'scaler': [StandardScaler()],
      'estimator': [MLPClassifier(random_state=1)],
@@ -175,8 +177,6 @@ GRID = [
      'estimator__alpha': [0.0001, 0.001, 0.005],
      }
 ]
-
-PIPELINE = Pipeline([('scaler', None), ('estimator', MLPClassifier())])
 
 grid_search = GridSearchCV(estimator=PIPELINE, param_grid=GRID, 
                             scoring=make_scorer(accuracy_score),# average='macro'), 
@@ -219,6 +219,7 @@ randm = RandomizedSearchCV(estimator=model, param_distributions = parameters,
                                cv = rskf, n_iter = 100, n_jobs=-1)
 
 randm.fit(X_train, y_train)
+randm.score(X_test, y_test)
 
 ############################
 #### randomsearch hyperopt##
